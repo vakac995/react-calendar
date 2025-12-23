@@ -1,6 +1,6 @@
 {
   "name": "@vakac995/react-calendar",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "A flexible, customizable React calendar component with date range and time picker support",
   "author": "vakac995",
