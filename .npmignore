@@ -1,0 +1,22 @@
+# Test files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Demo/Example files
+src/App.tsx
+src/main.tsx
+index.html
+
+# Config files
+vite.config.ts
+tsconfig.json
+tsconfig.build.json
+*.config.js
+*.config.ts
+
+# Dev files
+.gitignore
+.eslintrc*
+.prettierrc*
