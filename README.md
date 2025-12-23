@@ -2,6 +2,8 @@
 
 A flexible, customizable React calendar component with date range and time picker support.
 
+**[📺 Live Demo](https://react-calendar-3m3.pages.dev)** | **[📦 npm](https://www.npmjs.com/package/@vakac995/react-calendar)** | **[🐙 GitHub](https://github.com/vakac995/react-calendar)**
+
 ## Features
 
 - 📅 Single date and date range selection
