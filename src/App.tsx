@@ -13,18 +13,56 @@ import {
 // DEMO HELPER COMPONENTS
 // ============================================================================
 
-interface DemoSectionProps {
+function CopyButton({ text }: { text: string }): React.ReactElement {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="p-1.5 rounded hover:bg-slate-700 transition-colors text-slate-400 hover:text-white"
+      title={copied ? "Copied!" : "Copy to clipboard"}
+    >
+      {copied ? (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+          <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+interface DemoCardProps {
   title: string;
   description?: string;
   children: React.ReactNode;
+  wide?: boolean;
 }
 
-function DemoSection({ title, description, children }: DemoSectionProps): React.ReactElement {
+function DemoCard({ title, description, children, wide = false }: DemoCardProps): React.ReactElement {
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-      <h2 className="text-xl font-bold text-gray-800 mb-2">{title}</h2>
-      {description && <p className="text-gray-500 text-sm mb-4">{description}</p>}
-      <div className="flex flex-wrap gap-4">{children}</div>
+    <div className={`bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden ${wide ? "col-span-1 lg:col-span-2" : ""}`}>
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3">
+        <h3 className="text-white font-semibold text-lg">{title}</h3>
+        {description && <p className="text-blue-100 text-sm mt-0.5">{description}</p>}
+      </div>
+      <div className="p-5 flex flex-col items-center">
+        {children}
+      </div>
     </div>
   );
 }
@@ -39,7 +77,7 @@ function ValueDisplay<TMode extends SelectionMode>({
   mode,
 }: ValueDisplayProps<TMode>): React.ReactElement {
   const formatDateTime = (dtv: DateTimeValue | null): string => {
-    if (!dtv) return "null";
+    if (!dtv) return "—";
     const date = dtv.date.toLocaleDateString();
     if (dtv.time) {
       const time = `${String(dtv.time.hours).padStart(2, "0")}:${String(dtv.time.minutes).padStart(2, "0")}:${String(dtv.time.seconds).padStart(2, "0")}`;
@@ -51,23 +89,25 @@ function ValueDisplay<TMode extends SelectionMode>({
   if (mode === "single") {
     const singleValue = value as DateTimeValue | null | undefined;
     return (
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm">
-        <span className="font-medium text-gray-700">Selected: </span>
-        <span className="text-blue-600">{singleValue ? formatDateTime(singleValue) : "None"}</span>
+      <div className="mt-4 w-full p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl text-sm border border-gray-200">
+        <div className="flex items-center justify-between">
+          <span className="font-medium text-gray-600">Selected:</span>
+          <span className="text-blue-600 font-mono">{singleValue ? formatDateTime(singleValue) : "—"}</span>
+        </div>
       </div>
     );
   }
 
   const rangeValue = value as DateRangeValue | undefined;
   return (
-    <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm space-y-1">
-      <div>
-        <span className="font-medium text-gray-700">Start: </span>
-        <span className="text-blue-600">{formatDateTime(rangeValue?.start ?? null)}</span>
+    <div className="mt-4 w-full p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl text-sm border border-gray-200 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="font-medium text-gray-600">Start:</span>
+        <span className="text-blue-600 font-mono">{formatDateTime(rangeValue?.start ?? null)}</span>
       </div>
-      <div>
-        <span className="font-medium text-gray-700">End: </span>
-        <span className="text-green-600">{formatDateTime(rangeValue?.end ?? null)}</span>
+      <div className="flex items-center justify-between">
+        <span className="font-medium text-gray-600">End:</span>
+        <span className="text-emerald-600 font-mono">{formatDateTime(rangeValue?.end ?? null)}</span>
       </div>
     </div>
   );
@@ -81,7 +121,7 @@ function BasicCalendarDemo(): React.ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
   return (
-    <div>
+    <>
       <Calendar<"single">
         mode="single"
         value={value}
@@ -91,7 +131,7 @@ function BasicCalendarDemo(): React.ReactElement {
         onYearChange={(year) => console.log("Year changed:", year)}
       />
       <ValueDisplay value={value} mode="single" />
-    </div>
+    </>
   );
 }
 
@@ -99,7 +139,7 @@ function RangeCalendarDemo(): React.ReactElement {
   const [value, setValue] = useState<DateRangeValue>({ start: null, end: null });
 
   return (
-    <div>
+    <>
       <Calendar<"range">
         mode="range"
         value={value}
@@ -107,7 +147,7 @@ function RangeCalendarDemo(): React.ReactElement {
         onDayClick={(date) => console.log("Range day clicked:", date)}
       />
       <ValueDisplay value={value} mode="range" />
-    </div>
+    </>
   );
 }
 
@@ -115,7 +155,7 @@ function CalendarWithTimeDemo(): React.ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
   return (
-    <div>
+    <>
       <Calendar<"single">
         mode="single"
         value={value}
@@ -129,7 +169,7 @@ function CalendarWithTimeDemo(): React.ReactElement {
         onSecondsSelect={(seconds, target) => console.log("Seconds selected:", seconds, target)}
       />
       <ValueDisplay value={value} mode="single" />
-    </div>
+    </>
   );
 }
 
@@ -137,7 +177,7 @@ function RangeWithTimeDemo(): React.ReactElement {
   const [value, setValue] = useState<DateRangeValue>({ start: null, end: null });
 
   return (
-    <div>
+    <>
       <Calendar<"range">
         mode="range"
         value={value}
@@ -148,7 +188,7 @@ function RangeWithTimeDemo(): React.ReactElement {
         onTimeChange={(time, target) => console.log("Range time changed:", time, target)}
       />
       <ValueDisplay value={value} mode="range" />
-    </div>
+    </>
   );
 }
 
@@ -160,7 +200,7 @@ function MinMaxDatesDemo(): React.ReactElement {
   const maxDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 10);
 
   return (
-    <div>
+    <>
       <Calendar<"single">
         mode="single"
         value={value}
@@ -168,11 +208,11 @@ function MinMaxDatesDemo(): React.ReactElement {
         minDate={minDate}
         maxDate={maxDate}
       />
-      <div className="mt-2 text-xs text-gray-500">
-        Min: {minDate.toLocaleDateString()} | Max: {maxDate.toLocaleDateString()}
+      <div className="mt-2 text-xs text-gray-500 text-center">
+        📅 {minDate.toLocaleDateString()} → {maxDate.toLocaleDateString()}
       </div>
       <ValueDisplay value={value} mode="single" />
-    </div>
+    </>
   );
 }
 
@@ -180,7 +220,7 @@ function WeekStartMondayDemo(): React.ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
   return (
-    <div>
+    <>
       <Calendar<"single">
         mode="single"
         value={value}
@@ -192,7 +232,7 @@ function WeekStartMondayDemo(): React.ReactElement {
         onNextWeek={(date) => console.log("Next week from:", date)}
       />
       <ValueDisplay value={value} mode="single" />
-    </div>
+    </>
   );
 }
 
@@ -201,7 +241,7 @@ function CustomYearsDemo(): React.ReactElement {
   const years = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030];
 
   return (
-    <div>
+    <>
       <Calendar<"single">
         mode="single"
         value={value}
@@ -211,11 +251,11 @@ function CustomYearsDemo(): React.ReactElement {
         onPrevYear={(year) => console.log("Prev year:", year)}
         onNextYear={(year) => console.log("Next year:", year)}
       />
-      <div className="mt-2 text-xs text-gray-500">
-        Available years: {years[0]} - {years[years.length - 1]}
+      <div className="mt-2 text-xs text-gray-500 text-center">
+        📆 Years: {years[0]} – {years[years.length - 1]}
       </div>
       <ValueDisplay value={value} mode="single" />
-    </div>
+    </>
   );
 }
 
@@ -223,7 +263,7 @@ function TimeWithLimitsDemo(): React.ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
   return (
-    <div>
+    <>
       <Calendar<"single">
         mode="single"
         value={value}
@@ -232,9 +272,11 @@ function TimeWithLimitsDemo(): React.ReactElement {
         minTime={{ hours: 9, minutes: 0, seconds: 0 }}
         maxTime={{ hours: 17, minutes: 30, seconds: 0 }}
       />
-      <div className="mt-2 text-xs text-gray-500">Time limited: 09:00 - 17:30</div>
+      <div className="mt-2 text-xs text-gray-500 text-center">
+        ⏰ Business hours: 09:00 – 17:30
+      </div>
       <ValueDisplay value={value} mode="single" />
-    </div>
+    </>
   );
 }
 
@@ -258,7 +300,7 @@ function CustomStylesDemo(): React.ReactElement {
   };
 
   return (
-    <div>
+    <>
       <Calendar<"single">
         mode="single"
         value={value}
@@ -266,7 +308,7 @@ function CustomStylesDemo(): React.ReactElement {
         classNames={customClassNames}
       />
       <ValueDisplay value={value} mode="single" />
-    </div>
+    </>
   );
 }
 
@@ -283,23 +325,25 @@ function CustomDayRendererDemo(): React.ReactElement {
       <div className="relative">
         {defaultRender}
         {hasEvent && (
-          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-red-500 rounded-full" />
+          <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-red-500 rounded-full" />
         )}
       </div>
     );
   };
 
   return (
-    <div>
+    <>
       <Calendar<"single">
         mode="single"
         value={value}
         onChange={(v) => setValue(v)}
         renderDay={renderDay}
       />
-      <div className="mt-2 text-xs text-gray-500">Red dots indicate events</div>
+      <div className="mt-2 text-xs text-gray-500 text-center">
+        🔴 Red dots = events on days 5, 12, 15, 22, 28
+      </div>
       <ValueDisplay value={value} mode="single" />
-    </div>
+    </>
   );
 }
 
@@ -312,8 +356,8 @@ function AllCallbacksDemo(): React.ReactElement {
   };
 
   return (
-    <div className="flex gap-4 flex-wrap">
-      <div>
+    <div className="flex flex-col lg:flex-row gap-4 w-full">
+      <div className="flex flex-col items-center">
         <Calendar<"single">
           mode="single"
           value={value}
@@ -338,15 +382,18 @@ function AllCallbacksDemo(): React.ReactElement {
         />
         <ValueDisplay value={value} mode="single" />
       </div>
-      <div className="flex-1 min-w-[250px]">
-        <div className="bg-gray-900 rounded-lg p-4 h-80 overflow-y-auto">
-          <h3 className="text-green-400 font-mono text-sm mb-2">Event Log:</h3>
+      <div className="flex-1 min-w-[280px]">
+        <div className="bg-gray-900 rounded-xl p-4 h-80 overflow-y-auto shadow-inner">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            <h4 className="text-green-400 font-mono text-sm font-semibold">Event Log</h4>
+          </div>
           {logs.length === 0 ? (
             <p className="text-gray-500 font-mono text-xs">Interact with the calendar...</p>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {logs.map((log, i) => (
-                <div key={i} className="text-green-300 font-mono text-xs">
+                <div key={i} className="text-green-300 font-mono text-xs bg-gray-800 rounded px-2 py-1">
                   {log}
                 </div>
               ))}
@@ -364,97 +411,137 @@ function AllCallbacksDemo(): React.ReactElement {
 
 export default function App(): React.ReactElement {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-10 px-4">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            📅 Production-Ready Calendar Component
-          </h1>
-          <p className="text-gray-600">
-            Strictly typed TypeScript with generics • All features demonstrated below
+          <div className="inline-flex items-center gap-3 mb-4">
+            <span className="text-5xl">📅</span>
+            <div className="text-left">
+              <h1 className="text-4xl font-bold text-white">
+                React Calendar
+              </h1>
+              <p className="text-blue-400 font-mono text-sm">@vakac995/react-calendar</p>
+            </div>
+          </div>
+          <p className="text-slate-400 max-w-2xl mx-auto">
+            A flexible, customizable React calendar component with date range and time picker support.
+            Fully typed with TypeScript generics.
           </p>
+          <div className="flex justify-center gap-3 mt-6">
+            <a
+              href="https://www.npmjs.com/package/@vakac995/react-calendar"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M0 0v24h24V0H0zm6.672 19.992H3.996V6.996h2.676v13.002-.006zm6.672 0H10.68V10.668H8.004V6.996h8.016v3.672h-2.676v9.324zm6.66 0h-2.676V10.668h2.676v9.324z"/>
+              </svg>
+              npm
+            </a>
+            <a
+              href="https://github.com/vakac995/react-calendar"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+              GitHub
+            </a>
+          </div>
         </header>
 
-        <DemoSection
-          title="1. Basic Single Date Selection"
-          description="Simple date picker with single selection mode"
-        >
-          <BasicCalendarDemo />
-        </DemoSection>
+        {/* Demo Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <DemoCard
+            title="Basic Single Date"
+            description="Simple date picker with single selection"
+          >
+            <BasicCalendarDemo />
+          </DemoCard>
 
-        <DemoSection
-          title="2. Range Selection"
-          description="Select a date range. Same-day range sets 00:00:00 to 23:59:59"
-        >
-          <RangeCalendarDemo />
-        </DemoSection>
+          <DemoCard
+            title="Date Range Selection"
+            description="Select start and end dates"
+          >
+            <RangeCalendarDemo />
+          </DemoCard>
 
-        <DemoSection
-          title="3. Single Date with Time (Bottom Position)"
-          description="Date and time selection with seconds, scrollable time selectors"
-        >
-          <CalendarWithTimeDemo />
-        </DemoSection>
+          <DemoCard
+            title="Date & Time (Bottom)"
+            description="With scrollable time selectors"
+          >
+            <CalendarWithTimeDemo />
+          </DemoCard>
 
-        <DemoSection
-          title="4. Range with Time (Side Position)"
-          description="Range selection with independent start/end time pickers"
-        >
-          <RangeWithTimeDemo />
-        </DemoSection>
+          <DemoCard
+            title="Range with Time (Side)"
+            description="Independent start/end time pickers"
+          >
+            <RangeWithTimeDemo />
+          </DemoCard>
 
-        <DemoSection
-          title="5. Min/Max Date Constraints"
-          description="Only dates within range are selectable"
-        >
-          <MinMaxDatesDemo />
-        </DemoSection>
+          <DemoCard
+            title="Min/Max Constraints"
+            description="Limited date range selection"
+          >
+            <MinMaxDatesDemo />
+          </DemoCard>
 
-        <DemoSection
-          title="6. Week Starts on Monday + Week Numbers"
-          description="Configurable week start day with clickable week numbers"
-        >
-          <WeekStartMondayDemo />
-        </DemoSection>
+          <DemoCard
+            title="Week Numbers + Monday Start"
+            description="Clickable week numbers"
+          >
+            <WeekStartMondayDemo />
+          </DemoCard>
 
-        <DemoSection
-          title="7. Custom Years Array"
-          description="Limit year selection to specific range"
-        >
-          <CustomYearsDemo />
-        </DemoSection>
+          <DemoCard
+            title="Custom Year Range"
+            description="Limited year selection"
+          >
+            <CustomYearsDemo />
+          </DemoCard>
 
-        <DemoSection
-          title="8. Time with Min/Max Limits"
-          description="Time selection restricted to business hours (9:00 AM - 5:30 PM)"
-        >
-          <TimeWithLimitsDemo />
-        </DemoSection>
+          <DemoCard
+            title="Business Hours Only"
+            description="Time restricted to 09:00–17:30"
+          >
+            <TimeWithLimitsDemo />
+          </DemoCard>
 
-        <DemoSection
-          title="9. Custom Styling via classNames"
-          description="Every element is stylable via the classNames prop"
-        >
-          <CustomStylesDemo />
-        </DemoSection>
+          <DemoCard
+            title="Custom Styling"
+            description="Purple theme via classNames prop"
+          >
+            <CustomStylesDemo />
+          </DemoCard>
 
-        <DemoSection
-          title="10. Custom Day Renderer"
-          description="Use renderDay prop to add custom indicators"
-        >
-          <CustomDayRendererDemo />
-        </DemoSection>
+          <DemoCard
+            title="Custom Day Renderer"
+            description="Event indicators with renderDay"
+          >
+            <CustomDayRendererDemo />
+          </DemoCard>
 
-        <DemoSection
-          title="11. All Callbacks Demo"
-          description="Interactive log showing all event callbacks in action"
-        >
-          <AllCallbacksDemo />
-        </DemoSection>
+          <DemoCard
+            title="All Callbacks Demo"
+            description="Interactive event log"
+            wide
+          >
+            <AllCallbacksDemo />
+          </DemoCard>
+        </div>
 
-        <footer className="text-center text-gray-500 text-sm mt-12 pb-8">
+        {/* Footer */}
+        <footer className="text-center text-slate-500 text-sm mt-12 pb-8">
           <p>Built with React + TypeScript + Tailwind CSS</p>
-          <p className="mt-1">All types are strictly enforced with generics</p>
+          <div className="mt-3 inline-flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg">
+            <code className="text-blue-400">npm install @vakac995/react-calendar</code>
+            <CopyButton text="npm install @vakac995/react-calendar" />
+          </div>
         </footer>
       </div>
     </div>
