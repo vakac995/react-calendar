@@ -61,6 +61,26 @@ export interface MonthData {
   weeks: WeekData[];
 }
 
+/** Labels for all text in the calendar */
+export interface CalendarLabels {
+  // Navigation aria-labels
+  previousYear?: string;
+  previousMonth?: string;
+  nextMonth?: string;
+  nextYear?: string;
+  // Time labels
+  timeLabel?: string;
+  startTimeLabel?: string;
+  endTimeLabel?: string;
+  hoursLabel?: string;
+  minutesLabel?: string;
+  secondsLabel?: string;
+  // Month names (array of 12)
+  months?: readonly string[];
+  // Short day names (array of 7, starting from Sunday)
+  shortDays?: readonly string[];
+}
+
 /** ClassNames for styling every element */
 export interface CalendarClassNames {
   // Root
@@ -179,6 +199,8 @@ export interface CalendarProps<TMode extends SelectionMode = "single">
   locale?: string;
   /** Custom class names */
   classNames?: CalendarClassNames;
+  /** Custom labels for i18n */
+  labels?: CalendarLabels;
   /** Disabled state */
   disabled?: boolean;
   /** Custom day renderer */

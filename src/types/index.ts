@@ -9,6 +9,7 @@ export type {
   DayCell,
   WeekData,
   MonthData,
+  CalendarLabels,
   CalendarClassNames,
   CalendarEventHandlers,
   CalendarProps,

@@ -7,7 +7,9 @@ import {
   type DateRangeValue,
   type DayCell,
   defaultClassNames,
+  defaultLabels,
   mergeClassNames,
+  mergeLabels,
 } from "./index";
 
 // ============================================================================
@@ -321,6 +323,36 @@ function CustomStylesDemo(): React.ReactElement {
   );
 }
 
+function CustomLabelsDemo(): React.ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  // Custom English labels - merge with defaults, only override specific ones
+  const customLabels = mergeLabels(defaultLabels, {
+    timeLabel: "Select Time",
+    hoursLabel: "Hr",
+    minutesLabel: "Min",
+    secondsLabel: "Sec",
+    shortDays: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"] as const,
+  });
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        showTime
+        onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
+        labels={customLabels}
+      />
+      <div className="mt-2 text-xs text-gray-500 text-center">
+        🏷️ Custom labels via mergeLabels()
+      </div>
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
 function CustomDayRendererDemo(): React.ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
@@ -528,6 +560,13 @@ export default function App(): React.ReactElement {
             description="Purple theme via classNames prop"
           >
             <CustomStylesDemo />
+          </DemoCard>
+
+          <DemoCard
+            title="Custom Labels"
+            description="Override labels via mergeLabels()"
+          >
+            <CustomLabelsDemo />
           </DemoCard>
 
           <DemoCard

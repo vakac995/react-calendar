@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import type { TimeValue, CalendarClassNames } from "../types";
+import type { TimeValue, CalendarClassNames, CalendarLabels } from "../types";
 import { isTimeDisabled } from "../utils";
 import { TimeSelector } from "./TimeSelector";
 
@@ -11,6 +11,7 @@ interface TimePickerProps {
   minTime?: TimeValue;
   maxTime?: TimeValue;
   classNames?: CalendarClassNames;
+  labels?: CalendarLabels;
   target: "start" | "end" | "single";
   onTimeChange?: (time: TimeValue, target: "start" | "end" | "single") => void;
   onHourClick?: (hour: number, target: "start" | "end" | "single") => void;
@@ -29,6 +30,7 @@ export function TimePicker({
   minTime,
   maxTime,
   classNames,
+  labels,
   target,
   onTimeChange,
   onHourClick,
@@ -88,7 +90,7 @@ export function TimePicker({
         <TimeSelector
           value={time.hours}
           max={23}
-          label="HH"
+          label={labels?.hoursLabel ?? "HH"}
           disabled={disabled}
           classNames={classNames}
           isDisabled={isHourDisabled}
@@ -102,7 +104,7 @@ export function TimePicker({
         <TimeSelector
           value={time.minutes}
           max={59}
-          label="MM"
+          label={labels?.minutesLabel ?? "MM"}
           disabled={disabled}
           classNames={classNames}
           isDisabled={isMinuteDisabled}
@@ -118,7 +120,7 @@ export function TimePicker({
             <TimeSelector
               value={time.seconds}
               max={59}
-              label="SS"
+              label={labels?.secondsLabel ?? "SS"}
               disabled={disabled}
               classNames={classNames}
               isDisabled={isSecondDisabled}

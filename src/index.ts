@@ -13,6 +13,7 @@ export type {
   DayCell,
   WeekData,
   MonthData,
+  CalendarLabels,
   CalendarClassNames,
   CalendarEventHandlers,
   CalendarProps,
@@ -22,8 +23,8 @@ export type {
 // Time Picker components
 export { TimePicker, TimeSelector } from "./time-picker";
 
-// Default styles
-export { defaultClassNames, mergeClassNames } from "./styles";
+// Default styles and labels
+export { defaultClassNames, mergeClassNames, defaultLabels, mergeLabels } from "./styles";
 
 // Utils
 export {

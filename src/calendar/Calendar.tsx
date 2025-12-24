@@ -15,9 +15,11 @@ import type {
   WeekData,
   CalendarProps,
   HeaderRenderProps,
+  CalendarLabels,
 } from "../types";
 
-import { DAYS_IN_WEEK, MONTHS, SHORT_DAYS } from "../constants";
+import { DAYS_IN_WEEK } from "../constants";
+import { defaultLabels } from "../styles/defaultLabels";
 import { getDefaultYears, isSameDay, addMonths, getMonthData } from "../utils";
 import { TimePicker } from "../time-picker";
 
@@ -43,6 +45,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
     weekStartsOn = 0,
     showWeekNumbers = false,
     classNames,
+    labels: customLabels,
     disabled = false,
     renderDay,
     renderHeader,
@@ -66,6 +69,12 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
     onSecondsClick,
     onSecondsSelect,
   } = props;
+
+  // Merge custom labels with defaults
+  const labels: CalendarLabels = useMemo(
+    () => ({ ...defaultLabels, ...customLabels }),
+    [customLabels]
+  );
 
   // State
   const [internalValue, setInternalValue] = useState<CalendarValue<TMode> | undefined>(
@@ -91,10 +100,10 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
 
   // Get ordered days based on weekStartsOn
   const orderedDays = useMemo(() => {
-    const days = [...SHORT_DAYS];
+    const days = [...(labels.shortDays ?? defaultLabels.shortDays!)];
     const rotated = days.splice(0, weekStartsOn);
     return [...days, ...rotated];
-  }, [weekStartsOn]);
+  }, [weekStartsOn, labels.shortDays]);
 
   // Get current selection values
   const singleValue = mode === "single" ? (currentValue as DateTimeValue | null) : null;
@@ -317,7 +326,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           onClick={handlePrevYear}
           disabled={disabled}
           className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonPrev].filter(Boolean).join(" ")}
-          aria-label="Previous year"
+          aria-label={labels.previousYear}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
@@ -328,7 +337,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           onClick={handlePrevMonth}
           disabled={disabled}
           className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonPrev].filter(Boolean).join(" ")}
-          aria-label="Previous month"
+          aria-label={labels.previousMonth}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -343,7 +352,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           disabled={disabled}
           className={classNames?.headerMonthSelect}
         >
-          {MONTHS.map((month, index) => (
+          {(labels.months ?? defaultLabels.months!).map((month, index) => (
             <option key={month} value={index}>
               {month}
             </option>
@@ -369,7 +378,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           onClick={handleNextMonth}
           disabled={disabled}
           className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonNext].filter(Boolean).join(" ")}
-          aria-label="Next month"
+          aria-label={labels.nextMonth}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -380,7 +389,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           onClick={handleNextYear}
           disabled={disabled}
           className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonNext].filter(Boolean).join(" ")}
-          aria-label="Next year"
+          aria-label={labels.nextYear}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
@@ -402,12 +411,13 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
       {mode === "single" ? (
         <TimePicker
           time={singleValue?.time ?? { hours: 0, minutes: 0, seconds: 0 }}
-          label="Time"
+          label={labels.timeLabel}
           showSeconds={showSeconds}
           disabled={disabled || !singleValue}
           minTime={minTime}
           maxTime={maxTime}
           classNames={classNames}
+          labels={labels}
           target="single"
           onTimeChange={handleTimeChange}
           onHourClick={onHourClick}
@@ -421,12 +431,13 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
         <>
           <TimePicker
             time={rangeValue?.start?.time ?? { hours: 0, minutes: 0, seconds: 0 }}
-            label="Start Time"
+            label={labels.startTimeLabel}
             showSeconds={showSeconds}
             disabled={disabled || !rangeValue?.start}
             minTime={minTime}
             maxTime={maxTime}
             classNames={classNames}
+            labels={labels}
             target="start"
             onTimeChange={handleTimeChange}
             onHourClick={onHourClick}
@@ -438,12 +449,13 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           />
           <TimePicker
             time={rangeValue?.end?.time ?? { hours: 23, minutes: 59, seconds: 59 }}
-            label="End Time"
+            label={labels.endTimeLabel}
             showSeconds={showSeconds}
             disabled={disabled || !rangeValue?.end}
             minTime={minTime}
             maxTime={maxTime}
             classNames={classNames}
+            labels={labels}
             target="end"
             onTimeChange={handleTimeChange}
             onHourClick={onHourClick}
