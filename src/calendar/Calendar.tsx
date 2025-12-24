@@ -153,13 +153,15 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
       } else {
         // Range mode
         const currentRange = rangeValue ?? { start: null, end: null };
+        const startTime: TimeValue = { hours: 0, minutes: 0, seconds: 0 };
+        const endTime: TimeValue = { hours: 23, minutes: 59, seconds: 59 };
 
         if (rangeSelectState === "start" || (currentRange.start && currentRange.end)) {
           // Starting new selection or resetting
           const newValue: DateRangeValue = {
             start: {
               date: day.date,
-              time: showTime ? { hours: 0, minutes: 0, seconds: 0 } : undefined,
+              time: showTime ? startTime : undefined,
             },
             end: null,
           };
@@ -171,28 +173,28 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           let finalStart = currentRange.start!;
           let finalEnd: DateTimeValue = {
             date: day.date,
-            time: showTime ? { hours: 23, minutes: 59, seconds: 59 } : undefined,
+            time: endTime,
           };
 
           // Handle same day selection
           if (isSameDay(startDate, day.date)) {
             finalStart = {
               date: startDate,
-              time: showTime ? { hours: 0, minutes: 0, seconds: 0 } : undefined,
+              time: showTime ? startTime : undefined,
             };
             finalEnd = {
               date: day.date,
-              time: showTime ? { hours: 23, minutes: 59, seconds: 59 } : undefined,
+              time: endTime,
             };
           } else if (day.date < startDate) {
             // Swap if end is before start
             finalEnd = {
               ...finalStart,
-              time: showTime ? { hours: 23, minutes: 59, seconds: 59 } : undefined,
+              time: endTime,
             };
             finalStart = {
               date: day.date,
-              time: showTime ? { hours: 0, minutes: 0, seconds: 0 } : undefined,
+              time: showTime ? startTime : undefined,
             };
           }
 
@@ -288,7 +290,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           },
           end: {
             date: lastDay.date,
-            time: showTime ? { hours: 23, minutes: 59, seconds: 59 } : undefined,
+            time: { hours: 23, minutes: 59, seconds: 59 },
           },
         };
         updateValue(newValue as CalendarValue<TMode>);

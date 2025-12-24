@@ -95,11 +95,11 @@ function ValueDisplay<TMode extends SelectionMode>({
   const formatDateTime = (dtv: DateTimeValue | null): string => {
     if (!dtv) return "—";
     const date = dtv.date.toLocaleDateString();
-    if (dtv.time) {
-      const time = `${String(dtv.time.hours).padStart(2, "0")}:${String(dtv.time.minutes).padStart(2, "0")}:${String(dtv.time.seconds).padStart(2, "0")}`;
-      return `${date} ${time}`;
-    }
-    return date;
+    const hours = dtv.time?.hours ?? 0;
+    const minutes = dtv.time?.minutes ?? 0;
+    const seconds = dtv.time?.seconds ?? 0;
+    const time = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    return `${date} ${time}`;
   };
 
   if (mode === "single") {
@@ -512,13 +512,16 @@ function BookingCalendarDemo(): React.ReactElement {
 
 function ControlledRangeDemo(): React.ReactElement {
   // Initialize with current week (Sunday to Saturday)
-  const getThisWeek = () => {
+  const getThisWeek = (): DateRangeValue => {
     const today = new Date();
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay());
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
-    return { start: { date: startOfWeek }, end: { date: endOfWeek } };
+    return {
+      start: { date: startOfWeek, time: { hours: 0, minutes: 0, seconds: 0 } },
+      end: { date: endOfWeek, time: { hours: 23, minutes: 59, seconds: 59 } },
+    };
   };
 
   const [value, setValue] = useState<DateRangeValue>(getThisWeek());
