@@ -53,18 +53,31 @@ interface DemoCardProps {
   title: string;
   description?: string;
   children: React.ReactNode;
-  wide?: boolean;
+  code: string;
 }
 
-function DemoCard({ title, description, children, wide = false }: DemoCardProps): React.ReactElement {
+function DemoCard({ title, description, children, code }: DemoCardProps): React.ReactElement {
   return (
-    <div className={`bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden ${wide ? "col-span-1 lg:col-span-2" : ""}`}>
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden w-full max-w-4xl mx-auto">
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3">
         <h3 className="text-white font-semibold text-lg">{title}</h3>
         {description && <p className="text-blue-100 text-sm mt-0.5">{description}</p>}
       </div>
-      <div className="p-5 flex flex-col items-center">
-        {children}
+      <div className="flex flex-col">
+        {/* Calendar Section */}
+        <div className="p-5 flex flex-col items-center border-b border-gray-100">
+          {children}
+        </div>
+        {/* Code Section */}
+        <div className="p-4 bg-slate-900">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-slate-400 font-medium uppercase tracking-wide">Usage</span>
+            <CopyButton text={code} />
+          </div>
+          <pre className="text-sm text-slate-300 font-mono whitespace-pre overflow-x-auto">
+            <code>{code}</code>
+          </pre>
+        </div>
       </div>
     </div>
   );
@@ -508,10 +521,16 @@ export default function App(): React.ReactElement {
         </header>
 
         {/* Demo Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-6">
           <DemoCard
             title="Basic Single Date"
             description="Simple date picker with single selection"
+            code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  classNames={defaultClassNames}
+/>`}
           >
             <BasicCalendarDemo />
           </DemoCard>
@@ -519,6 +538,13 @@ export default function App(): React.ReactElement {
           <DemoCard
             title="Date Range Selection"
             description="Select start and end dates"
+            code={`<Calendar
+  mode="range"
+  value={value}
+  onChange={setValue}
+  classNames={defaultClassNames}
+  showWeekNumbers
+/>`}
           >
             <RangeCalendarDemo />
           </DemoCard>
@@ -526,6 +552,15 @@ export default function App(): React.ReactElement {
           <DemoCard
             title="Date & Time (Bottom)"
             description="With scrollable time selectors"
+            code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  classNames={defaultClassNames}
+  showTime
+  showSeconds
+  timePosition="bottom"
+/>`}
           >
             <CalendarWithTimeDemo />
           </DemoCard>
@@ -533,6 +568,15 @@ export default function App(): React.ReactElement {
           <DemoCard
             title="Range with Time (Side)"
             description="Independent start/end time pickers"
+            code={`<Calendar
+  mode="range"
+  value={value}
+  onChange={setValue}
+  classNames={defaultClassNames}
+  showTime
+  showSeconds
+  timePosition="side"
+/>`}
           >
             <RangeWithTimeDemo />
           </DemoCard>
@@ -540,6 +584,14 @@ export default function App(): React.ReactElement {
           <DemoCard
             title="Min/Max Constraints"
             description="Limited date range selection"
+            code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  classNames={defaultClassNames}
+  minDate={new Date()} // today
+  maxDate={addDays(new Date(), 30)}
+/>`}
           >
             <MinMaxDatesDemo />
           </DemoCard>
@@ -547,6 +599,14 @@ export default function App(): React.ReactElement {
           <DemoCard
             title="Week Numbers + Monday Start"
             description="Clickable week numbers"
+            code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  classNames={defaultClassNames}
+  weekStartsOn={1} // Monday
+  showWeekNumbers
+/>`}
           >
             <WeekStartMondayDemo />
           </DemoCard>
@@ -554,6 +614,13 @@ export default function App(): React.ReactElement {
           <DemoCard
             title="Custom Year Range"
             description="Limited year selection"
+            code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  classNames={defaultClassNames}
+  years={[2020, 2021, 2022, ...]}
+/>`}
           >
             <CustomYearsDemo />
           </DemoCard>
@@ -561,6 +628,15 @@ export default function App(): React.ReactElement {
           <DemoCard
             title="Business Hours Only"
             description="Time restricted to 09:00–17:30"
+            code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  classNames={defaultClassNames}
+  showTime
+  minTime={{ hours: 9, minutes: 0, seconds: 0 }}
+  maxTime={{ hours: 17, minutes: 30, seconds: 0 }}
+/>`}
           >
             <TimeWithLimitsDemo />
           </DemoCard>
@@ -568,6 +644,17 @@ export default function App(): React.ReactElement {
           <DemoCard
             title="Custom Styling"
             description="Purple theme via classNames prop"
+            code={`const customClassNames = mergeClassNames(
+  defaultClassNames,
+  {
+    root: "bg-purple-50 border-purple-200",
+    daySelected: "bg-purple-600",
+    dayToday: "border-purple-500",
+    // ... more overrides
+  }
+);
+
+<Calendar classNames={customClassNames} />`}
           >
             <CustomStylesDemo />
           </DemoCard>
@@ -575,6 +662,19 @@ export default function App(): React.ReactElement {
           <DemoCard
             title="Custom Labels"
             description="Override labels via mergeLabels()"
+            code={`const customLabels = mergeLabels(
+  defaultLabels,
+  {
+    timeLabel: "Select Time",
+    hoursLabel: "Hr",
+    minutesLabel: "Min",
+    shortDays: ["Su", "Mo", "Tu", ...],
+    previousMonthIcon: "«",
+    nextMonthIcon: "»",
+  }
+);
+
+<Calendar labels={customLabels} />`}
           >
             <CustomLabelsDemo />
           </DemoCard>
@@ -582,6 +682,17 @@ export default function App(): React.ReactElement {
           <DemoCard
             title="Custom Day Renderer"
             description="Event indicators with renderDay"
+            code={`const renderDay = (day, defaultRender) => (
+  <div className="relative">
+    {defaultRender}
+    {hasEvent(day.date) && (
+      <span className="absolute bottom-0.5
+        w-1.5 h-1.5 bg-red-500 rounded-full" />
+    )}
+  </div>
+);
+
+<Calendar renderDay={renderDay} />`}
           >
             <CustomDayRendererDemo />
           </DemoCard>
@@ -589,7 +700,21 @@ export default function App(): React.ReactElement {
           <DemoCard
             title="All Callbacks Demo"
             description="Interactive event log"
-            wide
+            code={`<Calendar
+  mode="range"
+  onDayClick={(date, e) => {}}
+  onWeekClick={(week, e) => {}}
+  onMonthSelect={(month, year) => {}}
+  onYearChange={(year) => {}}
+  onPrevMonth={(month, year) => {}}
+  onNextMonth={(month, year) => {}}
+  onPrevYear={(year) => {}}
+  onNextYear={(year) => {}}
+  onTimeChange={(time, target) => {}}
+  onHourClick={(hour, target) => {}}
+  onMinuteClick={(minute, target) => {}}
+  // ... and more
+/>`}
           >
             <AllCallbacksDemo />
           </DemoCard>
