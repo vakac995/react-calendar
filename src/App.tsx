@@ -153,7 +153,7 @@ function BasicCalendarDemo(): React.ReactElement {
 }
 
 function RangeCalendarDemo(): React.ReactElement {
-  const [value, setValue] = useState<DateRangeValue>({ start: null, end: null });
+  const [value, setValue] = useState<DateRangeValue | null>(null);
 
   return (
     <>
@@ -198,7 +198,7 @@ function CalendarWithTimeDemo(): React.ReactElement {
 }
 
 function RangeWithTimeDemo(): React.ReactElement {
-  const [value, setValue] = useState<DateRangeValue>({ start: null, end: null });
+  const [value, setValue] = useState<DateRangeValue | null>(null);
 
   return (
     <>
@@ -310,39 +310,84 @@ function TimeWithLimitsDemo(): React.ReactElement {
 }
 
 function CustomStylesDemo(): React.ReactElement {
-  const [value, setValue] = useState<DateTimeValue | null>(null);
+  const [mode, setMode] = useState<"single" | "range">("single");
+  const [singleValue, setSingleValue] = useState<DateTimeValue | null>(null);
+  const [rangeValue, setRangeValue] = useState<DateRangeValue | null>(null);
 
   // Shadcn-inspired minimal design - black, gray, white
+  // mergeClassNames replaces default classes, so we provide complete class strings
   const shadcnClassNames = mergeClassNames(defaultClassNames, {
-    root: "bg-white border border-gray-200 rounded-lg shadow-sm",
-    header: "border-b border-gray-100 pb-3 mb-3",
+    root: "inline-flex flex-col bg-white border border-gray-200 rounded-lg shadow-sm p-4",
+    header: "flex items-center justify-between mb-4 border-b border-gray-100 pb-3",
     headerNavigation: "flex items-center gap-1",
-    headerNavigationButton: "h-7 w-7 bg-transparent hover:bg-gray-100 rounded-md text-gray-600 hover:text-gray-900 transition-colors",
+    headerNavigationButton: "p-1.5 h-7 w-7 bg-transparent hover:bg-gray-100 rounded-md text-gray-600 hover:text-gray-900 transition-colors",
     headerTitle: "flex items-center gap-2",
-    headerMonthSelect: "h-8 border-0 bg-transparent font-medium text-gray-900 focus:ring-0 focus:outline-none cursor-pointer hover:bg-gray-100 rounded-md px-2",
-    headerYearSelect: "h-8 border-0 bg-transparent font-medium text-gray-900 focus:ring-0 focus:outline-none cursor-pointer hover:bg-gray-100 rounded-md px-2",
-    weekDayCell: "text-gray-500 font-medium text-xs uppercase tracking-wide",
+    headerMonthSelect: "px-2 py-1 h-8 border-0 bg-transparent font-medium text-gray-900 rounded-md cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-0",
+    headerYearSelect: "px-2 py-1 h-8 border-0 bg-transparent font-medium text-gray-900 rounded-md cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-0",
+    weekDayCell: "text-center text-xs font-medium text-gray-500 py-1 uppercase tracking-wide",
     weekDayCellWeekend: "text-gray-400",
-    dayButton: "h-9 w-9 rounded-md text-sm font-normal hover:bg-gray-100 transition-colors",
+    dayButton: "w-9 h-9 rounded-md flex items-center justify-center text-sm font-normal relative z-10 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 hover:bg-gray-100",
     dayToday: "bg-gray-100 font-semibold",
     daySelected: "bg-gray-900 text-white hover:bg-gray-800 font-medium",
-    dayInRange: "bg-gray-100",
-    dayRangeStart: "bg-gray-900 text-white rounded-l-md",
-    dayRangeEnd: "bg-gray-900 text-white rounded-r-md",
+    dayInRange: "bg-gray-200 rounded-none hover:bg-gray-300",
+    dayRangeStart: "bg-gray-900 text-white rounded-l-md rounded-r-none hover:bg-gray-800",
+    dayRangeEnd: "bg-gray-900 text-white rounded-r-md rounded-l-none hover:bg-gray-800",
+    dayRangeBackground: "absolute inset-y-0 bg-gray-200",
+    dayRangeBackgroundStart: "left-1/2 right-0",
+    dayRangeBackgroundEnd: "left-0 right-1/2",
+    dayRangeBackgroundMiddle: "left-0 right-0",
+    dayRangeBackgroundFirstOfWeek: "rounded-l-md",
+    dayRangeBackgroundLastOfWeek: "rounded-r-md",
     dayWeekend: "text-gray-600",
-    dayDisabled: "text-gray-300 hover:bg-transparent cursor-not-allowed",
+    dayDisabled: "text-gray-300 opacity-50 cursor-not-allowed hover:bg-transparent",
     dayOutsideMonth: "text-gray-300",
   });
 
   return (
     <>
-      <Calendar<"single">
-        mode="single"
-        value={value}
-        onChange={(v) => setValue(v)}
-        classNames={shadcnClassNames}
-      />
-      <ValueDisplay value={value} mode="single" />
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setMode("single")}
+          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+            mode === "single"
+              ? "bg-gray-900 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          Single
+        </button>
+        <button
+          onClick={() => setMode("range")}
+          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+            mode === "range"
+              ? "bg-gray-900 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          Range
+        </button>
+      </div>
+      {mode === "single" ? (
+        <>
+          <Calendar<"single">
+            mode="single"
+            value={singleValue}
+            onChange={(v) => setSingleValue(v)}
+            classNames={shadcnClassNames}
+          />
+          <ValueDisplay value={singleValue} mode="single" />
+        </>
+      ) : (
+        <>
+          <Calendar<"range">
+            mode="range"
+            value={rangeValue}
+            onChange={(v) => setRangeValue(v)}
+            classNames={shadcnClassNames}
+          />
+          <ValueDisplay value={rangeValue} mode="range" />
+        </>
+      )}
     </>
   );
 }
@@ -530,9 +575,9 @@ function ControlledRangeDemo(): React.ReactElement {
     };
   };
 
-  const [value, setValue] = useState<DateRangeValue>(getThisWeek());
+  const [value, setValue] = useState<DateRangeValue | null>(getThisWeek());
 
-  const clearSelection = () => setValue({ start: null, end: null });
+  const clearSelection = () => setValue(null);
   const selectThisWeek = () => setValue(getThisWeek());
 
   return (

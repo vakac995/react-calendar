@@ -83,17 +83,55 @@ export const defaultClassNames: CalendarClassNames = {
 
 /**
  * Helper to merge custom classNames with defaults.
- * Custom classes will be appended to (not replace) default classes.
+ * Custom classes will REPLACE default classes for each key provided.
+ * Keys not provided in custom will keep their default values.
+ *
+ * This approach works with any styling solution (Tailwind, CSS modules, plain CSS, etc.)
+ * because it completely replaces the class string rather than appending.
  *
  * @example
  * ```tsx
  * import { Calendar, defaultClassNames, mergeClassNames } from '@vakac995/calendar';
  *
- * const customClassNames = { root: 'my-custom-root', daySelected: 'bg-green-500' };
- * <Calendar classNames={mergeClassNames(defaultClassNames, customClassNames)} />
+ * const customClassNames = mergeClassNames(defaultClassNames, {
+ *   root: 'my-custom-root',           // Completely replaces default root classes
+ *   daySelected: 'bg-green-500',      // Completely replaces default selected styles
+ * });
+ * <Calendar classNames={customClassNames} />
  * ```
  */
 export function mergeClassNames(
+  base: CalendarClassNames,
+  custom: CalendarClassNames
+): CalendarClassNames {
+  const result: CalendarClassNames = { ...base };
+  for (const key of Object.keys(custom) as (keyof CalendarClassNames)[]) {
+    if (custom[key] !== undefined) {
+      result[key] = custom[key];
+    }
+  }
+  return result;
+}
+
+/**
+ * Helper to extend classNames by appending custom classes to defaults.
+ * Use this when you want to ADD classes on top of defaults rather than replace them.
+ *
+ * Note: When using Tailwind CSS, later classes may not override earlier ones
+ * due to CSS specificity. Consider using mergeClassNames for full control.
+ *
+ * @example
+ * ```tsx
+ * import { Calendar, defaultClassNames, extendClassNames } from '@vakac995/calendar';
+ *
+ * const customClassNames = extendClassNames(defaultClassNames, {
+ *   root: 'extra-padding',            // Appends to default root classes
+ *   dayButton: 'custom-hover-effect', // Appends to default day button classes
+ * });
+ * <Calendar classNames={customClassNames} />
+ * ```
+ */
+export function extendClassNames(
   base: CalendarClassNames,
   custom: CalendarClassNames
 ): CalendarClassNames {

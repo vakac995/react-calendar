@@ -31,7 +31,7 @@ export interface DateRangeValue {
 /** Calendar value - either single date or range */
 export type CalendarValue<TMode extends SelectionMode> = TMode extends "single"
   ? DateTimeValue | null
-  : DateRangeValue;
+  : DateRangeValue | null;
 
 /** Day cell data */
 export interface DayCell {
