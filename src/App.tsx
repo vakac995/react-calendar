@@ -412,6 +412,147 @@ function CustomDayRendererDemo(): React.ReactElement {
   );
 }
 
+function DisabledCalendarDemo(): React.ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>({
+    date: new Date(),
+    time: { hours: 14, minutes: 30, seconds: 0 },
+  });
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
+        showTime
+        disabled
+      />
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+function TimeTopDemo(): React.ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
+        showTime
+        timePosition="top"
+      />
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+function PreselectedDateDemo(): React.ReactElement {
+  // Pre-select Christmas 2025
+  const [value, setValue] = useState<DateTimeValue | null>({
+    date: new Date(2025, 11, 25),
+  });
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
+      />
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+function BookingCalendarDemo(): React.ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  // Simulate booked/unavailable dates
+  const bookedDates = [3, 4, 10, 11, 17, 18, 24, 25];
+  const today = new Date();
+
+  const renderDay = (day: DayCell, defaultRender: React.ReactNode): React.ReactNode => {
+    const isBooked = day.isCurrentMonth && bookedDates.includes(day.date.getDate());
+    const isPast = day.date < today && !day.isToday;
+
+    if (isBooked || isPast) {
+      return (
+        <div className="relative">
+          <div className="opacity-40 line-through">{defaultRender}</div>
+        </div>
+      );
+    }
+
+    return defaultRender;
+  };
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
+        renderDay={renderDay}
+        minDate={today}
+      />
+      <div className="mt-2 text-xs text-gray-500 text-center">
+        📅 Strikethrough = booked/unavailable
+      </div>
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+function ControlledRangeDemo(): React.ReactElement {
+  // Initialize with current week (Sunday to Saturday)
+  const getThisWeek = () => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    return { start: { date: startOfWeek }, end: { date: endOfWeek } };
+  };
+
+  const [value, setValue] = useState<DateRangeValue>(getThisWeek());
+
+  const clearSelection = () => setValue({ start: null, end: null });
+  const selectThisWeek = () => setValue(getThisWeek());
+
+  return (
+    <>
+      <div className="flex gap-2 mb-3">
+        <button
+          onClick={selectThisWeek}
+          className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          This Week
+        </button>
+        <button
+          onClick={clearSelection}
+          className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+        >
+          Clear
+        </button>
+      </div>
+      <Calendar<"range">
+        mode="range"
+        value={value}
+        onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
+      />
+      <ValueDisplay value={value} mode="range" />
+    </>
+  );
+}
+
 function AllCallbacksDemo(): React.ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
@@ -695,6 +836,94 @@ export default function App(): React.ReactElement {
 <Calendar renderDay={renderDay} />`}
           >
             <CustomDayRendererDemo />
+          </DemoCard>
+
+          <DemoCard
+            title="Disabled State"
+            description="Non-interactive calendar"
+            code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  classNames={defaultClassNames}
+  showTime
+  disabled
+/>`}
+          >
+            <DisabledCalendarDemo />
+          </DemoCard>
+
+          <DemoCard
+            title="Time Picker (Top)"
+            description="Time selector above calendar"
+            code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  classNames={defaultClassNames}
+  showTime
+  timePosition="top"
+/>`}
+          >
+            <TimeTopDemo />
+          </DemoCard>
+
+          <DemoCard
+            title="Preselected Date"
+            description="Calendar with initial value"
+            code={`const [value, setValue] = useState({
+  date: new Date(2025, 11, 25), // Dec 25
+});
+
+<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  classNames={defaultClassNames}
+/>`}
+          >
+            <PreselectedDateDemo />
+          </DemoCard>
+
+          <DemoCard
+            title="Booking Calendar"
+            description="With unavailable dates"
+            code={`const renderDay = (day, defaultRender) => {
+  const isBooked = bookedDates.includes(day.date.getDate());
+  if (isBooked) {
+    return (
+      <div className="opacity-40 line-through">
+        {defaultRender}
+      </div>
+    );
+  }
+  return defaultRender;
+};
+
+<Calendar
+  renderDay={renderDay}
+  minDate={new Date()}
+/>`}
+          >
+            <BookingCalendarDemo />
+          </DemoCard>
+
+          <DemoCard
+            title="Controlled Range"
+            description="Programmatic selection control"
+            code={`const selectThisWeek = () => {
+  const start = getStartOfWeek(new Date());
+  const end = addDays(start, 6);
+  setValue({ start: { date: start }, end: { date: end } });
+};
+
+<button onClick={selectThisWeek}>This Week</button>
+<button onClick={() => setValue({ start: null, end: null })}>
+  Clear
+</button>
+<Calendar mode="range" value={value} onChange={setValue} />`}
+          >
+            <ControlledRangeDemo />
           </DemoCard>
 
           <DemoCard
