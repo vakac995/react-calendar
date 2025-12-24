@@ -1,4 +1,5 @@
-import React, { useMemo, useCallback } from "react";
+import type React from "react";
+import { useMemo, useCallback } from "react";
 import type { CalendarClassNames } from "../types";
 
 interface TimeSelectorProps {
@@ -41,12 +42,10 @@ export function TimeSelector({
 
   return (
     <div className={classNames?.timeSelector}>
-      <span className={classNames?.timeSelectorLabel}>
-        {label}
-      </span>
+      <span className={classNames?.timeSelectorLabel}>{label}</span>
       <div className={classNames?.timeSelectorScroll}>
         {items.map((item) => {
-          const itemDisabled = disabled || isDisabled?.(item);
+          const itemDisabled = disabled ?? isDisabled?.(item);
           const isSelected = item === value;
 
           return (

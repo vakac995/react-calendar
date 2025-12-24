@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import {
   Calendar,
   type CalendarValue,
@@ -19,28 +20,44 @@ import {
 function CopyButton({ text }: { text: string }): React.ReactElement {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
+  const handleCopy = (): void => {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch((err) => {
+        console.error("Failed to copy:", err);
+      });
   };
 
   return (
     <button
       onClick={handleCopy}
-      className="p-1.5 rounded hover:bg-slate-700 transition-colors text-slate-400 hover:text-white"
+      className="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
       title={copied ? "Copied!" : "Copy to clipboard"}
     >
       {copied ? (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4 text-green-400"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+            clipRule="evenodd"
+          />
         </svg>
       ) : (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
           <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
           <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
         </svg>
@@ -58,23 +75,23 @@ interface DemoCardProps {
 
 function DemoCard({ title, description, children, code }: DemoCardProps): React.ReactElement {
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden w-full max-w-4xl mx-auto">
+    <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg">
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3">
-        <h3 className="text-white font-semibold text-lg">{title}</h3>
-        {description && <p className="text-blue-100 text-sm mt-0.5">{description}</p>}
+        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        {description && <p className="mt-0.5 text-sm text-blue-100">{description}</p>}
       </div>
       <div className="flex flex-col">
         {/* Calendar Section */}
-        <div className="p-5 flex flex-col items-center border-b border-gray-100">
-          {children}
-        </div>
+        <div className="flex flex-col items-center border-b border-gray-100 p-5">{children}</div>
         {/* Code Section */}
-        <div className="p-4 bg-slate-900">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-slate-400 font-medium uppercase tracking-wide">Usage</span>
+        <div className="bg-slate-900 p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Usage
+            </span>
             <CopyButton text={code} />
           </div>
-          <pre className="text-sm text-slate-300 font-mono whitespace-pre overflow-x-auto">
+          <pre className="overflow-x-auto whitespace-pre font-mono text-sm text-slate-300">
             <code>{code}</code>
           </pre>
         </div>
@@ -105,10 +122,12 @@ function ValueDisplay<TMode extends SelectionMode>({
   if (mode === "single") {
     const singleValue = value as DateTimeValue | null | undefined;
     return (
-      <div className="mt-4 w-full p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl text-sm border border-gray-200">
+      <div className="mt-4 w-full rounded-xl border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-3 text-sm">
         <div className="flex items-center justify-between">
           <span className="font-medium text-gray-600">Selected:</span>
-          <span className="text-blue-600 font-mono">{singleValue ? formatDateTime(singleValue) : "—"}</span>
+          <span className="font-mono text-blue-600">
+            {singleValue ? formatDateTime(singleValue) : "—"}
+          </span>
         </div>
       </div>
     );
@@ -116,14 +135,16 @@ function ValueDisplay<TMode extends SelectionMode>({
 
   const rangeValue = value as DateRangeValue | undefined;
   return (
-    <div className="mt-4 w-full p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl text-sm border border-gray-200 space-y-2">
+    <div className="mt-4 w-full space-y-2 rounded-xl border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-3 text-sm">
       <div className="flex items-center justify-between">
         <span className="font-medium text-gray-600">Start:</span>
-        <span className="text-blue-600 font-mono">{formatDateTime(rangeValue?.start ?? null)}</span>
+        <span className="font-mono text-blue-600">{formatDateTime(rangeValue?.start ?? null)}</span>
       </div>
       <div className="flex items-center justify-between">
         <span className="font-medium text-gray-600">End:</span>
-        <span className="text-emerald-600 font-mono">{formatDateTime(rangeValue?.end ?? null)}</span>
+        <span className="font-mono text-emerald-600">
+          {formatDateTime(rangeValue?.end ?? null)}
+        </span>
       </div>
     </div>
   );
@@ -166,7 +187,7 @@ function RangeCalendarDemo(): React.ReactElement {
         onDayClick={(date) => console.log("Range day clicked:", date)}
         onWeekClick={(week) => console.log("Week selected:", week.weekNumber)}
       />
-      <div className="mt-1 text-xs text-gray-500 text-center">
+      <div className="mt-1 text-center text-xs text-gray-500">
         Click week number to select entire week
       </div>
       <ValueDisplay value={value} mode="range" />
@@ -234,7 +255,7 @@ function MinMaxDatesDemo(): React.ReactElement {
         minDate={minDate}
         maxDate={maxDate}
       />
-      <div className="mt-2 text-xs text-gray-500 text-center">
+      <div className="mt-2 text-center text-xs text-gray-500">
         📅 {minDate.toLocaleDateString()} → {maxDate.toLocaleDateString()}
       </div>
       <ValueDisplay value={value} mode="single" />
@@ -279,7 +300,7 @@ function CustomYearsDemo(): React.ReactElement {
         onPrevYear={(year) => console.log("Prev year:", year)}
         onNextYear={(year) => console.log("Next year:", year)}
       />
-      <div className="mt-2 text-xs text-gray-500 text-center">
+      <div className="mt-2 text-center text-xs text-gray-500">
         📆 Years: {years[0]} – {years[years.length - 1]}
       </div>
       <ValueDisplay value={value} mode="single" />
@@ -301,9 +322,7 @@ function TimeWithLimitsDemo(): React.ReactElement {
         minTime={{ hours: 9, minutes: 0, seconds: 0 }}
         maxTime={{ hours: 17, minutes: 30, seconds: 0 }}
       />
-      <div className="mt-2 text-xs text-gray-500 text-center">
-        ⏰ Business hours: 09:00 – 17:30
-      </div>
+      <div className="mt-2 text-center text-xs text-gray-500">⏰ Business hours: 09:00 – 17:30</div>
       <ValueDisplay value={value} mode="single" />
     </>
   );
@@ -320,13 +339,17 @@ function CustomStylesDemo(): React.ReactElement {
     root: "inline-flex flex-col bg-white border border-gray-200 rounded-lg shadow-sm p-4",
     header: "flex items-center justify-between mb-4 border-b border-gray-100 pb-3",
     headerNavigation: "flex items-center gap-1",
-    headerNavigationButton: "p-1.5 h-7 w-7 bg-transparent hover:bg-gray-100 rounded-md text-gray-600 hover:text-gray-900 transition-colors",
+    headerNavigationButton:
+      "p-1.5 h-7 w-7 bg-transparent hover:bg-gray-100 rounded-md text-gray-600 hover:text-gray-900 transition-colors",
     headerTitle: "flex items-center gap-2",
-    headerMonthSelect: "px-2 py-1 h-8 border-0 bg-transparent font-medium text-gray-900 rounded-md cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-0",
-    headerYearSelect: "px-2 py-1 h-8 border-0 bg-transparent font-medium text-gray-900 rounded-md cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-0",
+    headerMonthSelect:
+      "px-2 py-1 h-8 border-0 bg-transparent font-medium text-gray-900 rounded-md cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-0",
+    headerYearSelect:
+      "px-2 py-1 h-8 border-0 bg-transparent font-medium text-gray-900 rounded-md cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-0",
     weekDayCell: "text-center text-xs font-medium text-gray-500 py-1 uppercase tracking-wide",
     weekDayCellWeekend: "text-gray-400",
-    dayButton: "w-9 h-9 rounded-md flex items-center justify-center text-sm font-normal relative z-10 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 hover:bg-gray-100",
+    dayButton:
+      "w-9 h-9 rounded-md flex items-center justify-center text-sm font-normal relative z-10 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 hover:bg-gray-100",
     dayToday: "bg-gray-100 font-semibold",
     daySelected: "bg-gray-900 text-white hover:bg-gray-800 font-medium",
     dayInRange: "bg-gray-200 rounded-none hover:bg-gray-300",
@@ -345,10 +368,10 @@ function CustomStylesDemo(): React.ReactElement {
 
   return (
     <>
-      <div className="flex gap-2 mb-4">
+      <div className="mb-4 flex gap-2">
         <button
           onClick={() => setMode("single")}
-          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
             mode === "single"
               ? "bg-gray-900 text-white"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -358,7 +381,7 @@ function CustomStylesDemo(): React.ReactElement {
         </button>
         <button
           onClick={() => setMode("range")}
-          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
             mode === "range"
               ? "bg-gray-900 text-white"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -419,7 +442,7 @@ function CustomLabelsDemo(): React.ReactElement {
         classNames={defaultClassNames}
         labels={customLabels}
       />
-      <div className="mt-2 text-xs text-gray-500 text-center">
+      <div className="mt-2 text-center text-xs text-gray-500">
         🏷️ Custom labels &amp; text nav via mergeLabels()
       </div>
       <ValueDisplay value={value} mode="single" />
@@ -440,7 +463,7 @@ function CustomDayRendererDemo(): React.ReactElement {
       <div className="relative">
         {defaultRender}
         {hasEvent && (
-          <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-red-500 rounded-full" />
+          <span className="absolute bottom-0.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-red-500" />
         )}
       </div>
     );
@@ -455,7 +478,7 @@ function CustomDayRendererDemo(): React.ReactElement {
         classNames={defaultClassNames}
         renderDay={renderDay}
       />
-      <div className="mt-2 text-xs text-gray-500 text-center">
+      <div className="mt-2 text-center text-xs text-gray-500">
         🔴 Red dots = events on days 5, 12, 15, 22, 28
       </div>
       <ValueDisplay value={value} mode="single" />
@@ -535,7 +558,7 @@ function BookingCalendarDemo(): React.ReactElement {
     if (isBooked || isPast) {
       return (
         <div className="relative">
-          <div className="opacity-40 line-through">{defaultRender}</div>
+          <div className="line-through opacity-40">{defaultRender}</div>
         </div>
       );
     }
@@ -553,7 +576,7 @@ function BookingCalendarDemo(): React.ReactElement {
         renderDay={renderDay}
         minDate={today}
       />
-      <div className="mt-2 text-xs text-gray-500 text-center">
+      <div className="mt-2 text-center text-xs text-gray-500">
         📅 Strikethrough = booked/unavailable
       </div>
       <ValueDisplay value={value} mode="single" />
@@ -582,16 +605,16 @@ function ControlledRangeDemo(): React.ReactElement {
 
   return (
     <>
-      <div className="flex gap-2 mb-3">
+      <div className="mb-3 flex gap-2">
         <button
           onClick={selectThisWeek}
-          className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700"
         >
           This Week
         </button>
         <button
           onClick={clearSelection}
-          className="px-3 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+          className="rounded-lg bg-gray-200 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-300"
         >
           Clear
         </button>
@@ -616,7 +639,7 @@ function AllCallbacksDemo(): React.ReactElement {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 w-full">
+    <div className="flex w-full flex-col gap-4 lg:flex-row">
       <div className="flex flex-col items-center">
         <Calendar<"single">
           mode="single"
@@ -637,24 +660,29 @@ function AllCallbacksDemo(): React.ReactElement {
           onNextMonth={(month, year) => addLog(`onNextMonth: ${month + 1}/${year}`)}
           onPrevYear={(year) => addLog(`onPrevYear: ${year}`)}
           onNextYear={(year) => addLog(`onNextYear: ${year}`)}
-          onTimeChange={(time, target) => addLog(`onTimeChange: ${time.hours}:${time.minutes} (${target})`)}
+          onTimeChange={(time, target) =>
+            addLog(`onTimeChange: ${time.hours}:${time.minutes} (${target})`)
+          }
           onHourSelect={(hour) => addLog(`onHourSelect: ${hour}`)}
           onMinuteSelect={(minute) => addLog(`onMinuteSelect: ${minute}`)}
         />
         <ValueDisplay value={value} mode="single" />
       </div>
-      <div className="flex-1 min-w-[280px]">
-        <div className="bg-gray-900 rounded-xl p-4 h-80 overflow-y-auto shadow-inner">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <h4 className="text-green-400 font-mono text-sm font-semibold">Event Log</h4>
+      <div className="min-w-[280px] flex-1">
+        <div className="h-80 overflow-y-auto rounded-xl bg-gray-900 p-4 shadow-inner">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
+            <h4 className="font-mono text-sm font-semibold text-green-400">Event Log</h4>
           </div>
           {logs.length === 0 ? (
-            <p className="text-gray-500 font-mono text-xs">Interact with the calendar...</p>
+            <p className="font-mono text-xs text-gray-500">Interact with the calendar...</p>
           ) : (
             <div className="space-y-1.5">
               {logs.map((log, i) => (
-                <div key={i} className="text-green-300 font-mono text-xs bg-gray-800 rounded px-2 py-1">
+                <div
+                  key={i}
+                  className="rounded bg-gray-800 px-2 py-1 font-mono text-xs text-green-300"
+                >
                   {log}
                 </div>
               ))}
@@ -672,32 +700,30 @@ function AllCallbacksDemo(): React.ReactElement {
 
 export default function App(): React.ReactElement {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-10 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-10">
+      <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <header className="text-center mb-12">
-          <div className="inline-flex items-center gap-3 mb-4">
+        <header className="mb-12 text-center">
+          <div className="mb-4 inline-flex items-center gap-3">
             <span className="text-5xl">📅</span>
             <div className="text-left">
-              <h1 className="text-4xl font-bold text-white">
-                React Calendar
-              </h1>
-              <p className="text-blue-400 font-mono text-sm">@vakac995/react-calendar</p>
+              <h1 className="text-4xl font-bold text-white">React Calendar</h1>
+              <p className="font-mono text-sm text-blue-400">@vakac995/react-calendar</p>
             </div>
           </div>
-          <p className="text-slate-400 max-w-2xl mx-auto">
-            A flexible, customizable React calendar component with date range and time picker support.
-            Fully typed with TypeScript generics.
+          <p className="mx-auto max-w-2xl text-slate-400">
+            A flexible, customizable React calendar component with date range and time picker
+            support. Fully typed with TypeScript generics.
           </p>
-          <div className="flex justify-center gap-3 mt-6">
+          <div className="mt-6 flex justify-center gap-3">
             <a
               href="https://www.npmjs.com/package/@vakac995/react-calendar"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M0 0v24h24V0H0zm6.672 19.992H3.996V6.996h2.676v13.002-.006zm6.672 0H10.68V10.668H8.004V6.996h8.016v3.672h-2.676v9.324zm6.66 0h-2.676V10.668h2.676v9.324z"/>
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M0 0v24h24V0H0zm6.672 19.992H3.996V6.996h2.676v13.002-.006zm6.672 0H10.68V10.668H8.004V6.996h8.016v3.672h-2.676v9.324zm6.66 0h-2.676V10.668h2.676v9.324z" />
               </svg>
               npm
             </a>
@@ -705,10 +731,10 @@ export default function App(): React.ReactElement {
               href="https://github.com/vakac995/react-calendar"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-600"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
               </svg>
               GitHub
             </a>
@@ -1008,9 +1034,9 @@ export default function App(): React.ReactElement {
         </div>
 
         {/* Footer */}
-        <footer className="text-center text-slate-500 text-sm mt-12 pb-8">
+        <footer className="mt-12 pb-8 text-center text-sm text-slate-500">
           <p>Built with React + TypeScript + Tailwind CSS</p>
-          <div className="mt-3 inline-flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg">
+          <div className="mt-3 inline-flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2">
             <code className="text-blue-400">npm install @vakac995/react-calendar</code>
             <CopyButton text="npm install @vakac995/react-calendar" />
           </div>

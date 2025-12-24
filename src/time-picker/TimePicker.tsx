@@ -1,4 +1,5 @@
-import React, { useCallback } from "react";
+import type React from "react";
+import { useCallback } from "react";
 import type { TimeValue, CalendarClassNames, CalendarLabels } from "../types";
 import { isTimeDisabled } from "../utils";
 import { TimeSelector } from "./TimeSelector";
@@ -81,11 +82,7 @@ export function TimePicker({
 
   return (
     <div className={classNames?.timeContainer}>
-      {label && (
-        <span className={classNames?.timeLabel}>
-          {label}
-        </span>
-      )}
+      {label && <span className={classNames?.timeLabel}>{label}</span>}
       <div className={classNames?.timeSelectors}>
         <TimeSelector
           value={time.hours}

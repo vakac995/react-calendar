@@ -172,8 +172,9 @@ export interface CalendarEventHandlers<TMode extends SelectionMode> {
 }
 
 /** Main Calendar Props */
-export interface CalendarProps<TMode extends SelectionMode = "single">
-  extends CalendarEventHandlers<TMode> {
+export interface CalendarProps<
+  TMode extends SelectionMode = "single",
+> extends CalendarEventHandlers<TMode> {
   /** Selection mode - single date or range */
   mode?: TMode;
   /** Current value */

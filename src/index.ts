@@ -24,7 +24,13 @@ export type {
 export { TimePicker, TimeSelector } from "./time-picker";
 
 // Default styles and labels
-export { defaultClassNames, mergeClassNames, extendClassNames, defaultLabels, mergeLabels } from "./styles";
+export {
+  defaultClassNames,
+  mergeClassNames,
+  extendClassNames,
+  defaultLabels,
+  mergeLabels,
+} from "./styles";
 
 // Utils
 export {

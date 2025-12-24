@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+demo-dist/
+
+# Cache
+.wrangler/
+
+# Lock files
+package-lock.json
+
+# Generated types
+*.d.ts

@@ -1,9 +1,5 @@
-import React, {
-  useState,
-  useMemo,
-  useCallback,
-  type MouseEvent,
-} from "react";
+import type React from "react";
+import { useState, useMemo, useCallback, type MouseEvent } from "react";
 
 import type {
   SelectionMode,
@@ -207,27 +203,24 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
         }
       }
     },
-    [
-      mode,
-      disabled,
-      showTime,
-      singleValue,
-      rangeValue,
-      rangeSelectState,
-      onDayClick,
-      updateValue,
-    ]
+    [mode, disabled, showTime, singleValue, rangeValue, rangeSelectState, onDayClick, updateValue]
   );
 
   // Navigation handlers
   const handlePrevMonth = useCallback(() => {
     setViewDate((prev) => addMonths(prev, -1));
-    onPrevMonth?.(currentMonth === 0 ? 11 : currentMonth - 1, currentMonth === 0 ? currentYear - 1 : currentYear);
+    onPrevMonth?.(
+      currentMonth === 0 ? 11 : currentMonth - 1,
+      currentMonth === 0 ? currentYear - 1 : currentYear
+    );
   }, [currentMonth, currentYear, onPrevMonth]);
 
   const handleNextMonth = useCallback(() => {
     setViewDate((prev) => addMonths(prev, 1));
-    onNextMonth?.(currentMonth === 11 ? 0 : currentMonth + 1, currentMonth === 11 ? currentYear + 1 : currentYear);
+    onNextMonth?.(
+      currentMonth === 11 ? 0 : currentMonth + 1,
+      currentMonth === 11 ? currentYear + 1 : currentYear
+    );
   }, [currentMonth, currentYear, onNextMonth]);
 
   const handlePrevYear = useCallback(() => {
@@ -347,7 +340,9 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           type="button"
           onClick={handlePrevYear}
           disabled={disabled}
-          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonPrev].filter(Boolean).join(" ")}
+          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonPrev]
+            .filter(Boolean)
+            .join(" ")}
           aria-label={labels.previousYear}
         >
           {labels.previousYearIcon ?? defaultLabels.previousYearIcon}
@@ -356,7 +351,9 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           type="button"
           onClick={handlePrevMonth}
           disabled={disabled}
-          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonPrev].filter(Boolean).join(" ")}
+          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonPrev]
+            .filter(Boolean)
+            .join(" ")}
           aria-label={labels.previousMonth}
         >
           {labels.previousMonthIcon ?? defaultLabels.previousMonthIcon}
@@ -395,7 +392,9 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           type="button"
           onClick={handleNextMonth}
           disabled={disabled}
-          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonNext].filter(Boolean).join(" ")}
+          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonNext]
+            .filter(Boolean)
+            .join(" ")}
           aria-label={labels.nextMonth}
         >
           {labels.nextMonthIcon ?? defaultLabels.nextMonthIcon}
@@ -404,7 +403,9 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           type="button"
           onClick={handleNextYear}
           disabled={disabled}
-          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonNext].filter(Boolean).join(" ")}
+          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonNext]
+            .filter(Boolean)
+            .join(" ")}
           aria-label={labels.nextYear}
         >
           {labels.nextYearIcon ?? defaultLabels.nextYearIcon}
@@ -414,14 +415,17 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
   );
 
   // Time pickers
-  const timePickerPositionClass = timePosition === "top"
-    ? classNames?.timePickerWrapperTop
-    : timePosition === "bottom"
-    ? classNames?.timePickerWrapperBottom
-    : classNames?.timePickerWrapperSide;
+  const timePickerPositionClass =
+    timePosition === "top"
+      ? classNames?.timePickerWrapperTop
+      : timePosition === "bottom"
+        ? classNames?.timePickerWrapperBottom
+        : classNames?.timePickerWrapperSide;
 
   const timePickers = showTime && (
-    <div className={[classNames?.timePickerWrapper, timePickerPositionClass].filter(Boolean).join(" ")}>
+    <div
+      className={[classNames?.timePickerWrapper, timePickerPositionClass].filter(Boolean).join(" ")}
+    >
       {mode === "single" ? (
         <TimePicker
           time={singleValue?.time ?? { hours: 0, minutes: 0, seconds: 0 }}
@@ -488,8 +492,10 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
     <div
       className={[
         classNames?.root,
-        timePosition === "side" ? classNames?.rootSideLayout : classNames?.rootDefaultLayout
-      ].filter(Boolean).join(" ")}
+        timePosition === "side" ? classNames?.rootSideLayout : classNames?.rootDefaultLayout,
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       <div className={classNames?.calendarWrapper}>
         {/* Header */}
@@ -499,17 +505,23 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
         {timePosition === "top" && timePickers}
 
         {/* Week day headers */}
-        <div className={classNames?.weekDaysRow} style={{ gridTemplateColumns: showWeekNumbers ? `auto repeat(${DAYS_IN_WEEK}, 1fr)` : `repeat(${DAYS_IN_WEEK}, 1fr)` }}>
+        <div
+          className={classNames?.weekDaysRow}
+          style={{
+            gridTemplateColumns: showWeekNumbers
+              ? `auto repeat(${DAYS_IN_WEEK}, 1fr)`
+              : `repeat(${DAYS_IN_WEEK}, 1fr)`,
+          }}
+        >
           {showWeekNumbers && <div className={classNames?.weekNumberPlaceholder} />}
           {orderedDays.map((day, index) => {
             const isWeekend = (index + weekStartsOn) % 7 === 0 || (index + weekStartsOn) % 7 === 6;
             return (
               <div
                 key={day}
-                className={[
-                  classNames?.weekDayCell,
-                  isWeekend && classNames?.weekDayCellWeekend
-                ].filter(Boolean).join(" ")}
+                className={[classNames?.weekDayCell, isWeekend && classNames?.weekDayCellWeekend]
+                  .filter(Boolean)
+                  .join(" ")}
               >
                 {day}
               </div>
@@ -523,14 +535,20 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
             <div
               key={week.weekNumber + "-" + week.startDate.getTime()}
               className={classNames?.week}
-              style={{ gridTemplateColumns: showWeekNumbers ? `auto repeat(${DAYS_IN_WEEK}, 1fr)` : `repeat(${DAYS_IN_WEEK}, 1fr)` }}
+              style={{
+                gridTemplateColumns: showWeekNumbers
+                  ? `auto repeat(${DAYS_IN_WEEK}, 1fr)`
+                  : `repeat(${DAYS_IN_WEEK}, 1fr)`,
+              }}
             >
               {showWeekNumbers && (
                 <button
                   type="button"
                   onClick={(e) => handleWeekClick(week, e)}
                   disabled={disabled}
-                  className={[classNames?.weekNumber, classNames?.weekNumberCell].filter(Boolean).join(" ")}
+                  className={[classNames?.weekNumber, classNames?.weekNumberCell]
+                    .filter(Boolean)
+                    .join(" ")}
                 >
                   {week.weekNumber}
                 </button>
@@ -553,13 +571,23 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
                       classNames?.dayButton,
                       day.isToday && !day.isSelected && classNames?.dayToday,
                       day.isSelected && mode === "single" && classNames?.daySelected,
-                      day.isInRange && !day.isRangeStart && !day.isRangeEnd && day.isCurrentMonth && classNames?.dayInRange,
+                      day.isInRange &&
+                        !day.isRangeStart &&
+                        !day.isRangeEnd &&
+                        day.isCurrentMonth &&
+                        classNames?.dayInRange,
                       day.isRangeStart && classNames?.dayRangeStart,
                       day.isRangeEnd && classNames?.dayRangeEnd,
                       day.isDisabled && classNames?.dayDisabled,
                       !day.isCurrentMonth && classNames?.dayOutsideMonth,
-                      isWeekend && day.isCurrentMonth && !day.isSelected && !day.isInRange && classNames?.dayWeekend
-                    ].filter(Boolean).join(" ")}
+                      isWeekend &&
+                        day.isCurrentMonth &&
+                        !day.isSelected &&
+                        !day.isInRange &&
+                        classNames?.dayWeekend,
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                   >
                     {day.date.getDate()}
                   </button>
@@ -568,21 +596,28 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
                 const content = renderDay ? renderDay(day, dayButton) : dayButton;
 
                 return (
-                  <div
-                    key={day.date.getTime()}
-                    className={classNames?.day}
-                  >
+                  <div key={day.date.getTime()} className={classNames?.day}>
                     {/* Range background connector */}
                     {showRangeBackground && (
                       <div
                         className={[
                           classNames?.dayRangeBackground,
-                          day.isRangeStart && !day.isRangeEnd && classNames?.dayRangeBackgroundStart,
+                          day.isRangeStart &&
+                            !day.isRangeEnd &&
+                            classNames?.dayRangeBackgroundStart,
                           day.isRangeEnd && !day.isRangeStart && classNames?.dayRangeBackgroundEnd,
-                          !day.isRangeStart && !day.isRangeEnd && classNames?.dayRangeBackgroundMiddle,
-                          isFirstDayOfWeek && !day.isRangeStart && classNames?.dayRangeBackgroundFirstOfWeek,
-                          isLastDayOfWeek && !day.isRangeEnd && classNames?.dayRangeBackgroundLastOfWeek
-                        ].filter(Boolean).join(" ")}
+                          !day.isRangeStart &&
+                            !day.isRangeEnd &&
+                            classNames?.dayRangeBackgroundMiddle,
+                          isFirstDayOfWeek &&
+                            !day.isRangeStart &&
+                            classNames?.dayRangeBackgroundFirstOfWeek,
+                          isLastDayOfWeek &&
+                            !day.isRangeEnd &&
+                            classNames?.dayRangeBackgroundLastOfWeek,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
                         style={day.isRangeStart && day.isRangeEnd ? { display: "none" } : undefined}
                       />
                     )}
