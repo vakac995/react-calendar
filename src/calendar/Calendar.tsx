@@ -274,8 +274,28 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
     (week: WeekData, event: MouseEvent<HTMLButtonElement>) => {
       if (disabled) return;
       onWeekClick?.(week, event);
+
+      // In range mode, select the entire week
+      if (mode === "range" && week.days.length > 0) {
+        const firstDay = week.days[0];
+        const lastDay = week.days[week.days.length - 1];
+        if (!firstDay || !lastDay) return;
+
+        const newValue: DateRangeValue = {
+          start: {
+            date: firstDay.date,
+            time: showTime ? { hours: 0, minutes: 0, seconds: 0 } : undefined,
+          },
+          end: {
+            date: lastDay.date,
+            time: showTime ? { hours: 23, minutes: 59, seconds: 59 } : undefined,
+          },
+        };
+        updateValue(newValue as CalendarValue<TMode>);
+        setRangeSelectState("start");
+      }
     },
-    [disabled, onWeekClick]
+    [disabled, onWeekClick, mode, showTime, updateValue]
   );
 
   // Note: Week and day navigation handlers can be added here if needed

@@ -149,8 +149,13 @@ function RangeCalendarDemo(): React.ReactElement {
         value={value}
         onChange={(v) => setValue(v)}
         classNames={defaultClassNames}
+        showWeekNumbers
         onDayClick={(date) => console.log("Range day clicked:", date)}
+        onWeekClick={(week) => console.log("Week selected:", week.weekNumber)}
       />
+      <div className="mt-1 text-xs text-gray-500 text-center">
+        Click week number to select entire week
+      </div>
       <ValueDisplay value={value} mode="range" />
     </>
   );
