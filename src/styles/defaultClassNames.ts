@@ -1,0 +1,107 @@
+import type { CalendarClassNames } from "../types";
+
+/**
+ * Default Tailwind CSS class names for the Calendar component.
+ * Import and pass to the `classNames` prop if you want the default styling.
+ *
+ * @example
+ * ```tsx
+ * import { Calendar, defaultClassNames } from '@vakac995/calendar';
+ *
+ * <Calendar classNames={defaultClassNames} />
+ * ```
+ */
+export const defaultClassNames: CalendarClassNames = {
+  // Root container
+  root: "inline-flex bg-white rounded-lg shadow-lg p-4",
+  rootDefaultLayout: "flex-col",
+  rootSideLayout: "flex-row gap-4",
+  calendarWrapper: "flex flex-col",
+
+  // Header
+  header: "flex items-center justify-between mb-4",
+  headerNavigation: "flex items-center gap-1",
+  headerNavigationButton: "p-1.5 rounded hover:bg-gray-100 disabled:opacity-50",
+  headerNavigationButtonPrev: "",
+  headerNavigationButtonNext: "",
+  headerTitle: "flex items-center gap-2",
+  headerMonthSelect:
+    "px-2 py-1 rounded border border-gray-200 bg-white text-sm font-medium hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500",
+  headerYearSelect:
+    "px-2 py-1 rounded border border-gray-200 bg-white text-sm font-medium hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500",
+
+  // Week days header
+  weekDaysRow: "grid gap-1 mb-2",
+  weekDayCell: "text-center text-sm font-medium text-gray-500 py-1",
+  weekDayCellWeekend: "text-red-400",
+  weekNumberPlaceholder: "w-8",
+
+  // Calendar body
+  body: "flex flex-col gap-1",
+  week: "grid gap-1",
+  weekNumber:
+    "w-8 text-xs text-gray-400 flex items-center justify-center hover:bg-gray-100 rounded cursor-pointer",
+  weekNumberCell: "",
+
+  // Day cells
+  day: "flex justify-center relative",
+  dayButton:
+    "w-9 h-9 rounded-full flex items-center justify-center text-sm relative z-10 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 hover:bg-gray-100",
+  dayToday: "border border-blue-500",
+  daySelected: "bg-blue-500 text-white hover:bg-blue-600",
+  dayInRange: "bg-blue-200",
+  dayRangeStart: "bg-blue-500 text-white hover:bg-blue-600",
+  dayRangeEnd: "bg-blue-500 text-white hover:bg-blue-600",
+  dayDisabled: "opacity-50 cursor-not-allowed hover:bg-transparent",
+  dayOutsideMonth: "text-gray-300",
+  dayWeekend: "text-red-500",
+  dayRangeBackground: "absolute inset-y-0 bg-blue-200",
+  dayRangeBackgroundStart: "left-1/2 right-0",
+  dayRangeBackgroundEnd: "left-0 right-1/2",
+  dayRangeBackgroundMiddle: "left-0 right-0",
+  dayRangeBackgroundFirstOfWeek: "rounded-l-full",
+  dayRangeBackgroundLastOfWeek: "rounded-r-full",
+
+  // Time picker
+  timePickerWrapper: "flex gap-4",
+  timePickerWrapperTop: "flex-row justify-center mb-4",
+  timePickerWrapperBottom: "flex-row justify-center mt-4 pt-4 border-t",
+  timePickerWrapperSide: "flex-col border-l pl-4 items-center",
+  timeContainer: "flex flex-col gap-2",
+  timeLabel: "text-sm font-medium text-gray-700",
+  timeSelectors: "flex items-center gap-1",
+  timeSelector: "flex flex-col items-center",
+  timeSelectorLabel: "text-xs text-gray-500 mb-1 font-medium",
+  timeSelectorScroll:
+    "h-32 w-12 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 border border-gray-200 rounded-md bg-white",
+  timeSelectorItem:
+    "w-full py-1.5 text-center text-sm transition-colors hover:bg-gray-100 focus:outline-none focus:bg-gray-100",
+  timeSelectorItemSelected: "bg-blue-500 text-white hover:bg-blue-600 focus:bg-blue-600",
+  timeSelectorItemDisabled: "opacity-40 cursor-not-allowed hover:bg-transparent",
+  timeSeparator: "text-xl text-gray-400 mt-5",
+};
+
+/**
+ * Helper to merge custom classNames with defaults.
+ * Custom classes will be appended to (not replace) default classes.
+ *
+ * @example
+ * ```tsx
+ * import { Calendar, defaultClassNames, mergeClassNames } from '@vakac995/calendar';
+ *
+ * const customClassNames = { root: 'my-custom-root', daySelected: 'bg-green-500' };
+ * <Calendar classNames={mergeClassNames(defaultClassNames, customClassNames)} />
+ * ```
+ */
+export function mergeClassNames(
+  base: CalendarClassNames,
+  custom: CalendarClassNames
+): CalendarClassNames {
+  const result: CalendarClassNames = { ...base };
+  for (const key of Object.keys(custom) as (keyof CalendarClassNames)[]) {
+    if (custom[key]) {
+      result[key] = base[key] ? `${base[key]} ${custom[key]}` : custom[key];
+    }
+  }
+  return result;
+}

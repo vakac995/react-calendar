@@ -65,6 +65,9 @@ export interface MonthData {
 export interface CalendarClassNames {
   // Root
   root?: string;
+  rootDefaultLayout?: string;
+  rootSideLayout?: string;
+  calendarWrapper?: string;
   // Header
   header?: string;
   headerNavigation?: string;
@@ -78,6 +81,7 @@ export interface CalendarClassNames {
   weekDaysRow?: string;
   weekDayCell?: string;
   weekDayCellWeekend?: string;
+  weekNumberPlaceholder?: string;
   // Calendar body
   body?: string;
   week?: string;
@@ -94,7 +98,17 @@ export interface CalendarClassNames {
   dayDisabled?: string;
   dayOutsideMonth?: string;
   dayWeekend?: string;
+  dayRangeBackground?: string;
+  dayRangeBackgroundStart?: string;
+  dayRangeBackgroundEnd?: string;
+  dayRangeBackgroundMiddle?: string;
+  dayRangeBackgroundFirstOfWeek?: string;
+  dayRangeBackgroundLastOfWeek?: string;
   // Time picker
+  timePickerWrapper?: string;
+  timePickerWrapperTop?: string;
+  timePickerWrapperBottom?: string;
+  timePickerWrapperSide?: string;
   timeContainer?: string;
   timeLabel?: string;
   timeSelectors?: string;

@@ -22,6 +22,9 @@ export type {
 // Time Picker components
 export { TimePicker, TimeSelector } from "./time-picker";
 
+// Default styles
+export { defaultClassNames, mergeClassNames } from "./styles";
+
 // Utils
 export {
   cn,

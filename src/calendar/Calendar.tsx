@@ -18,7 +18,7 @@ import type {
 } from "../types";
 
 import { DAYS_IN_WEEK, MONTHS, SHORT_DAYS } from "../constants";
-import { cn, getDefaultYears, isSameDay, addMonths, getMonthData } from "../utils";
+import { getDefaultYears, isSameDay, addMonths, getMonthData } from "../utils";
 import { TimePicker } from "../time-picker";
 
 // ============================================================================
@@ -310,17 +310,13 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
 
   // Default header
   const defaultHeader = (
-    <div className={cn("flex items-center justify-between mb-4", classNames?.header)}>
-      <div className={cn("flex items-center gap-1", classNames?.headerNavigation)}>
+    <div className={classNames?.header}>
+      <div className={classNames?.headerNavigation}>
         <button
           type="button"
           onClick={handlePrevYear}
           disabled={disabled}
-          className={cn(
-            "p-1.5 rounded hover:bg-gray-100 disabled:opacity-50",
-            classNames?.headerNavigationButton,
-            classNames?.headerNavigationButtonPrev
-          )}
+          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonPrev].filter(Boolean).join(" ")}
           aria-label="Previous year"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -331,11 +327,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           type="button"
           onClick={handlePrevMonth}
           disabled={disabled}
-          className={cn(
-            "p-1.5 rounded hover:bg-gray-100 disabled:opacity-50",
-            classNames?.headerNavigationButton,
-            classNames?.headerNavigationButtonPrev
-          )}
+          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonPrev].filter(Boolean).join(" ")}
           aria-label="Previous month"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -344,16 +336,12 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
         </button>
       </div>
 
-      <div className={cn("flex items-center gap-2", classNames?.headerTitle)}>
+      <div className={classNames?.headerTitle}>
         <select
           value={currentMonth}
           onChange={(e) => handleMonthSelectChange(Number(e.target.value))}
           disabled={disabled}
-          className={cn(
-            "px-2 py-1 rounded border border-gray-200 bg-white text-sm font-medium",
-            "hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500",
-            classNames?.headerMonthSelect
-          )}
+          className={classNames?.headerMonthSelect}
         >
           {MONTHS.map((month, index) => (
             <option key={month} value={index}>
@@ -365,11 +353,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           value={currentYear}
           onChange={(e) => handleYearSelectChange(Number(e.target.value))}
           disabled={disabled}
-          className={cn(
-            "px-2 py-1 rounded border border-gray-200 bg-white text-sm font-medium",
-            "hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500",
-            classNames?.headerYearSelect
-          )}
+          className={classNames?.headerYearSelect}
         >
           {years.map((year) => (
             <option key={year} value={year}>
@@ -379,16 +363,12 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
         </select>
       </div>
 
-      <div className={cn("flex items-center gap-1", classNames?.headerNavigation)}>
+      <div className={classNames?.headerNavigation}>
         <button
           type="button"
           onClick={handleNextMonth}
           disabled={disabled}
-          className={cn(
-            "p-1.5 rounded hover:bg-gray-100 disabled:opacity-50",
-            classNames?.headerNavigationButton,
-            classNames?.headerNavigationButtonNext
-          )}
+          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonNext].filter(Boolean).join(" ")}
           aria-label="Next month"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -399,11 +379,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           type="button"
           onClick={handleNextYear}
           disabled={disabled}
-          className={cn(
-            "p-1.5 rounded hover:bg-gray-100 disabled:opacity-50",
-            classNames?.headerNavigationButton,
-            classNames?.headerNavigationButtonNext
-          )}
+          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonNext].filter(Boolean).join(" ")}
           aria-label="Next year"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -415,14 +391,14 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
   );
 
   // Time pickers
+  const timePickerPositionClass = timePosition === "top"
+    ? classNames?.timePickerWrapperTop
+    : timePosition === "bottom"
+    ? classNames?.timePickerWrapperBottom
+    : classNames?.timePickerWrapperSide;
+
   const timePickers = showTime && (
-    <div
-      className={cn(
-        "flex gap-4",
-        timePosition === "side" ? "flex-col" : "flex-row justify-center",
-        timePosition === "top" ? "mb-4" : timePosition === "bottom" ? "mt-4 pt-4 border-t" : ""
-      )}
-    >
+    <div className={[classNames?.timePickerWrapper, timePickerPositionClass].filter(Boolean).join(" ")}>
       {mode === "single" ? (
         <TimePicker
           time={singleValue?.time ?? { hours: 0, minutes: 0, seconds: 0 }}
@@ -484,13 +460,12 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
 
   return (
     <div
-      className={cn(
-        "inline-flex bg-white rounded-lg shadow-lg p-4",
-        timePosition === "side" ? "flex-row gap-4" : "flex-col",
-        classNames?.root
-      )}
+      className={[
+        classNames?.root,
+        timePosition === "side" ? classNames?.rootSideLayout : classNames?.rootDefaultLayout
+      ].filter(Boolean).join(" ")}
     >
-      <div className="flex flex-col">
+      <div className={classNames?.calendarWrapper}>
         {/* Header */}
         {renderHeader ? renderHeader(headerRenderProps) : defaultHeader}
 
@@ -498,19 +473,17 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
         {timePosition === "top" && timePickers}
 
         {/* Week day headers */}
-        <div className={cn("grid gap-1 mb-2", classNames?.weekDaysRow)} style={{ gridTemplateColumns: showWeekNumbers ? `auto repeat(${DAYS_IN_WEEK}, 1fr)` : `repeat(${DAYS_IN_WEEK}, 1fr)` }}>
-          {showWeekNumbers && <div className="w-8" />}
+        <div className={classNames?.weekDaysRow} style={{ gridTemplateColumns: showWeekNumbers ? `auto repeat(${DAYS_IN_WEEK}, 1fr)` : `repeat(${DAYS_IN_WEEK}, 1fr)` }}>
+          {showWeekNumbers && <div className={classNames?.weekNumberPlaceholder} />}
           {orderedDays.map((day, index) => {
             const isWeekend = (index + weekStartsOn) % 7 === 0 || (index + weekStartsOn) % 7 === 6;
             return (
               <div
                 key={day}
-                className={cn(
-                  "text-center text-sm font-medium text-gray-500 py-1",
-                  isWeekend && "text-red-400",
+                className={[
                   classNames?.weekDayCell,
                   isWeekend && classNames?.weekDayCellWeekend
-                )}
+                ].filter(Boolean).join(" ")}
               >
                 {day}
               </div>
@@ -519,11 +492,11 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
         </div>
 
         {/* Calendar body */}
-        <div className={cn("flex flex-col gap-1", classNames?.body)}>
+        <div className={classNames?.body}>
           {monthData.weeks.map((week) => (
             <div
               key={week.weekNumber + "-" + week.startDate.getTime()}
-              className={cn("grid gap-1", classNames?.week)}
+              className={classNames?.week}
               style={{ gridTemplateColumns: showWeekNumbers ? `auto repeat(${DAYS_IN_WEEK}, 1fr)` : `repeat(${DAYS_IN_WEEK}, 1fr)` }}
             >
               {showWeekNumbers && (
@@ -531,12 +504,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
                   type="button"
                   onClick={(e) => handleWeekClick(week, e)}
                   disabled={disabled}
-                  className={cn(
-                    "w-8 text-xs text-gray-400 flex items-center justify-center",
-                    "hover:bg-gray-100 rounded cursor-pointer",
-                    classNames?.weekNumber,
-                    classNames?.weekNumberCell
-                  )}
+                  className={[classNames?.weekNumber, classNames?.weekNumberCell].filter(Boolean).join(" ")}
                 >
                   {week.weekNumber}
                 </button>
@@ -555,27 +523,17 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
                     type="button"
                     onClick={(e) => handleDayClick(day, e)}
                     disabled={day.isDisabled || disabled}
-                    className={cn(
-                      "w-9 h-9 rounded-full flex items-center justify-center text-sm relative z-10",
-                      "transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
-                      !day.isCurrentMonth && "text-gray-300",
-                      day.isCurrentMonth && !day.isSelected && !day.isInRange && "hover:bg-gray-100",
-                      day.isToday && !day.isSelected && "border border-blue-500",
-                      day.isInRange && !day.isRangeStart && !day.isRangeEnd && day.isCurrentMonth && "bg-blue-200",
-                      (day.isRangeStart || day.isRangeEnd) && "bg-blue-500 text-white hover:bg-blue-600",
-                      day.isSelected && mode === "single" && "bg-blue-500 text-white hover:bg-blue-600",
-                      day.isDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent",
-                      isWeekend && day.isCurrentMonth && !day.isSelected && !day.isInRange && "text-red-500",
+                    className={[
                       classNames?.dayButton,
-                      day.isToday && classNames?.dayToday,
-                      day.isSelected && classNames?.daySelected,
-                      day.isInRange && classNames?.dayInRange,
+                      day.isToday && !day.isSelected && classNames?.dayToday,
+                      day.isSelected && mode === "single" && classNames?.daySelected,
+                      day.isInRange && !day.isRangeStart && !day.isRangeEnd && day.isCurrentMonth && classNames?.dayInRange,
                       day.isRangeStart && classNames?.dayRangeStart,
                       day.isRangeEnd && classNames?.dayRangeEnd,
                       day.isDisabled && classNames?.dayDisabled,
                       !day.isCurrentMonth && classNames?.dayOutsideMonth,
-                      isWeekend && classNames?.dayWeekend
-                    )}
+                      isWeekend && day.isCurrentMonth && !day.isSelected && !day.isInRange && classNames?.dayWeekend
+                    ].filter(Boolean).join(" ")}
                   >
                     {day.date.getDate()}
                   </button>
@@ -586,23 +544,20 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
                 return (
                   <div
                     key={day.date.getTime()}
-                    className={cn(
-                      "flex justify-center relative",
-                      classNames?.day
-                    )}
+                    className={classNames?.day}
                   >
                     {/* Range background connector */}
                     {showRangeBackground && (
                       <div
-                        className={cn(
-                          "absolute inset-y-0 bg-blue-200",
-                          day.isRangeStart && !day.isRangeEnd && "left-1/2 right-0",
-                          day.isRangeEnd && !day.isRangeStart && "left-0 right-1/2",
-                          day.isRangeStart && day.isRangeEnd && "hidden",
-                          !day.isRangeStart && !day.isRangeEnd && "left-0 right-0",
-                          isFirstDayOfWeek && !day.isRangeStart && "rounded-l-full",
-                          isLastDayOfWeek && !day.isRangeEnd && "rounded-r-full"
-                        )}
+                        className={[
+                          classNames?.dayRangeBackground,
+                          day.isRangeStart && !day.isRangeEnd && classNames?.dayRangeBackgroundStart,
+                          day.isRangeEnd && !day.isRangeStart && classNames?.dayRangeBackgroundEnd,
+                          !day.isRangeStart && !day.isRangeEnd && classNames?.dayRangeBackgroundMiddle,
+                          isFirstDayOfWeek && !day.isRangeStart && classNames?.dayRangeBackgroundFirstOfWeek,
+                          isLastDayOfWeek && !day.isRangeEnd && classNames?.dayRangeBackgroundLastOfWeek
+                        ].filter(Boolean).join(" ")}
+                        style={day.isRangeStart && day.isRangeEnd ? { display: "none" } : undefined}
                       />
                     )}
                     {content}
@@ -618,9 +573,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
       </div>
 
       {/* Time picker - side position */}
-      {timePosition === "side" && (
-        <div className="border-l pl-4 flex items-center">{timePickers}</div>
-      )}
+      {timePosition === "side" && timePickers}
     </div>
   );
 }

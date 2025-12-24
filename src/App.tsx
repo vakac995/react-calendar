@@ -6,7 +6,8 @@ import {
   type DateTimeValue,
   type DateRangeValue,
   type DayCell,
-  type CalendarClassNames,
+  defaultClassNames,
+  mergeClassNames,
 } from "./index";
 
 // ============================================================================
@@ -126,6 +127,7 @@ function BasicCalendarDemo(): React.ReactElement {
         mode="single"
         value={value}
         onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
         onDayClick={(date) => console.log("Day clicked:", date)}
         onMonthSelect={(month, year) => console.log("Month selected:", month, year)}
         onYearChange={(year) => console.log("Year changed:", year)}
@@ -144,6 +146,7 @@ function RangeCalendarDemo(): React.ReactElement {
         mode="range"
         value={value}
         onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
         onDayClick={(date) => console.log("Range day clicked:", date)}
       />
       <ValueDisplay value={value} mode="range" />
@@ -160,6 +163,7 @@ function CalendarWithTimeDemo(): React.ReactElement {
         mode="single"
         value={value}
         onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
         showTime
         showSeconds
         timePosition="bottom"
@@ -182,6 +186,7 @@ function RangeWithTimeDemo(): React.ReactElement {
         mode="range"
         value={value}
         onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
         showTime
         showSeconds
         timePosition="side"
@@ -205,6 +210,7 @@ function MinMaxDatesDemo(): React.ReactElement {
         mode="single"
         value={value}
         onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
         minDate={minDate}
         maxDate={maxDate}
       />
@@ -225,6 +231,7 @@ function WeekStartMondayDemo(): React.ReactElement {
         mode="single"
         value={value}
         onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
         weekStartsOn={1}
         showWeekNumbers
         onWeekClick={(week, _e) => console.log("Week clicked:", week)}
@@ -246,6 +253,7 @@ function CustomYearsDemo(): React.ReactElement {
         mode="single"
         value={value}
         onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
         years={years}
         onYearChange={(year) => console.log("Custom year changed:", year)}
         onPrevYear={(year) => console.log("Prev year:", year)}
@@ -268,6 +276,7 @@ function TimeWithLimitsDemo(): React.ReactElement {
         mode="single"
         value={value}
         onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
         showTime
         minTime={{ hours: 9, minutes: 0, seconds: 0 }}
         maxTime={{ hours: 17, minutes: 30, seconds: 0 }}
@@ -283,7 +292,7 @@ function TimeWithLimitsDemo(): React.ReactElement {
 function CustomStylesDemo(): React.ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
-  const customClassNames: CalendarClassNames = {
+  const customClassNames = mergeClassNames(defaultClassNames, {
     root: "bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200",
     header: "bg-purple-100 rounded-lg p-2 -m-2 mb-2",
     headerNavigationButton: "text-purple-600 hover:bg-purple-200",
@@ -297,7 +306,7 @@ function CustomStylesDemo(): React.ReactElement {
     dayWeekend: "text-pink-600",
     dayDisabled: "opacity-30",
     dayOutsideMonth: "text-gray-300",
-  };
+  });
 
   return (
     <>
@@ -337,6 +346,7 @@ function CustomDayRendererDemo(): React.ReactElement {
         mode="single"
         value={value}
         onChange={(v) => setValue(v)}
+        classNames={defaultClassNames}
         renderDay={renderDay}
       />
       <div className="mt-2 text-xs text-gray-500 text-center">
@@ -365,6 +375,7 @@ function AllCallbacksDemo(): React.ReactElement {
             setValue(v);
             addLog(`onChange: ${v?.date.toLocaleDateString() ?? "null"}`);
           }}
+          classNames={defaultClassNames}
           showTime
           showWeekNumbers
           onDayClick={(date) => addLog(`onDayClick: ${date.toLocaleDateString()}`)}

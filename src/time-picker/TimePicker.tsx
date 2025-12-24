@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import type { TimeValue, CalendarClassNames } from "../types";
-import { cn, isTimeDisabled } from "../utils";
+import { isTimeDisabled } from "../utils";
 import { TimeSelector } from "./TimeSelector";
 
 interface TimePickerProps {
@@ -78,13 +78,13 @@ export function TimePicker({
   );
 
   return (
-    <div className={cn("flex flex-col gap-2", classNames?.timeContainer)}>
+    <div className={classNames?.timeContainer}>
       {label && (
-        <span className={cn("text-sm font-medium text-gray-700", classNames?.timeLabel)}>
+        <span className={classNames?.timeLabel}>
           {label}
         </span>
       )}
-      <div className={cn("flex items-center gap-1", classNames?.timeSelectors)}>
+      <div className={classNames?.timeSelectors}>
         <TimeSelector
           value={time.hours}
           max={23}
@@ -98,7 +98,7 @@ export function TimePicker({
             onHourSelect?.(h, target);
           }}
         />
-        <span className={cn("text-xl text-gray-400 mt-5", classNames?.timeSeparator)}>:</span>
+        <span className={classNames?.timeSeparator}>:</span>
         <TimeSelector
           value={time.minutes}
           max={59}
@@ -114,7 +114,7 @@ export function TimePicker({
         />
         {showSeconds && (
           <>
-            <span className={cn("text-xl text-gray-400 mt-5", classNames?.timeSeparator)}>:</span>
+            <span className={classNames?.timeSeparator}>:</span>
             <TimeSelector
               value={time.seconds}
               max={59}

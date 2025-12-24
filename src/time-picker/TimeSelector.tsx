@@ -1,6 +1,5 @@
 import React, { useMemo, useCallback } from "react";
 import type { CalendarClassNames } from "../types";
-import { cn } from "../utils";
 
 interface TimeSelectorProps {
   value: number;
@@ -41,22 +40,11 @@ export function TimeSelector({
   );
 
   return (
-    <div className={cn("flex flex-col items-center", classNames?.timeSelector)}>
-      <span
-        className={cn(
-          "text-xs text-gray-500 mb-1 font-medium",
-          classNames?.timeSelectorLabel
-        )}
-      >
+    <div className={classNames?.timeSelector}>
+      <span className={classNames?.timeSelectorLabel}>
         {label}
       </span>
-      <div
-        className={cn(
-          "h-32 w-12 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300",
-          "border border-gray-200 rounded-md bg-white",
-          classNames?.timeSelectorScroll
-        )}
-      >
+      <div className={classNames?.timeSelectorScroll}>
         {items.map((item) => {
           const itemDisabled = disabled || isDisabled?.(item);
           const isSelected = item === value;
@@ -67,15 +55,13 @@ export function TimeSelector({
               type="button"
               disabled={itemDisabled}
               onClick={() => handleClick(item)}
-              className={cn(
-                "w-full py-1.5 text-center text-sm transition-colors",
-                "hover:bg-gray-100 focus:outline-none focus:bg-gray-100",
-                isSelected && "bg-blue-500 text-white hover:bg-blue-600 focus:bg-blue-600",
-                itemDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent",
+              className={[
                 classNames?.timeSelectorItem,
                 isSelected && classNames?.timeSelectorItemSelected,
-                itemDisabled && classNames?.timeSelectorItemDisabled
-              )}
+                itemDisabled && classNames?.timeSelectorItemDisabled,
+              ]
+                .filter(Boolean)
+                .join(" ")}
             >
               {String(item).padStart(2, "0")}
             </button>
