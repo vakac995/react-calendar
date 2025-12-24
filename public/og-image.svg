@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <!-- OG Image - 1200x630 standard for social sharing -->
+  
+  <!-- Embed Google Fonts for consistent rendering -->
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap');
+    </style>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18181B"/>
+      <stop offset="100%" stop-color="#09090B"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="1200" height="630" fill="#09090B"/>
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  
+  <!-- Decorative rings -->
+  <circle cx="220" cy="315" r="180" fill="none" stroke="#27272A" stroke-width="1" opacity="0.3"/>
+  <circle cx="220" cy="315" r="155" fill="none" stroke="#3F3F46" stroke-width="2" opacity="0.4"/>
+  <circle cx="220" cy="315" r="130" fill="none" stroke="#52525B" stroke-width="2" opacity="0.5"/>
+  
+  <!-- Time arc -->
+  <circle 
+    cx="220" 
+    cy="315" 
+    r="110" 
+    stroke="#71717A" 
+    stroke-width="5" 
+    stroke-linecap="round"
+    stroke-dasharray="518 691"
+    stroke-dashoffset="-86"
+    fill="none"
+  />
+  
+  <!-- Calendar cell -->
+  <rect 
+    x="135" 
+    y="230" 
+    width="170" 
+    height="170" 
+    rx="20" 
+    ry="20" 
+    fill="#18181B"
+  />
+  
+  <!-- Calendar header -->
+  <rect 
+    x="135" 
+    y="230" 
+    width="170" 
+    height="32" 
+    rx="20" 
+    ry="20" 
+    fill="#09090B"
+  />
+  <rect 
+    x="135" 
+    y="252" 
+    width="170" 
+    height="10" 
+    fill="#09090B"
+  />
+  
+  <!-- Header dots -->
+  <circle cx="170" cy="246" r="3.5" fill="#3F3F46"/>
+  <circle cx="220" cy="246" r="3.5" fill="#3F3F46"/>
+  <circle cx="270" cy="246" r="3.5" fill="#3F3F46"/>
+  
+  <!-- Day number -->
+  <text 
+    x="220" 
+    y="345" 
+    font-family="'Inter', sans-serif" 
+    font-size="72" 
+    font-weight="600" 
+    fill="white" 
+    text-anchor="middle" 
+    dominant-baseline="middle"
+  >24</text>
+  
+  <!-- Title text -->
+  <text 
+    x="470" 
+    y="270" 
+    font-family="'Inter', sans-serif" 
+    font-size="56" 
+    font-weight="700" 
+    fill="white"
+  >React Calendar</text>
+  
+  <!-- Subtitle -->
+  <text 
+    x="470" 
+    y="335" 
+    font-family="'Inter', sans-serif" 
+    font-size="24" 
+    font-weight="400" 
+    fill="#A1A1AA"
+  >Flexible Date &amp; Time Picker Component</text>
+  
+  <!-- Features -->
+  <text 
+    x="470" 
+    y="390" 
+    font-family="'Inter', sans-serif" 
+    font-size="18" 
+    font-weight="500" 
+    fill="#71717A"
+  >✓ Range  ✓ Time Picker  ✓ Customizable  ✓ TypeScript</text>
+  
+  <!-- npm badge -->
+  <rect x="450" y="430" width="400" height="48" rx="10" fill="#27272A"/>
+  <text 
+    x="650" 
+    y="454" 
+    font-family="'JetBrains Mono', monospace" 
+    font-size="20" 
+    fill="#E4E4E7"
+    text-anchor="middle"
+    dominant-baseline="middle"
+  >npm i @vakac995/react-calendar</text>
+</svg>

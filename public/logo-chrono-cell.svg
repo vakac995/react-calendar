@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <!-- Pulse animation -->
+    <style>
+      @keyframes pulse {
+        0%, 100% { opacity: 0.15; transform: scale(1); }
+        50% { opacity: 0.3; transform: scale(1.02); }
+      }
+      @keyframes pulse2 {
+        0%, 100% { opacity: 0.1; transform: scale(1); }
+        50% { opacity: 0.2; transform: scale(1.03); }
+      }
+      @keyframes pulse3 {
+        0%, 100% { opacity: 0.05; transform: scale(1); }
+        50% { opacity: 0.15; transform: scale(1.04); }
+      }
+      .ring1 { animation: pulse 2s ease-in-out infinite; transform-origin: center; }
+      .ring2 { animation: pulse2 2s ease-in-out infinite 0.3s; transform-origin: center; }
+      .ring3 { animation: pulse3 2s ease-in-out infinite 0.6s; transform-origin: center; }
+    </style>
+    <!-- Shadow -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  
+  <!-- Radiating pulse rings -->
+  <circle class="ring3" cx="256" cy="256" r="240" fill="none" stroke="#18181B" stroke-width="2"/>
+  <circle class="ring2" cx="256" cy="256" r="210" fill="none" stroke="#27272A" stroke-width="3"/>
+  <circle class="ring1" cx="256" cy="256" r="180" fill="none" stroke="#3F3F46" stroke-width="4"/>
+  
+  <!-- Outer time ring (arc) -->
+  <circle 
+    cx="256" 
+    cy="256" 
+    r="155" 
+    stroke="#71717A" 
+    stroke-width="8" 
+    stroke-linecap="round"
+    stroke-dasharray="730 974"
+    stroke-dashoffset="-122"
+    fill="none"
+  />
+  
+  <!-- Time indicator dot -->
+  <circle cx="256" cy="101" r="10" fill="#18181B"/>
+  
+  <!-- Calendar cell (rounded square) -->
+  <rect 
+    x="120" 
+    y="120" 
+    width="272" 
+    height="272" 
+    rx="32" 
+    ry="32" 
+    fill="#18181B"
+    filter="url(#shadow)"
+  />
+  
+  <!-- Calendar header bar -->
+  <rect 
+    x="120" 
+    y="120" 
+    width="272" 
+    height="48" 
+    rx="32" 
+    ry="32" 
+    fill="#09090B"
+  />
+  <rect 
+    x="120" 
+    y="145" 
+    width="272" 
+    height="23" 
+    fill="#09090B"
+  />
+  
+  <!-- Header dots (calendar pins) -->
+  <circle cx="180" cy="144" r="6" fill="#3F3F46"/>
+  <circle cx="256" cy="144" r="6" fill="#3F3F46"/>
+  <circle cx="332" cy="144" r="6" fill="#3F3F46"/>
+  
+  <!-- Day number "24" -->
+  <text 
+    x="256" 
+    y="295" 
+    font-family="system-ui, -apple-system, sans-serif" 
+    font-size="120" 
+    font-weight="600" 
+    fill="white" 
+    text-anchor="middle" 
+    dominant-baseline="middle"
+  >24</text>
+</svg>
