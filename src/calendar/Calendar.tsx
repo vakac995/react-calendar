@@ -545,18 +545,23 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
                 const dayIndex = day.date.getDay();
                 const isWeekend = dayIndex === 0 || dayIndex === 6;
 
+                // Determine range background styling
+                const showRangeBackground = day.isInRange && day.isCurrentMonth;
+                const isFirstDayOfWeek = week.days.indexOf(day) === 0;
+                const isLastDayOfWeek = week.days.indexOf(day) === DAYS_IN_WEEK - 1;
+
                 const dayButton = (
                   <button
                     type="button"
                     onClick={(e) => handleDayClick(day, e)}
                     disabled={day.isDisabled || disabled}
                     className={cn(
-                      "w-9 h-9 rounded-full flex items-center justify-center text-sm",
+                      "w-9 h-9 rounded-full flex items-center justify-center text-sm relative z-10",
                       "transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
                       !day.isCurrentMonth && "text-gray-300",
                       day.isCurrentMonth && !day.isSelected && !day.isInRange && "hover:bg-gray-100",
                       day.isToday && !day.isSelected && "border border-blue-500",
-                      day.isInRange && !day.isRangeStart && !day.isRangeEnd && "bg-blue-100",
+                      day.isInRange && !day.isRangeStart && !day.isRangeEnd && day.isCurrentMonth && "bg-blue-200",
                       (day.isRangeStart || day.isRangeEnd) && "bg-blue-500 text-white hover:bg-blue-600",
                       day.isSelected && mode === "single" && "bg-blue-500 text-white hover:bg-blue-600",
                       day.isDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent",
@@ -579,7 +584,27 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
                 const content = renderDay ? renderDay(day, dayButton) : dayButton;
 
                 return (
-                  <div key={day.date.getTime()} className={cn("flex justify-center", classNames?.day)}>
+                  <div
+                    key={day.date.getTime()}
+                    className={cn(
+                      "flex justify-center relative",
+                      classNames?.day
+                    )}
+                  >
+                    {/* Range background connector */}
+                    {showRangeBackground && (
+                      <div
+                        className={cn(
+                          "absolute inset-y-0 bg-blue-200",
+                          day.isRangeStart && !day.isRangeEnd && "left-1/2 right-0",
+                          day.isRangeEnd && !day.isRangeStart && "left-0 right-1/2",
+                          day.isRangeStart && day.isRangeEnd && "hidden",
+                          !day.isRangeStart && !day.isRangeEnd && "left-0 right-0",
+                          isFirstDayOfWeek && !day.isRangeStart && "rounded-l-full",
+                          isLastDayOfWeek && !day.isRangeEnd && "rounded-r-full"
+                        )}
+                      />
+                    )}
                     {content}
                   </div>
                 );

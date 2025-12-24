@@ -1,9 +1,4 @@
-import React, {
-  useMemo,
-  useCallback,
-  useRef,
-  useEffect,
-} from "react";
+import React, { useMemo, useCallback } from "react";
 import type { CalendarClassNames } from "../types";
 import { cn } from "../utils";
 
@@ -28,19 +23,6 @@ export function TimeSelector({
   onClick,
   onSelect,
 }: TimeSelectorProps): React.ReactElement {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
-
-  // Scroll to selected value on mount and when value changes
-  useEffect(() => {
-    const element = itemRefs.current.get(value);
-    if (element && scrollRef.current) {
-      const container = scrollRef.current;
-      const scrollTop = element.offsetTop - container.clientHeight / 2 + element.clientHeight / 2;
-      container.scrollTop = scrollTop;
-    }
-  }, [value]);
-
   const items = useMemo(() => {
     const result: number[] = [];
     for (let i = 0; i <= max; i++) {
@@ -69,7 +51,6 @@ export function TimeSelector({
         {label}
       </span>
       <div
-        ref={scrollRef}
         className={cn(
           "h-32 w-12 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300",
           "border border-gray-200 rounded-md bg-white",
@@ -83,9 +64,6 @@ export function TimeSelector({
           return (
             <button
               key={item}
-              ref={(el) => {
-                if (el) itemRefs.current.set(item, el);
-              }}
               type="button"
               disabled={itemDisabled}
               onClick={() => handleClick(item)}
