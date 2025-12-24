@@ -312,19 +312,25 @@ function TimeWithLimitsDemo(): React.ReactElement {
 function CustomStylesDemo(): React.ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
-  const customClassNames = mergeClassNames(defaultClassNames, {
-    root: "bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200",
-    header: "bg-purple-100 rounded-lg p-2 -m-2 mb-2",
-    headerNavigationButton: "text-purple-600 hover:bg-purple-200",
-    headerMonthSelect: "border-purple-300 focus:ring-purple-500",
-    headerYearSelect: "border-purple-300 focus:ring-purple-500",
-    weekDayCell: "text-purple-600 font-bold",
-    weekDayCellWeekend: "text-pink-500",
-    dayButton: "hover:bg-purple-100",
-    dayToday: "border-purple-500 border-2",
-    daySelected: "bg-purple-600 hover:bg-purple-700",
-    dayWeekend: "text-pink-600",
-    dayDisabled: "opacity-30",
+  // Shadcn-inspired minimal design - black, gray, white
+  const shadcnClassNames = mergeClassNames(defaultClassNames, {
+    root: "bg-white border border-gray-200 rounded-lg shadow-sm",
+    header: "border-b border-gray-100 pb-3 mb-3",
+    headerNavigation: "flex items-center gap-1",
+    headerNavigationButton: "h-7 w-7 bg-transparent hover:bg-gray-100 rounded-md text-gray-600 hover:text-gray-900 transition-colors",
+    headerTitle: "flex items-center gap-2",
+    headerMonthSelect: "h-8 border-0 bg-transparent font-medium text-gray-900 focus:ring-0 focus:outline-none cursor-pointer hover:bg-gray-100 rounded-md px-2",
+    headerYearSelect: "h-8 border-0 bg-transparent font-medium text-gray-900 focus:ring-0 focus:outline-none cursor-pointer hover:bg-gray-100 rounded-md px-2",
+    weekDayCell: "text-gray-500 font-medium text-xs uppercase tracking-wide",
+    weekDayCellWeekend: "text-gray-400",
+    dayButton: "h-9 w-9 rounded-md text-sm font-normal hover:bg-gray-100 transition-colors",
+    dayToday: "bg-gray-100 font-semibold",
+    daySelected: "bg-gray-900 text-white hover:bg-gray-800 font-medium",
+    dayInRange: "bg-gray-100",
+    dayRangeStart: "bg-gray-900 text-white rounded-l-md",
+    dayRangeEnd: "bg-gray-900 text-white rounded-r-md",
+    dayWeekend: "text-gray-600",
+    dayDisabled: "text-gray-300 hover:bg-transparent cursor-not-allowed",
     dayOutsideMonth: "text-gray-300",
   });
 
@@ -334,7 +340,7 @@ function CustomStylesDemo(): React.ReactElement {
         mode="single"
         value={value}
         onChange={(v) => setValue(v)}
-        classNames={customClassNames}
+        classNames={shadcnClassNames}
       />
       <ValueDisplay value={value} mode="single" />
     </>
@@ -787,18 +793,22 @@ export default function App(): React.ReactElement {
 
           <DemoCard
             title="Custom Styling"
-            description="Purple theme via classNames prop"
-            code={`const customClassNames = mergeClassNames(
+            description="Shadcn-inspired minimal theme via classNames prop"
+            code={`const shadcnClassNames = mergeClassNames(
   defaultClassNames,
   {
-    root: "bg-purple-50 border-purple-200",
-    daySelected: "bg-purple-600",
-    dayToday: "border-purple-500",
-    // ... more overrides
+    root: "bg-white border-gray-200 rounded-lg shadow-sm",
+    header: "border-b border-gray-100 pb-3 mb-3",
+    monthYearButton: "text-sm font-medium text-gray-900",
+    navButton: "h-7 w-7 bg-transparent hover:bg-gray-100 rounded-md",
+    daySelected: "bg-gray-900 text-white hover:bg-gray-800",
+    dayToday: "bg-gray-100 font-semibold",
+    dayHover: "hover:bg-gray-50",
+    // ... minimal black, gray, white palette
   }
 );
 
-<Calendar classNames={customClassNames} />`}
+<Calendar classNames={shadcnClassNames} />`}
           >
             <CustomStylesDemo />
           </DemoCard>
