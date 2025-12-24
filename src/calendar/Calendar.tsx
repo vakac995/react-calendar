@@ -328,9 +328,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonPrev].filter(Boolean).join(" ")}
           aria-label={labels.previousYear}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-          </svg>
+          {labels.previousYearIcon ?? defaultLabels.previousYearIcon}
         </button>
         <button
           type="button"
@@ -339,9 +337,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonPrev].filter(Boolean).join(" ")}
           aria-label={labels.previousMonth}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          {labels.previousMonthIcon ?? defaultLabels.previousMonthIcon}
         </button>
       </div>
 
@@ -380,9 +376,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonNext].filter(Boolean).join(" ")}
           aria-label={labels.nextMonth}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          {labels.nextMonthIcon ?? defaultLabels.nextMonthIcon}
         </button>
         <button
           type="button"
@@ -391,9 +385,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonNext].filter(Boolean).join(" ")}
           aria-label={labels.nextYear}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-          </svg>
+          {labels.nextYearIcon ?? defaultLabels.nextYearIcon}
         </button>
       </div>
     </div>

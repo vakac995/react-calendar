@@ -333,6 +333,11 @@ function CustomLabelsDemo(): React.ReactElement {
     minutesLabel: "Min",
     secondsLabel: "Sec",
     shortDays: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"] as const,
+    // Custom text-based navigation buttons instead of icons
+    previousYearIcon: "««",
+    previousMonthIcon: "«",
+    nextMonthIcon: "»",
+    nextYearIcon: "»»",
   });
 
   return (
@@ -346,7 +351,7 @@ function CustomLabelsDemo(): React.ReactElement {
         labels={customLabels}
       />
       <div className="mt-2 text-xs text-gray-500 text-center">
-        🏷️ Custom labels via mergeLabels()
+        🏷️ Custom labels &amp; text nav via mergeLabels()
       </div>
       <ValueDisplay value={value} mode="single" />
     </>

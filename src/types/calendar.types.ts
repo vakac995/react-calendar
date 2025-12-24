@@ -68,6 +68,11 @@ export interface CalendarLabels {
   previousMonth?: string;
   nextMonth?: string;
   nextYear?: string;
+  // Navigation button content (icons or text)
+  previousYearIcon?: ReactNode;
+  previousMonthIcon?: ReactNode;
+  nextMonthIcon?: ReactNode;
+  nextYearIcon?: ReactNode;
   // Time labels
   timeLabel?: string;
   startTimeLabel?: string;
