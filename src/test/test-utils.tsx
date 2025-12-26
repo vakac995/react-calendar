@@ -45,3 +45,15 @@ export function formatTestDate(date: Date): string {
 export async function waitForAnimations(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
+
+/**
+ * Helper to query an element and return it as HTMLElement for use with within()
+ * Throws if element is not found
+ */
+export function queryAsHtmlElement(container: Element | Document, selector: string): HTMLElement {
+  const element = container.querySelector(selector);
+  if (!element) {
+    throw new Error(`Element not found: ${selector}`);
+  }
+  return element as HTMLElement;
+}

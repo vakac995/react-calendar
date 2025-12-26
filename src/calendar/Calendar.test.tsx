@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, beforeAll, afterAll, type Mock } from "vitest";
 import { render, screen, within, fireEvent } from "@testing-library/react";
+import { queryAsHtmlElement } from "../test";
 import { Calendar } from "./Calendar";
 import type { DateTimeValue, DateRangeValue, DayCell, HeaderRenderProps } from "../types";
 
@@ -423,7 +424,7 @@ describe("Calendar", () => {
       );
 
       // Query within body only to avoid duplicate days from adjacent months
-      const calBody = container.querySelector(".cal-body") as HTMLElement;
+      const calBody = queryAsHtmlElement(container, ".cal-body");
       const buttons = within(calBody).getAllByRole("button");
 
       // Days 1-9 should be disabled
@@ -444,7 +445,7 @@ describe("Calendar", () => {
       );
 
       // Query within body only to avoid duplicate days from adjacent months
-      const calBody = container.querySelector(".cal-body") as HTMLElement;
+      const calBody = queryAsHtmlElement(container, ".cal-body");
       const buttons = within(calBody).getAllByRole("button");
       const day21 = buttons.find((b) => b.textContent === "21");
       expect(day21).toBeDefined();
@@ -813,7 +814,7 @@ describe("Calendar", () => {
 
   describe("renderDay prop", () => {
     it("should render custom day content", () => {
-      const renderDay = (day: DayCell, defaultContent: React.ReactNode) => (
+      const renderDay = (day: DayCell, defaultContent: React.ReactNode): React.ReactNode => (
         <div data-testid={`custom-day-${day.date.getDate()}`}>
           {defaultContent}
           {day.isToday && <span>Today!</span>}
@@ -839,7 +840,9 @@ describe("Calendar", () => {
 
   describe("renderHeader prop", () => {
     it("should render custom header", () => {
-      const renderHeader = () => <div data-testid="custom-header">Custom Header</div>;
+      const renderHeader = (): React.ReactNode => (
+        <div data-testid="custom-header">Custom Header</div>
+      );
       render(<Calendar renderHeader={renderHeader} />);
       expect(screen.getByTestId("custom-header")).toBeInTheDocument();
       expect(screen.getByText("Custom Header")).toBeInTheDocument();
@@ -860,7 +863,7 @@ describe("Calendar", () => {
     });
 
     it("should allow navigation from custom header", () => {
-      const renderHeader = (props: HeaderRenderProps) => (
+      const renderHeader = (props: HeaderRenderProps): React.ReactNode => (
         <div>
           <button onClick={props.onPrevMonth}>Custom Prev</button>
           <span data-testid="month">{props.currentMonth}</span>
@@ -1082,10 +1085,15 @@ describe("Calendar", () => {
       const handleChange = vi.fn();
       // Use a day > 23 to avoid conflict with hour buttons in time picker
       const { container } = render(
-        <Calendar mode="single" showTime onChange={handleChange} classNames={{ body: "cal-body" }} />
+        <Calendar
+          mode="single"
+          showTime
+          onChange={handleChange}
+          classNames={{ body: "cal-body" }}
+        />
       );
 
-      const calBody = container.querySelector(".cal-body") as HTMLElement;
+      const calBody = queryAsHtmlElement(container, ".cal-body");
       fireEvent.click(within(calBody).getByRole("button", { name: "25" }));
 
       const value = getMockCallArg<DateTimeValue>(handleChange, 0, 0);
@@ -1109,7 +1117,7 @@ describe("Calendar", () => {
         <Calendar mode="range" showTime onChange={handleChange} classNames={{ body: "cal-body" }} />
       );
 
-      const calBody = container.querySelector(".cal-body") as HTMLElement;
+      const calBody = queryAsHtmlElement(container, ".cal-body");
       fireEvent.click(within(calBody).getByRole("button", { name: "24" }));
 
       const startValue = getMockCallArg<DateRangeValue>(handleChange, 0, 0);
@@ -1138,7 +1146,7 @@ describe("Calendar", () => {
         <Calendar mode="range" showTime onChange={handleChange} classNames={{ body: "cal-body" }} />
       );
 
-      const calBody = container.querySelector(".cal-body") as HTMLElement;
+      const calBody = queryAsHtmlElement(container, ".cal-body");
       fireEvent.click(within(calBody).getByRole("button", { name: "25" }));
       fireEvent.click(within(calBody).getByRole("button", { name: "25" }));
 
@@ -1165,7 +1173,7 @@ describe("Calendar", () => {
         <Calendar mode="range" showTime onChange={handleChange} classNames={{ body: "cal-body" }} />
       );
 
-      const calBody = container.querySelector(".cal-body") as HTMLElement;
+      const calBody = queryAsHtmlElement(container, ".cal-body");
       fireEvent.click(within(calBody).getByRole("button", { name: "28" }));
       fireEvent.click(within(calBody).getByRole("button", { name: "24" }));
 
@@ -1637,7 +1645,7 @@ describe("Calendar", () => {
     it("should not navigate when disabled for prev month", () => {
       const onPrevMonth = vi.fn();
       render(<Calendar disabled onPrevMonth={onPrevMonth} />);
-      
+
       const btn = screen.getByRole("button", { name: /previous month/i });
       expect(btn).toBeDisabled();
       expect(onPrevMonth).not.toHaveBeenCalled();
@@ -1646,7 +1654,7 @@ describe("Calendar", () => {
     it("should not navigate when disabled for next month", () => {
       const onNextMonth = vi.fn();
       render(<Calendar disabled onNextMonth={onNextMonth} />);
-      
+
       const btn = screen.getByRole("button", { name: /next month/i });
       expect(btn).toBeDisabled();
       expect(onNextMonth).not.toHaveBeenCalled();
@@ -1656,9 +1664,9 @@ describe("Calendar", () => {
       const onNextMonth = vi.fn();
       // January 2025 is the current view (frozen date)
       render(<Calendar onNextMonth={onNextMonth} />);
-      
+
       fireEvent.click(screen.getByRole("button", { name: /next month/i }));
-      
+
       expect(onNextMonth).toHaveBeenCalledWith(1, 2025);
     });
 
@@ -1675,7 +1683,10 @@ describe("Calendar", () => {
     });
 
     it("should apply timeSeparator className", () => {
-      const value: DateTimeValue = { date: new Date(2025, 0, 15), time: { hours: 10, minutes: 0, seconds: 0 } };
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 0, seconds: 0 },
+      };
       const { container } = render(
         <Calendar mode="single" value={value} showTime classNames={{ timeSeparator: "time-sep" }} />
       );
@@ -1683,16 +1694,12 @@ describe("Calendar", () => {
     });
 
     it("should apply headerNavigationButton className", () => {
-      const { container } = render(
-        <Calendar classNames={{ headerNavigationButton: "nav-btn" }} />
-      );
+      const { container } = render(<Calendar classNames={{ headerNavigationButton: "nav-btn" }} />);
       expect(container.querySelectorAll(".nav-btn").length).toBe(4);
     });
 
     it("should apply headerNavigation className", () => {
-      const { container } = render(
-        <Calendar classNames={{ headerNavigation: "nav-container" }} />
-      );
+      const { container } = render(<Calendar classNames={{ headerNavigation: "nav-container" }} />);
       expect(container.querySelectorAll(".nav-container").length).toBe(2);
     });
 
@@ -1757,9 +1764,9 @@ describe("Calendar", () => {
   describe("branch coverage - edge cases with unusual data", () => {
     it("should handle labels with explicitly undefined shortDays", () => {
       // Pass labels object with shortDays explicitly undefined
-      const customLabels = { 
+      const customLabels = {
         previousYear: "<<",
-        shortDays: undefined as unknown as string[] 
+        shortDays: undefined as unknown as string[],
       };
       render(<Calendar labels={customLabels} />);
       // Should fall back to default shortDays
@@ -1780,13 +1787,13 @@ describe("Calendar", () => {
           classNames={{ body: "cal-body" }}
         />
       );
-      
+
       const calBody = container.querySelector(".cal-body");
       // Day 5 is both isDisabled (before minDate) AND calendar is disabled
       const buttons = within(calBody as HTMLElement).getAllByRole("button");
       const day5 = buttons.find((b) => b.textContent === "5");
       expect(day5).toBeDisabled();
-      
+
       // Try clicking - should not trigger anything
       if (day5) fireEvent.click(day5);
       expect(onDayClick).not.toHaveBeenCalled();
@@ -1797,15 +1804,8 @@ describe("Calendar", () => {
       const onChange = vi.fn();
       const onTimeChange = vi.fn();
       // Single mode with showTime but no value selected yet
-      render(
-        <Calendar
-          mode="single"
-          showTime
-          onChange={onChange}
-          onTimeChange={onTimeChange}
-        />
-      );
-      
+      render(<Calendar mode="single" showTime onChange={onChange} onTimeChange={onTimeChange} />);
+
       // Time picker is visible even without a selected date
       expect(screen.getByText("HH")).toBeInTheDocument();
     });
@@ -1814,15 +1814,8 @@ describe("Calendar", () => {
       const onChange = vi.fn();
       const onTimeChange = vi.fn();
       // Range mode with showTime but no range selected
-      render(
-        <Calendar
-          mode="range"
-          showTime
-          onChange={onChange}
-          onTimeChange={onTimeChange}
-        />
-      );
-      
+      render(<Calendar mode="range" showTime onChange={onChange} onTimeChange={onTimeChange} />);
+
       // Time pickers are visible - two of them in range mode
       expect(screen.queryAllByText("HH").length).toBe(2);
     });
@@ -1833,28 +1826,16 @@ describe("Calendar", () => {
         start: { date: new Date(2025, 0, 10), time: { hours: 10, minutes: 0, seconds: 0 } },
         end: null,
       };
-      render(
-        <Calendar
-          mode="range"
-          value={value}
-          showTime
-          onChange={onChange}
-        />
-      );
-      
+      render(<Calendar mode="range" value={value} showTime onChange={onChange} />);
+
       // Time pickers are visible even with partial range
       expect(screen.queryAllByText("HH").length).toBe(2);
     });
 
     it("should not navigate in month when disabled - prev month boundary", () => {
       const onPrevMonth = vi.fn();
-      render(
-        <Calendar
-          disabled
-          onPrevMonth={onPrevMonth}
-        />
-      );
-      
+      render(<Calendar disabled onPrevMonth={onPrevMonth} />);
+
       const prevBtn = screen.getByRole("button", { name: /previous month/i });
       expect(prevBtn).toBeDisabled();
       // Even if we force click, nothing should happen
@@ -1864,13 +1845,8 @@ describe("Calendar", () => {
 
     it("should not navigate in month when disabled - next month boundary", () => {
       const onNextMonth = vi.fn();
-      render(
-        <Calendar
-          disabled
-          onNextMonth={onNextMonth}
-        />
-      );
-      
+      render(<Calendar disabled onNextMonth={onNextMonth} />);
+
       const nextBtn = screen.getByRole("button", { name: /next month/i });
       expect(nextBtn).toBeDisabled();
       fireEvent.click(nextBtn);
@@ -1890,16 +1866,16 @@ describe("Calendar", () => {
           classNames={{ weekNumber: "week-num" }}
         />
       );
-      
+
       // Click week button - normally works fine
       fireEvent.click(getWeekButton(container, 0));
       expect(onWeekClick).toHaveBeenCalled();
     });
 
     it("should handle labels with null shortDays", () => {
-      const customLabels = { 
+      const customLabels = {
         previousYear: "<<",
-        shortDays: null as unknown as string[] 
+        shortDays: null as unknown as string[],
       };
       render(<Calendar labels={customLabels} />);
       // Should fall back to default shortDays
@@ -1924,7 +1900,7 @@ describe("Calendar", () => {
           classNames={{ body: "cal-body" }}
         />
       );
-      
+
       // Select day 25 - use day > 23 to avoid conflict with hour buttons
       const calBody = container.querySelector(".cal-body");
       const day25 = within(calBody as HTMLElement).getByRole("button", { name: "25" });
@@ -1938,15 +1914,8 @@ describe("Calendar", () => {
         start: { date: new Date(2025, 0, 10), time: { hours: 8, minutes: 0, seconds: 0 } },
         end: { date: new Date(2025, 0, 20), time: undefined },
       };
-      render(
-        <Calendar
-          mode="range"
-          value={value}
-          showTime
-          onChange={onChange}
-        />
-      );
-      
+      render(<Calendar mode="range" value={value} showTime onChange={onChange} />);
+
       // Both time pickers should be visible
       expect(screen.getAllByText("HH").length).toBe(2);
     });
@@ -1954,7 +1923,7 @@ describe("Calendar", () => {
     it("should handle controlled value change from parent", () => {
       const onChange = vi.fn();
       const initialValue: DateTimeValue = { date: new Date(2025, 0, 10), time: undefined };
-      
+
       const { rerender } = render(
         <Calendar
           mode="single"
@@ -1963,9 +1932,9 @@ describe("Calendar", () => {
           classNames={{ daySelected: "selected" }}
         />
       );
-      
+
       expect(screen.getByRole("button", { name: "10" })).toHaveClass("selected");
-      
+
       // Update value from parent
       const newValue: DateTimeValue = { date: new Date(2025, 0, 20), time: undefined };
       rerender(
@@ -1976,24 +1945,22 @@ describe("Calendar", () => {
           classNames={{ daySelected: "selected" }}
         />
       );
-      
+
       expect(screen.getByRole("button", { name: "20" })).toHaveClass("selected");
       expect(screen.getByRole("button", { name: "10" })).not.toHaveClass("selected");
     });
 
     it("should handle view date changes when value changes month", () => {
       const initialValue: DateTimeValue = { date: new Date(2025, 0, 15), time: undefined };
-      
-      const { rerender } = render(
-        <Calendar mode="single" value={initialValue} />
-      );
-      
+
+      const { rerender } = render(<Calendar mode="single" value={initialValue} />);
+
       expect(screen.getByText("January")).toBeInTheDocument();
-      
+
       // Change to a different month
       const newValue: DateTimeValue = { date: new Date(2025, 5, 15), time: undefined };
       rerender(<Calendar mode="single" value={newValue} />);
-      
+
       // View should still show January since viewDate is controlled internally
       // unless there's logic to sync it
       expect(screen.getByText("January")).toBeInTheDocument();
@@ -2003,14 +1970,8 @@ describe("Calendar", () => {
   describe("branch coverage - time picker with null values", () => {
     it("should render time picker in single mode even when value is null", () => {
       // Single mode with showTime but value is null
-      render(
-        <Calendar
-          mode="single"
-          value={null}
-          showTime
-        />
-      );
-      
+      render(<Calendar mode="single" value={null} showTime />);
+
       // The time picker is visible even without a selected date
       expect(screen.getByText("HH")).toBeInTheDocument();
       expect(screen.getByText("MM")).toBeInTheDocument();
@@ -2018,14 +1979,8 @@ describe("Calendar", () => {
 
     it("should render both time pickers in range mode even when value is null", () => {
       // Range mode with showTime but value is null
-      render(
-        <Calendar
-          mode="range"
-          value={null}
-          showTime
-        />
-      );
-      
+      render(<Calendar mode="range" value={null} showTime />);
+
       // Both time pickers visible
       expect(screen.getAllByText("HH").length).toBe(2);
       expect(screen.getAllByText("MM").length).toBe(2);
@@ -2036,15 +1991,9 @@ describe("Calendar", () => {
         start: { date: new Date(2025, 0, 10), time: { hours: 10, minutes: 0, seconds: 0 } },
         end: null,
       };
-      
-      render(
-        <Calendar
-          mode="range"
-          value={value}
-          showTime
-        />
-      );
-      
+
+      render(<Calendar mode="range" value={value} showTime />);
+
       // Both time pickers are visible
       expect(screen.getAllByText("HH").length).toBe(2);
     });
@@ -2057,7 +2006,7 @@ describe("Calendar", () => {
         start: { date: new Date(2025, 0, 15), time: undefined },
         end: { date: new Date(2025, 0, 15), time: undefined },
       };
-      
+
       const { container } = render(
         <Calendar
           mode="range"
@@ -2068,7 +2017,7 @@ describe("Calendar", () => {
           }}
         />
       );
-      
+
       // Same day means isRangeStart && isRangeEnd both true
       // The background should have display: none
       expect(container.querySelector(".bg-start")).not.toBeInTheDocument();
@@ -2080,7 +2029,7 @@ describe("Calendar", () => {
         start: { date: new Date(2025, 0, 10), time: undefined },
         end: { date: new Date(2025, 0, 20), time: undefined },
       };
-      
+
       const { container } = render(
         <Calendar
           mode="range"
@@ -2090,7 +2039,7 @@ describe("Calendar", () => {
           }}
         />
       );
-      
+
       // Days 11-19 should have bg-middle
       expect(container.querySelectorAll(".bg-middle").length).toBeGreaterThan(0);
     });
@@ -2101,7 +2050,7 @@ describe("Calendar", () => {
         start: { date: new Date(2025, 0, 8), time: undefined },
         end: { date: new Date(2025, 0, 22), time: undefined },
       };
-      
+
       const { container } = render(
         <Calendar
           mode="range"
@@ -2111,7 +2060,7 @@ describe("Calendar", () => {
           }}
         />
       );
-      
+
       // Check for first-of-week class on Sundays within the range
       expect(container.querySelectorAll(".first-of-week").length).toBeGreaterThan(0);
     });
@@ -2122,7 +2071,7 @@ describe("Calendar", () => {
         start: { date: new Date(2025, 0, 8), time: undefined },
         end: { date: new Date(2025, 0, 22), time: undefined },
       };
-      
+
       const { container } = render(
         <Calendar
           mode="range"
@@ -2132,7 +2081,7 @@ describe("Calendar", () => {
           }}
         />
       );
-      
+
       // Check for last-of-week class on Saturdays within the range
       expect(container.querySelectorAll(".last-of-week").length).toBeGreaterThan(0);
     });
@@ -2143,7 +2092,7 @@ describe("Calendar", () => {
         start: { date: new Date(2025, 0, 11), time: undefined },
         end: { date: new Date(2025, 0, 15), time: undefined },
       };
-      
+
       const { container } = render(
         <Calendar
           mode="range"
@@ -2154,7 +2103,7 @@ describe("Calendar", () => {
           }}
         />
       );
-      
+
       // The range start (Saturday Jan 11) should have range-start but not weekend
       const rangeStarts = container.querySelectorAll(".range-start");
       expect(rangeStarts.length).toBe(1);
@@ -2167,7 +2116,7 @@ describe("Calendar", () => {
         start: { date: new Date(2025, 0, 8), time: undefined },
         end: { date: new Date(2025, 0, 12), time: undefined },
       };
-      
+
       const { container } = render(
         <Calendar
           mode="range"
@@ -2178,7 +2127,7 @@ describe("Calendar", () => {
           }}
         />
       );
-      
+
       // The range end (Sunday Jan 12) should have range-end but not weekend
       const rangeEnds = container.querySelectorAll(".range-end");
       expect(rangeEnds.length).toBe(1);
@@ -2191,7 +2140,7 @@ describe("Calendar", () => {
         start: { date: new Date(2025, 0, 28), time: undefined },
         end: { date: new Date(2025, 1, 5), time: undefined },
       };
-      
+
       const { container } = render(
         <Calendar
           mode="range"
@@ -2202,7 +2151,7 @@ describe("Calendar", () => {
           }}
         />
       );
-      
+
       // Days in February (outside January view) should not have in-range
       const outsideDays = container.querySelectorAll(".outside");
       outsideDays.forEach((day) => {
@@ -2216,7 +2165,7 @@ describe("Calendar", () => {
     it("should trigger disabled branch when clicking enabled day on disabled calendar", () => {
       const onChange = vi.fn();
       const onDayClick = vi.fn();
-      
+
       // Calendar is disabled, but days themselves are not disabled by minDate/maxDate
       const { container } = render(
         <Calendar
@@ -2227,14 +2176,14 @@ describe("Calendar", () => {
           classNames={{ body: "cal-body" }}
         />
       );
-      
+
       // Day 15 is not disabled by date constraints, only by calendar disabled prop
       const calBody = container.querySelector(".cal-body");
       const dayButtons = within(calBody as HTMLElement).getAllByRole("button");
       const day15 = dayButtons.find((b) => b.textContent === "15");
-      
+
       expect(day15).toBeDisabled();
-      
+
       // Try to click - should not trigger callbacks
       if (day15) {
         fireEvent.click(day15);

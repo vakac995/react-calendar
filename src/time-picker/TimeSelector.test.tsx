@@ -233,7 +233,9 @@ describe("TimeSelector", () => {
       const user = userEvent.setup();
       const handleClick = vi.fn();
 
-      render(<TimeSelector value={0} max={23} label="Hours" disabled={true} onClick={handleClick} />);
+      render(
+        <TimeSelector value={0} max={23} label="Hours" disabled={true} onClick={handleClick} />
+      );
 
       await user.click(screen.getByRole("button", { name: "15" }));
 
@@ -365,7 +367,13 @@ describe("TimeSelector", () => {
       const isDisabled = vi.fn((v) => v < 5);
 
       render(
-        <TimeSelector value={0} max={9} label="Test" onClick={handleClick} isDisabled={isDisabled} />
+        <TimeSelector
+          value={0}
+          max={9}
+          label="Test"
+          onClick={handleClick}
+          isDisabled={isDisabled}
+        />
       );
 
       // Clicking disabled item (value < 5) should not trigger callback

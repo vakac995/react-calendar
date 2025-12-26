@@ -37,9 +37,7 @@ describe("TimePicker", () => {
 
     it("should apply timeLabel className to label", () => {
       const classNames: CalendarClassNames = { timeLabel: "my-time-label" };
-      render(
-        <TimePicker {...defaultProps} label="Time" classNames={classNames} />
-      );
+      render(<TimePicker {...defaultProps} label="Time" classNames={classNames} />);
 
       const label = screen.getByText("Time");
       expect(label).toHaveClass("my-time-label");
@@ -191,22 +189,14 @@ describe("TimePicker", () => {
       const time: TimeValue = { hours: 10, minutes: 30, seconds: 0 };
 
       render(
-        <TimePicker
-          {...defaultProps}
-          time={time}
-          target="single"
-          onTimeChange={onTimeChange}
-        />
+        <TimePicker {...defaultProps} time={time} target="single" onTimeChange={onTimeChange} />
       );
 
       // Click on hour 14 (use getAllByRole since 14 appears in both hours and minutes)
       const hour14Buttons = screen.getAllByRole("button", { name: "14" });
       await user.click(hour14Buttons[0]!); // First is hours
 
-      expect(onTimeChange).toHaveBeenCalledWith(
-        { hours: 14, minutes: 30, seconds: 0 },
-        "single"
-      );
+      expect(onTimeChange).toHaveBeenCalledWith({ hours: 14, minutes: 30, seconds: 0 }, "single");
     });
 
     it("should call onTimeChange when minute is selected", async () => {
@@ -214,12 +204,7 @@ describe("TimePicker", () => {
       const time: TimeValue = { hours: 10, minutes: 30, seconds: 0 };
 
       render(
-        <TimePicker
-          {...defaultProps}
-          time={time}
-          target="start"
-          onTimeChange={onTimeChange}
-        />
+        <TimePicker {...defaultProps} time={time} target="start" onTimeChange={onTimeChange} />
       );
 
       // Find and click minute 45
@@ -227,10 +212,7 @@ describe("TimePicker", () => {
       // The minute 45 should be in the second selector (first is hours)
       await user.click(allButtons[0]!);
 
-      expect(onTimeChange).toHaveBeenCalledWith(
-        { hours: 10, minutes: 45, seconds: 0 },
-        "start"
-      );
+      expect(onTimeChange).toHaveBeenCalledWith({ hours: 10, minutes: 45, seconds: 0 }, "start");
     });
 
     it("should call onTimeChange when second is selected", async () => {
@@ -252,10 +234,7 @@ describe("TimePicker", () => {
       // Click the last one which should be in seconds selector
       await user.click(allButtons[allButtons.length - 1]!);
 
-      expect(onTimeChange).toHaveBeenCalledWith(
-        { hours: 10, minutes: 30, seconds: 45 },
-        "end"
-      );
+      expect(onTimeChange).toHaveBeenCalledWith({ hours: 10, minutes: 30, seconds: 45 }, "end");
     });
 
     it("should not crash when onTimeChange is not provided", async () => {
@@ -279,9 +258,7 @@ describe("TimePicker", () => {
     it("should call onHourClick when hour is clicked", async () => {
       const onHourClick = vi.fn();
 
-      render(
-        <TimePicker {...defaultProps} target="single" onHourClick={onHourClick} />
-      );
+      render(<TimePicker {...defaultProps} target="single" onHourClick={onHourClick} />);
 
       // Use getAllByRole since "15" appears in both hours and minutes
       const hour15Buttons = screen.getAllByRole("button", { name: "15" });
@@ -293,9 +270,7 @@ describe("TimePicker", () => {
     it("should call onHourSelect when hour is selected", async () => {
       const onHourSelect = vi.fn();
 
-      render(
-        <TimePicker {...defaultProps} target="start" onHourSelect={onHourSelect} />
-      );
+      render(<TimePicker {...defaultProps} target="start" onHourSelect={onHourSelect} />);
 
       // Use getAllByRole since "15" appears in both hours and minutes
       const hour15Buttons = screen.getAllByRole("button", { name: "15" });
@@ -307,9 +282,7 @@ describe("TimePicker", () => {
     it("should call onMinuteClick when minute is clicked", async () => {
       const onMinuteClick = vi.fn();
 
-      render(
-        <TimePicker {...defaultProps} target="end" onMinuteClick={onMinuteClick} />
-      );
+      render(<TimePicker {...defaultProps} target="end" onMinuteClick={onMinuteClick} />);
 
       // Find minute buttons
       const allButtons = screen.getAllByRole("button", { name: "45" });
@@ -321,13 +294,7 @@ describe("TimePicker", () => {
     it("should call onMinuteSelect when minute is selected", async () => {
       const onMinuteSelect = vi.fn();
 
-      render(
-        <TimePicker
-          {...defaultProps}
-          target="single"
-          onMinuteSelect={onMinuteSelect}
-        />
-      );
+      render(<TimePicker {...defaultProps} target="single" onMinuteSelect={onMinuteSelect} />);
 
       const allButtons = screen.getAllByRole("button", { name: "45" });
       await user.click(allButtons[0]!);
@@ -339,12 +306,7 @@ describe("TimePicker", () => {
       const onSecondsClick = vi.fn();
 
       render(
-        <TimePicker
-          {...defaultProps}
-          showSeconds
-          target="start"
-          onSecondsClick={onSecondsClick}
-        />
+        <TimePicker {...defaultProps} showSeconds target="start" onSecondsClick={onSecondsClick} />
       );
 
       // Seconds 45 will be the last occurrence
@@ -358,12 +320,7 @@ describe("TimePicker", () => {
       const onSecondsSelect = vi.fn();
 
       render(
-        <TimePicker
-          {...defaultProps}
-          showSeconds
-          target="end"
-          onSecondsSelect={onSecondsSelect}
-        />
+        <TimePicker {...defaultProps} showSeconds target="end" onSecondsSelect={onSecondsSelect} />
       );
 
       const allButtons = screen.getAllByRole("button", { name: "45" });
@@ -408,9 +365,7 @@ describe("TimePicker", () => {
       const user = userEvent.setup();
       const onTimeChange = vi.fn();
 
-      render(
-        <TimePicker {...defaultProps} disabled onTimeChange={onTimeChange} />
-      );
+      render(<TimePicker {...defaultProps} disabled onTimeChange={onTimeChange} />);
 
       // Use getAllByRole since "14" appears in both hours and minutes
       const hour14Buttons = screen.getAllByRole("button", { name: "14" });
@@ -423,9 +378,7 @@ describe("TimePicker", () => {
       const user = userEvent.setup();
       const onHourClick = vi.fn();
 
-      render(
-        <TimePicker {...defaultProps} disabled onHourClick={onHourClick} />
-      );
+      render(<TimePicker {...defaultProps} disabled onHourClick={onHourClick} />);
 
       // Use getAllByRole since "14" appears in both hours and minutes
       const hour14Buttons = screen.getAllByRole("button", { name: "14" });
@@ -446,13 +399,7 @@ describe("TimePicker", () => {
       const onTimeChange = vi.fn();
       const minTime: TimeValue = { hours: 9, minutes: 0, seconds: 0 };
 
-      render(
-        <TimePicker
-          {...defaultProps}
-          minTime={minTime}
-          onTimeChange={onTimeChange}
-        />
-      );
+      render(<TimePicker {...defaultProps} minTime={minTime} onTimeChange={onTimeChange} />);
 
       // Use getAllByRole since "08" appears in both hours and minutes
       const hour8Buttons = screen.getAllByRole("button", { name: "08" });
@@ -468,22 +415,13 @@ describe("TimePicker", () => {
       const onTimeChange = vi.fn();
       const minTime: TimeValue = { hours: 9, minutes: 0, seconds: 0 };
 
-      render(
-        <TimePicker
-          {...defaultProps}
-          minTime={minTime}
-          onTimeChange={onTimeChange}
-        />
-      );
+      render(<TimePicker {...defaultProps} minTime={minTime} onTimeChange={onTimeChange} />);
 
       // Use getAllByRole since "10" appears in both hours and minutes
       const hour10Buttons = screen.getAllByRole("button", { name: "10" });
       await user.click(hour10Buttons[0]!); // First is hours
 
-      expect(onTimeChange).toHaveBeenCalledWith(
-        { hours: 10, minutes: 30, seconds: 0 },
-        "single"
-      );
+      expect(onTimeChange).toHaveBeenCalledWith({ hours: 10, minutes: 30, seconds: 0 }, "single");
     });
 
     it("should pass isHourDisabled callback to TimeSelector", () => {
@@ -509,9 +447,7 @@ describe("TimePicker", () => {
       const time: TimeValue = { hours: 9, minutes: 30, seconds: 0 };
       const minTime: TimeValue = { hours: 9, minutes: 30, seconds: 30 };
 
-      render(
-        <TimePicker {...defaultProps} time={time} showSeconds minTime={minTime} />
-      );
+      render(<TimePicker {...defaultProps} time={time} showSeconds minTime={minTime} />);
 
       // Verify the component renders without errors with minTime
       expect(screen.getByText("SS")).toBeInTheDocument();
@@ -534,9 +470,7 @@ describe("TimePicker", () => {
       const user = userEvent.setup();
       const onTimeChange = vi.fn();
 
-      render(
-        <TimePicker {...defaultProps} target="single" onTimeChange={onTimeChange} />
-      );
+      render(<TimePicker {...defaultProps} target="single" onTimeChange={onTimeChange} />);
 
       // Use getAllByRole since "15" appears in both hours and minutes
       const hour15Buttons = screen.getAllByRole("button", { name: "15" });
@@ -549,9 +483,7 @@ describe("TimePicker", () => {
       const user = userEvent.setup();
       const onTimeChange = vi.fn();
 
-      render(
-        <TimePicker {...defaultProps} target="start" onTimeChange={onTimeChange} />
-      );
+      render(<TimePicker {...defaultProps} target="start" onTimeChange={onTimeChange} />);
 
       // Use getAllByRole since "15" appears in both hours and minutes
       const hour15Buttons = screen.getAllByRole("button", { name: "15" });
@@ -564,9 +496,7 @@ describe("TimePicker", () => {
       const user = userEvent.setup();
       const onTimeChange = vi.fn();
 
-      render(
-        <TimePicker {...defaultProps} target="end" onTimeChange={onTimeChange} />
-      );
+      render(<TimePicker {...defaultProps} target="end" onTimeChange={onTimeChange} />);
 
       // Use getAllByRole since "15" appears in both hours and minutes
       const hour15Buttons = screen.getAllByRole("button", { name: "15" });
@@ -582,18 +512,13 @@ describe("TimePicker", () => {
       const onTimeChange = vi.fn();
       const time: TimeValue = { hours: 10, minutes: 25, seconds: 45 };
 
-      render(
-        <TimePicker {...defaultProps} time={time} onTimeChange={onTimeChange} />
-      );
+      render(<TimePicker {...defaultProps} time={time} onTimeChange={onTimeChange} />);
 
       // Use getAllByRole since "15" appears in both hours and minutes
       const hour15Buttons = screen.getAllByRole("button", { name: "15" });
       await user.click(hour15Buttons[0]!); // First is hours
 
-      expect(onTimeChange).toHaveBeenCalledWith(
-        { hours: 15, minutes: 25, seconds: 45 },
-        "single"
-      );
+      expect(onTimeChange).toHaveBeenCalledWith({ hours: 15, minutes: 25, seconds: 45 }, "single");
     });
 
     it("should preserve hours and seconds when changing minute", async () => {
@@ -601,18 +526,13 @@ describe("TimePicker", () => {
       const onTimeChange = vi.fn();
       const time: TimeValue = { hours: 10, minutes: 25, seconds: 45 };
 
-      render(
-        <TimePicker {...defaultProps} time={time} onTimeChange={onTimeChange} />
-      );
+      render(<TimePicker {...defaultProps} time={time} onTimeChange={onTimeChange} />);
 
       // Click minute 40
       const minute40Buttons = screen.getAllByRole("button", { name: "40" });
       await user.click(minute40Buttons[0]!);
 
-      expect(onTimeChange).toHaveBeenCalledWith(
-        { hours: 10, minutes: 40, seconds: 45 },
-        "single"
-      );
+      expect(onTimeChange).toHaveBeenCalledWith({ hours: 10, minutes: 40, seconds: 45 }, "single");
     });
 
     it("should preserve hours and minutes when changing seconds", async () => {
@@ -620,23 +540,13 @@ describe("TimePicker", () => {
       const onTimeChange = vi.fn();
       const time: TimeValue = { hours: 10, minutes: 25, seconds: 45 };
 
-      render(
-        <TimePicker
-          {...defaultProps}
-          time={time}
-          showSeconds
-          onTimeChange={onTimeChange}
-        />
-      );
+      render(<TimePicker {...defaultProps} time={time} showSeconds onTimeChange={onTimeChange} />);
 
       // Click seconds 30 (last occurrence of 30)
       const second30Buttons = screen.getAllByRole("button", { name: "30" });
       await user.click(second30Buttons[second30Buttons.length - 1]!);
 
-      expect(onTimeChange).toHaveBeenCalledWith(
-        { hours: 10, minutes: 25, seconds: 30 },
-        "single"
-      );
+      expect(onTimeChange).toHaveBeenCalledWith({ hours: 10, minutes: 25, seconds: 30 }, "single");
     });
   });
 

@@ -8,11 +8,12 @@ export default defineConfig({
     react(),
     dts({
       include: ["src"],
-      exclude: ["src/App.tsx", "src/main.tsx"],
+      exclude: ["src/App.tsx", "src/main.tsx", "**/*.test.ts", "**/*.test.tsx"],
       rollupTypes: true,
       insertTypesEntry: true,
     }),
   ],
+  publicDir: false, // Don't copy public folder for library build
   build: {
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
