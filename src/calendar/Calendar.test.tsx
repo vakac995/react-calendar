@@ -1999,4 +1999,248 @@ describe("Calendar", () => {
       expect(screen.getByText("January")).toBeInTheDocument();
     });
   });
+
+  describe("branch coverage - time picker with null values", () => {
+    it("should render time picker in single mode even when value is null", () => {
+      // Single mode with showTime but value is null
+      render(
+        <Calendar
+          mode="single"
+          value={null}
+          showTime
+        />
+      );
+      
+      // The time picker is visible even without a selected date
+      expect(screen.getByText("HH")).toBeInTheDocument();
+      expect(screen.getByText("MM")).toBeInTheDocument();
+    });
+
+    it("should render both time pickers in range mode even when value is null", () => {
+      // Range mode with showTime but value is null
+      render(
+        <Calendar
+          mode="range"
+          value={null}
+          showTime
+        />
+      );
+      
+      // Both time pickers visible
+      expect(screen.getAllByText("HH").length).toBe(2);
+      expect(screen.getAllByText("MM").length).toBe(2);
+    });
+
+    it("should render time pickers with partial range value", () => {
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 10), time: { hours: 10, minutes: 0, seconds: 0 } },
+        end: null,
+      };
+      
+      render(
+        <Calendar
+          mode="range"
+          value={value}
+          showTime
+        />
+      );
+      
+      // Both time pickers are visible
+      expect(screen.getAllByText("HH").length).toBe(2);
+    });
+  });
+
+  describe("branch coverage - JSX conditional classes", () => {
+    it("should not apply dayRangeBackgroundStart when day is both start and end", () => {
+      // Same day selection - both start and end
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 15), time: undefined },
+        end: { date: new Date(2025, 0, 15), time: undefined },
+      };
+      
+      const { container } = render(
+        <Calendar
+          mode="range"
+          value={value}
+          classNames={{
+            dayRangeBackgroundStart: "bg-start",
+            dayRangeBackgroundEnd: "bg-end",
+          }}
+        />
+      );
+      
+      // Same day means isRangeStart && isRangeEnd both true
+      // The background should have display: none
+      expect(container.querySelector(".bg-start")).not.toBeInTheDocument();
+      expect(container.querySelector(".bg-end")).not.toBeInTheDocument();
+    });
+
+    it("should apply dayRangeBackgroundMiddle for days in middle of range", () => {
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 10), time: undefined },
+        end: { date: new Date(2025, 0, 20), time: undefined },
+      };
+      
+      const { container } = render(
+        <Calendar
+          mode="range"
+          value={value}
+          classNames={{
+            dayRangeBackgroundMiddle: "bg-middle",
+          }}
+        />
+      );
+      
+      // Days 11-19 should have bg-middle
+      expect(container.querySelectorAll(".bg-middle").length).toBeGreaterThan(0);
+    });
+
+    it("should apply dayRangeBackgroundFirstOfWeek for first day of week in range", () => {
+      // Range spanning multiple weeks
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 8), time: undefined },
+        end: { date: new Date(2025, 0, 22), time: undefined },
+      };
+      
+      const { container } = render(
+        <Calendar
+          mode="range"
+          value={value}
+          classNames={{
+            dayRangeBackgroundFirstOfWeek: "first-of-week",
+          }}
+        />
+      );
+      
+      // Check for first-of-week class on Sundays within the range
+      expect(container.querySelectorAll(".first-of-week").length).toBeGreaterThan(0);
+    });
+
+    it("should apply dayRangeBackgroundLastOfWeek for last day of week in range", () => {
+      // Range spanning multiple weeks
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 8), time: undefined },
+        end: { date: new Date(2025, 0, 22), time: undefined },
+      };
+      
+      const { container } = render(
+        <Calendar
+          mode="range"
+          value={value}
+          classNames={{
+            dayRangeBackgroundLastOfWeek: "last-of-week",
+          }}
+        />
+      );
+      
+      // Check for last-of-week class on Saturdays within the range
+      expect(container.querySelectorAll(".last-of-week").length).toBeGreaterThan(0);
+    });
+
+    it("should not apply dayWeekend when day is range start", () => {
+      // Select a weekend day as range start (Jan 11 is Saturday)
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 11), time: undefined },
+        end: { date: new Date(2025, 0, 15), time: undefined },
+      };
+      
+      const { container } = render(
+        <Calendar
+          mode="range"
+          value={value}
+          classNames={{
+            dayWeekend: "weekend",
+            dayRangeStart: "range-start",
+          }}
+        />
+      );
+      
+      // The range start (Saturday Jan 11) should have range-start but not weekend
+      const rangeStarts = container.querySelectorAll(".range-start");
+      expect(rangeStarts.length).toBe(1);
+      expect(rangeStarts[0]).not.toHaveClass("weekend");
+    });
+
+    it("should not apply dayWeekend when day is range end", () => {
+      // Select a weekend day as range end (Jan 12 is Sunday)
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 8), time: undefined },
+        end: { date: new Date(2025, 0, 12), time: undefined },
+      };
+      
+      const { container } = render(
+        <Calendar
+          mode="range"
+          value={value}
+          classNames={{
+            dayWeekend: "weekend",
+            dayRangeEnd: "range-end",
+          }}
+        />
+      );
+      
+      // The range end (Sunday Jan 12) should have range-end but not weekend
+      const rangeEnds = container.querySelectorAll(".range-end");
+      expect(rangeEnds.length).toBe(1);
+      expect(rangeEnds[0]).not.toHaveClass("weekend");
+    });
+
+    it("should not show dayInRange for outside month days", () => {
+      // Range that extends into next month
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 28), time: undefined },
+        end: { date: new Date(2025, 1, 5), time: undefined },
+      };
+      
+      const { container } = render(
+        <Calendar
+          mode="range"
+          value={value}
+          classNames={{
+            dayInRange: "in-range",
+            dayOutsideMonth: "outside",
+          }}
+        />
+      );
+      
+      // Days in February (outside January view) should not have in-range
+      const outsideDays = container.querySelectorAll(".outside");
+      outsideDays.forEach((day) => {
+        // Outside month days shouldn't have in-range styling
+        expect(day).not.toHaveClass("in-range");
+      });
+    });
+  });
+
+  describe("branch coverage - disabled calendar day click", () => {
+    it("should trigger disabled branch when clicking enabled day on disabled calendar", () => {
+      const onChange = vi.fn();
+      const onDayClick = vi.fn();
+      
+      // Calendar is disabled, but days themselves are not disabled by minDate/maxDate
+      const { container } = render(
+        <Calendar
+          mode="single"
+          disabled
+          onChange={onChange}
+          onDayClick={onDayClick}
+          classNames={{ body: "cal-body" }}
+        />
+      );
+      
+      // Day 15 is not disabled by date constraints, only by calendar disabled prop
+      const calBody = container.querySelector(".cal-body");
+      const dayButtons = within(calBody as HTMLElement).getAllByRole("button");
+      const day15 = dayButtons.find((b) => b.textContent === "15");
+      
+      expect(day15).toBeDisabled();
+      
+      // Try to click - should not trigger callbacks
+      if (day15) {
+        fireEvent.click(day15);
+      }
+      expect(onDayClick).not.toHaveBeenCalled();
+      expect(onChange).not.toHaveBeenCalled();
+    });
+  });
 });
