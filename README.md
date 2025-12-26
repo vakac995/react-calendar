@@ -1,8 +1,9 @@
 # @vakac995/react-calendar
 
+[![CI](https://github.com/vakac995/react-calendar/actions/workflows/ci.yml/badge.svg)](https://github.com/vakac995/react-calendar/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@vakac995/react-calendar)](https://www.npmjs.com/package/@vakac995/react-calendar)
 [![npm bundle size](https://img.shields.io/bundlephobia/minzip/@vakac995/react-calendar)](https://bundlephobia.com/package/@vakac995/react-calendar)
-[![Coverage](https://img.shields.io/badge/coverage-98.4175%25-brightgreen.svg)](https://github.com/vakac995/react-calendar)
+[![Coverage](https://img.shields.io/badge/coverage-98.41%25-brightgreen.svg)](https://github.com/vakac995/react-calendar)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
