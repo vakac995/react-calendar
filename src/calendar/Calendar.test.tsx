@@ -1625,4 +1625,132 @@ describe("Calendar", () => {
       expect(container.querySelectorAll(".day-cell").length).toBeGreaterThan(0);
     });
   });
+
+  describe("branch coverage - additional edge cases", () => {
+    it("should use custom shortDays when provided in labels", () => {
+      const customLabels = { shortDays: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"] };
+      render(<Calendar labels={customLabels} />);
+      expect(screen.getByText("Su")).toBeInTheDocument();
+      expect(screen.queryByText("Sun")).not.toBeInTheDocument();
+    });
+
+    it("should not navigate when disabled for prev month", () => {
+      const onPrevMonth = vi.fn();
+      render(<Calendar disabled onPrevMonth={onPrevMonth} />);
+      
+      const btn = screen.getByRole("button", { name: /previous month/i });
+      expect(btn).toBeDisabled();
+      expect(onPrevMonth).not.toHaveBeenCalled();
+    });
+
+    it("should not navigate when disabled for next month", () => {
+      const onNextMonth = vi.fn();
+      render(<Calendar disabled onNextMonth={onNextMonth} />);
+      
+      const btn = screen.getByRole("button", { name: /next month/i });
+      expect(btn).toBeDisabled();
+      expect(onNextMonth).not.toHaveBeenCalled();
+    });
+
+    it("should navigate to next month correctly when not at boundary", () => {
+      const onNextMonth = vi.fn();
+      // January 2025 is the current view (frozen date)
+      render(<Calendar onNextMonth={onNextMonth} />);
+      
+      fireEvent.click(screen.getByRole("button", { name: /next month/i }));
+      
+      expect(onNextMonth).toHaveBeenCalledWith(1, 2025);
+    });
+
+    it("should apply dayButton className", () => {
+      const { container } = render(<Calendar classNames={{ dayButton: "day-btn" }} />);
+      expect(container.querySelectorAll(".day-btn").length).toBeGreaterThan(0);
+    });
+
+    it("should apply dayDisabled className for disabled days", () => {
+      const { container } = render(
+        <Calendar minDate={new Date(2025, 0, 10)} classNames={{ dayDisabled: "disabled-day" }} />
+      );
+      expect(container.querySelectorAll(".disabled-day").length).toBeGreaterThan(0);
+    });
+
+    it("should apply timeSeparator className", () => {
+      const value: DateTimeValue = { date: new Date(2025, 0, 15), time: { hours: 10, minutes: 0, seconds: 0 } };
+      const { container } = render(
+        <Calendar mode="single" value={value} showTime classNames={{ timeSeparator: "time-sep" }} />
+      );
+      expect(container.querySelector(".time-sep")).toBeInTheDocument();
+    });
+
+    it("should apply headerNavigationButton className", () => {
+      const { container } = render(
+        <Calendar classNames={{ headerNavigationButton: "nav-btn" }} />
+      );
+      expect(container.querySelectorAll(".nav-btn").length).toBe(4);
+    });
+
+    it("should apply headerNavigation className", () => {
+      const { container } = render(
+        <Calendar classNames={{ headerNavigation: "nav-container" }} />
+      );
+      expect(container.querySelectorAll(".nav-container").length).toBe(2);
+    });
+
+    it("should not trigger handleWeekClick when disabled", () => {
+      const onChange = vi.fn();
+      const onWeekClick = vi.fn();
+      const { container } = render(
+        <Calendar
+          mode="range"
+          showWeekNumbers
+          disabled
+          onChange={onChange}
+          onWeekClick={onWeekClick}
+          classNames={{ weekNumber: "week-num" }}
+        />
+      );
+
+      const weekButton = getWeekButton(container, 3);
+      fireEvent.click(weekButton);
+
+      expect(onWeekClick).not.toHaveBeenCalled();
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it("should not trigger handleDayClick when calendar is disabled via prop", () => {
+      const onChange = vi.fn();
+      const onDayClick = vi.fn();
+      const { container } = render(
+        <Calendar
+          mode="single"
+          disabled
+          onChange={onChange}
+          onDayClick={onDayClick}
+          classNames={{ body: "cal-body" }}
+        />
+      );
+
+      const calBody = container.querySelector(".cal-body");
+      const dayButton = within(calBody as HTMLElement).getByRole("button", { name: "25" });
+      fireEvent.click(dayButton);
+
+      expect(onDayClick).not.toHaveBeenCalled();
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it("should use default shortDays when labels.shortDays is undefined", () => {
+      // Pass labels without shortDays to trigger the ?? fallback
+      render(<Calendar labels={{ previousYear: "Prev" }} />);
+      // Default shortDays should be used (Sun, Mon, etc.)
+      expect(screen.getByText("Sun")).toBeInTheDocument();
+      expect(screen.getByText("Mon")).toBeInTheDocument();
+    });
+
+    it("should apply weekNumber className", () => {
+      const { container } = render(
+        <Calendar showWeekNumbers classNames={{ weekNumber: "wn-btn" }} />
+      );
+      expect(container.querySelectorAll(".wn-btn").length).toBeGreaterThan(0);
+    });
+  });
 });
