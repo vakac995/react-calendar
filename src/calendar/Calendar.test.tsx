@@ -1,0 +1,938 @@
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll, type Mock } from "vitest";
+import { render, screen, within, fireEvent } from "@testing-library/react";
+import { Calendar } from "./Calendar";
+import type { DateTimeValue, DateRangeValue, DayCell, HeaderRenderProps } from "../types";
+
+// ============================================================================
+// TEST SETUP
+// ============================================================================
+
+const FROZEN_DATE = new Date("2025-01-15T12:00:00.000Z");
+
+beforeAll(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(FROZEN_DATE);
+});
+
+afterAll(() => {
+  vi.useRealTimers();
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+// ============================================================================
+// TYPE-SAFE HELPERS
+// ============================================================================
+
+function getMockCallArg<T>(mock: Mock, callIndex: number, argIndex: number): T {
+  const calls = mock.mock.calls;
+  if (callIndex >= calls.length) {
+    throw new Error(`Mock was only called ${calls.length} times, but tried to access call ${callIndex}`);
+  }
+  const call = calls[callIndex];
+  if (call === undefined || argIndex >= call.length) {
+    throw new Error(`Invalid argument access at call ${callIndex}, arg ${argIndex}`);
+  }
+  return call[argIndex] as T;
+}
+
+function getCombobox(index: number): HTMLSelectElement {
+  const comboboxes = screen.getAllByRole("combobox");
+  if (index >= comboboxes.length) {
+    throw new Error(`Only ${comboboxes.length} comboboxes found, but tried to access index ${index}`);
+  }
+  return comboboxes[index] as HTMLSelectElement;
+}
+
+function getWeekButton(container: HTMLElement, index: number): HTMLButtonElement {
+  const weekButtons = container.querySelectorAll(".week-num");
+  if (index >= weekButtons.length) {
+    throw new Error(`Only ${weekButtons.length} week buttons found, but tried to access index ${index}`);
+  }
+  return weekButtons[index] as HTMLButtonElement;
+}
+
+// ============================================================================
+// TESTS
+// ============================================================================
+
+describe("Calendar", () => {
+  describe("basic rendering", () => {
+    it("should render the calendar root", () => {
+      const { container } = render(<Calendar classNames={{ root: "calendar-root" }} />);
+      expect(container.querySelector(".calendar-root")).toBeInTheDocument();
+    });
+
+    it("should render month and year selects", () => {
+      render(<Calendar />);
+      const comboboxes = screen.getAllByRole("combobox");
+      expect(comboboxes.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it("should render navigation buttons", () => {
+      render(<Calendar />);
+      expect(screen.getByRole("button", { name: /previous year/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /previous month/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /next month/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /next year/i })).toBeInTheDocument();
+    });
+
+    it("should render week day headers", () => {
+      render(<Calendar />);
+      expect(screen.getByText("Sun")).toBeInTheDocument();
+      expect(screen.getByText("Mon")).toBeInTheDocument();
+      expect(screen.getByText("Tue")).toBeInTheDocument();
+      expect(screen.getByText("Wed")).toBeInTheDocument();
+      expect(screen.getByText("Thu")).toBeInTheDocument();
+      expect(screen.getByText("Fri")).toBeInTheDocument();
+      expect(screen.getByText("Sat")).toBeInTheDocument();
+    });
+
+    it("should render day buttons for January 2025", () => {
+      render(<Calendar />);
+      // Days may appear multiple times due to adjacent months, use getAllByRole
+      const buttons1 = screen.getAllByRole("button", { name: "1" });
+      expect(buttons1.length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByRole("button", { name: "15" })).toBeInTheDocument();
+      const buttons31 = screen.getAllByRole("button", { name: "31" });
+      expect(buttons31.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("should display January 2025 by default", () => {
+      render(<Calendar />);
+      expect(screen.getByText("January")).toBeInTheDocument();
+      expect(getCombobox(1)).toHaveValue("2025");
+    });
+
+    it("should apply calendarWrapper className", () => {
+      const { container } = render(<Calendar classNames={{ calendarWrapper: "wrapper-class" }} />);
+      expect(container.querySelector(".wrapper-class")).toBeInTheDocument();
+    });
+
+    it("should apply header className", () => {
+      const { container } = render(<Calendar classNames={{ header: "header-class" }} />);
+      expect(container.querySelector(".header-class")).toBeInTheDocument();
+    });
+
+    it("should apply body className", () => {
+      const { container } = render(<Calendar classNames={{ body: "body-class" }} />);
+      expect(container.querySelector(".body-class")).toBeInTheDocument();
+    });
+  });
+
+  describe("weekStartsOn prop", () => {
+    it("should start week on Sunday by default (weekStartsOn=0)", () => {
+      const { container } = render(<Calendar classNames={{ weekDaysRow: "week-row" }} />);
+      const weekRow = container.querySelector(".week-row");
+      const dayHeaders = weekRow?.querySelectorAll("div");
+      expect(dayHeaders?.[0]).toHaveTextContent("Sun");
+    });
+
+    it("should start week on Monday when weekStartsOn=1", () => {
+      const { container } = render(<Calendar weekStartsOn={1} classNames={{ weekDaysRow: "week-row" }} />);
+      const weekRow = container.querySelector(".week-row");
+      const dayHeaders = weekRow?.querySelectorAll("div");
+      expect(dayHeaders?.[0]).toHaveTextContent("Mon");
+    });
+
+    it("should start week on Saturday when weekStartsOn=6", () => {
+      const { container } = render(<Calendar weekStartsOn={6} classNames={{ weekDaysRow: "week-row" }} />);
+      const weekRow = container.querySelector(".week-row");
+      const dayHeaders = weekRow?.querySelectorAll("div");
+      expect(dayHeaders?.[0]).toHaveTextContent("Sat");
+    });
+  });
+
+  describe("single mode selection", () => {
+    it("should select a day when clicked", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="single" onChange={handleChange} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "20" }));
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      const value = getMockCallArg<DateTimeValue>(handleChange, 0, 0);
+      expect(value.date.getDate()).toBe(20);
+      expect(value.date.getMonth()).toBe(0);
+      expect(value.date.getFullYear()).toBe(2025);
+    });
+
+    it("should apply selected className to selected day", () => {
+      render(<Calendar mode="single" classNames={{ daySelected: "selected" }} />);
+
+      const day20 = screen.getByRole("button", { name: "20" });
+      fireEvent.click(day20);
+      expect(day20).toHaveClass("selected");
+    });
+
+    it("should work as controlled component", () => {
+      const value: DateTimeValue = { date: new Date(2025, 0, 10), time: undefined };
+      render(<Calendar mode="single" value={value} classNames={{ daySelected: "selected" }} />);
+      expect(screen.getByRole("button", { name: "10" })).toHaveClass("selected");
+    });
+
+    it("should work as uncontrolled component with defaultValue", () => {
+      const defaultValue: DateTimeValue = { date: new Date(2025, 0, 15), time: undefined };
+      render(<Calendar mode="single" defaultValue={defaultValue} classNames={{ daySelected: "selected" }} />);
+      expect(screen.getByRole("button", { name: "15" })).toHaveClass("selected");
+    });
+
+    it("should preserve time when selecting a new day with showTime", () => {
+      const handleChange = vi.fn();
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 10),
+        time: { hours: 14, minutes: 30, seconds: 45 },
+      };
+
+      const { container } = render(
+        <Calendar mode="single" value={value} showTime onChange={handleChange} classNames={{ body: "calendar-body" }} />
+      );
+
+      const calendarBody = container.querySelector(".calendar-body");
+      const day20Button = within(calendarBody as HTMLElement).getByRole("button", { name: "20" });
+      fireEvent.click(day20Button);
+
+      const newValue = getMockCallArg<DateTimeValue>(handleChange, 0, 0);
+      expect(newValue.time).toEqual({ hours: 14, minutes: 30, seconds: 45 });
+    });
+  });
+
+  describe("range mode selection", () => {
+    it("should select range start on first click", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="range" onChange={handleChange} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "10" }));
+
+      const value = getMockCallArg<DateRangeValue>(handleChange, 0, 0);
+      expect(value.start?.date.getDate()).toBe(10);
+      expect(value.end).toBeNull();
+    });
+
+    it("should complete range on second click", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="range" onChange={handleChange} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "10" }));
+      fireEvent.click(screen.getByRole("button", { name: "20" }));
+
+      expect(handleChange).toHaveBeenCalledTimes(2);
+      const value = getMockCallArg<DateRangeValue>(handleChange, 1, 0);
+      expect(value.start?.date.getDate()).toBe(10);
+      expect(value.end?.date.getDate()).toBe(20);
+    });
+
+    it("should swap dates when end is before start", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="range" onChange={handleChange} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "20" }));
+      fireEvent.click(screen.getByRole("button", { name: "10" }));
+
+      const value = getMockCallArg<DateRangeValue>(handleChange, 1, 0);
+      expect(value.start?.date.getDate()).toBe(10);
+      expect(value.end?.date.getDate()).toBe(20);
+    });
+
+    it("should handle same day selection", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="range" onChange={handleChange} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      const value = getMockCallArg<DateRangeValue>(handleChange, 1, 0);
+      expect(value.start?.date.getDate()).toBe(15);
+      expect(value.end?.date.getDate()).toBe(15);
+    });
+
+    it("should reset selection on third click", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="range" onChange={handleChange} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "10" }));
+      fireEvent.click(screen.getByRole("button", { name: "20" }));
+      fireEvent.click(screen.getByRole("button", { name: "5" }));
+
+      const value = getMockCallArg<DateRangeValue>(handleChange, 2, 0);
+      expect(value.start?.date.getDate()).toBe(5);
+      expect(value.end).toBeNull();
+    });
+
+    it("should apply range classNames", () => {
+      render(
+        <Calendar
+          mode="range"
+          classNames={{ dayRangeStart: "range-start", dayRangeEnd: "range-end", dayInRange: "in-range" }}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "10" }));
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      expect(screen.getByRole("button", { name: "10" })).toHaveClass("range-start");
+      expect(screen.getByRole("button", { name: "15" })).toHaveClass("range-end");
+      expect(screen.getByRole("button", { name: "12" })).toHaveClass("in-range");
+    });
+
+    it("should work with controlled range value", () => {
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 10), time: undefined },
+        end: { date: new Date(2025, 0, 20), time: undefined },
+      };
+
+      render(
+        <Calendar mode="range" value={value} classNames={{ dayRangeStart: "range-start", dayRangeEnd: "range-end" }} />
+      );
+
+      expect(screen.getByRole("button", { name: "10" })).toHaveClass("range-start");
+      expect(screen.getByRole("button", { name: "20" })).toHaveClass("range-end");
+    });
+  });
+
+  describe("navigation", () => {
+    it("should navigate to previous month", () => {
+      const onPrevMonth = vi.fn();
+      render(<Calendar onPrevMonth={onPrevMonth} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /previous month/i }));
+
+      expect(onPrevMonth).toHaveBeenCalledWith(11, 2024);
+    });
+
+    it("should navigate to next month", () => {
+      const onNextMonth = vi.fn();
+      render(<Calendar onNextMonth={onNextMonth} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /next month/i }));
+
+      expect(onNextMonth).toHaveBeenCalledWith(1, 2025);
+    });
+
+    it("should navigate to previous year", () => {
+      const onPrevYear = vi.fn();
+      render(<Calendar onPrevYear={onPrevYear} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /previous year/i }));
+
+      expect(onPrevYear).toHaveBeenCalledWith(2024);
+    });
+
+    it("should navigate to next year", () => {
+      const onNextYear = vi.fn();
+      render(<Calendar onNextYear={onNextYear} />);
+
+      fireEvent.click(screen.getByRole("button", { name: /next year/i }));
+
+      expect(onNextYear).toHaveBeenCalledWith(2026);
+    });
+
+    it("should select month via dropdown", () => {
+      const onMonthSelect = vi.fn();
+      render(<Calendar onMonthSelect={onMonthSelect} />);
+
+      fireEvent.change(getCombobox(0), { target: { value: "6" } });
+
+      expect(onMonthSelect).toHaveBeenCalledWith(6, 2025);
+    });
+
+    it("should select year via dropdown", () => {
+      const onYearChange = vi.fn();
+      render(<Calendar onYearChange={onYearChange} />);
+
+      fireEvent.change(getCombobox(1), { target: { value: "2030" } });
+
+      expect(onYearChange).toHaveBeenCalledWith(2030);
+    });
+  });
+
+  describe("disabled state", () => {
+    it("should disable all day buttons when disabled", () => {
+      render(<Calendar disabled />);
+      const dayButtons = screen.getAllByRole("button").filter(
+        (btn) => !isNaN(Number(btn.textContent)) && Number(btn.textContent) > 0 && Number(btn.textContent) <= 31
+      );
+      dayButtons.forEach((btn) => expect(btn).toBeDisabled());
+    });
+
+    it("should disable navigation buttons when disabled", () => {
+      render(<Calendar disabled />);
+      expect(screen.getByRole("button", { name: /previous year/i })).toBeDisabled();
+      expect(screen.getByRole("button", { name: /previous month/i })).toBeDisabled();
+      expect(screen.getByRole("button", { name: /next month/i })).toBeDisabled();
+      expect(screen.getByRole("button", { name: /next year/i })).toBeDisabled();
+    });
+
+    it("should disable month/year selects when disabled", () => {
+      render(<Calendar disabled />);
+      const comboboxes = screen.getAllByRole("combobox");
+      comboboxes.forEach((combo) => expect(combo).toBeDisabled());
+    });
+
+    it("should not call onChange when clicking disabled days", () => {
+      const handleChange = vi.fn();
+      render(<Calendar disabled onChange={handleChange} />);
+
+      // Attempt to click but since it's disabled, nothing should happen
+      const day15 = screen.getByRole("button", { name: "15" });
+      expect(day15).toBeDisabled();
+    });
+  });
+
+  describe("minDate and maxDate constraints", () => {
+    it("should disable days before minDate", () => {
+      const { container } = render(<Calendar minDate={new Date(2025, 0, 10)} classNames={{ body: "cal-body" }} />);
+      
+      // Query within body only to avoid duplicate days from adjacent months
+      const calBody = container.querySelector(".cal-body") as HTMLElement;
+      const buttons = within(calBody).getAllByRole("button");
+
+      // Days 1-9 should be disabled
+      for (let i = 1; i <= 9; i++) {
+        const dayButton = buttons.find((b) => b.textContent === String(i));
+        expect(dayButton).toBeDefined();
+        expect(dayButton).toBeDisabled();
+      }
+
+      // Day 10 should be enabled
+      const day10 = buttons.find((b) => b.textContent === "10");
+      expect(day10).not.toBeDisabled();
+    });
+
+    it("should disable days after maxDate", () => {
+      const { container } = render(
+        <Calendar maxDate={new Date(2025, 0, 20)} classNames={{ body: "cal-body" }} />
+      );
+
+      // Query within body only to avoid duplicate days from adjacent months
+      const calBody = container.querySelector(".cal-body") as HTMLElement;
+      const buttons = within(calBody).getAllByRole("button");
+      const day21 = buttons.find((b) => b.textContent === "21");
+      expect(day21).toBeDefined();
+      expect(day21).toBeDisabled();
+
+      const day20 = buttons.find((b) => b.textContent === "20");
+      expect(day20).not.toBeDisabled();
+    });
+  });
+
+  describe("onDayClick callback", () => {
+    it("should call onDayClick when day is clicked", () => {
+      const handleDayClick = vi.fn();
+      render(<Calendar onDayClick={handleDayClick} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      expect(handleDayClick).toHaveBeenCalledTimes(1);
+      expect(getMockCallArg<Date>(handleDayClick, 0, 0).getDate()).toBe(15);
+    });
+
+    it("should not call onDayClick when disabled", () => {
+      const handleDayClick = vi.fn();
+      render(<Calendar disabled onDayClick={handleDayClick} />);
+
+      expect(screen.getByRole("button", { name: "15" })).toBeDisabled();
+    });
+  });
+
+  describe("week numbers", () => {
+    it("should not show week numbers by default", () => {
+      const { container } = render(<Calendar classNames={{ weekNumber: "week-num" }} />);
+      expect(container.querySelector(".week-num")).not.toBeInTheDocument();
+    });
+
+    it("should show week numbers when showWeekNumbers is true", () => {
+      const { container } = render(<Calendar showWeekNumbers classNames={{ weekNumber: "week-num" }} />);
+      expect(container.querySelectorAll(".week-num").length).toBeGreaterThan(0);
+    });
+
+    it("should call onWeekClick when week number is clicked", () => {
+      const handleWeekClick = vi.fn();
+      const { container } = render(
+        <Calendar showWeekNumbers onWeekClick={handleWeekClick} classNames={{ weekNumber: "week-num" }} />
+      );
+
+      fireEvent.click(getWeekButton(container, 0));
+      expect(handleWeekClick).toHaveBeenCalledTimes(1);
+    });
+
+    it("should select entire week in range mode when clicking week number", () => {
+      const handleChange = vi.fn();
+      const { container } = render(
+        <Calendar mode="range" showWeekNumbers onChange={handleChange} classNames={{ weekNumber: "week-num" }} />
+      );
+
+      fireEvent.click(getWeekButton(container, 1));
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      const value = getMockCallArg<DateRangeValue>(handleChange, 0, 0);
+      expect(value.start).not.toBeNull();
+      expect(value.end).not.toBeNull();
+    });
+
+    it("should disable week buttons when disabled", () => {
+      const { container } = render(
+        <Calendar disabled showWeekNumbers classNames={{ weekNumber: "week-num" }} />
+      );
+      expect(getWeekButton(container, 0)).toBeDisabled();
+    });
+  });
+
+  describe("time picker integration", () => {
+    it("should not show time picker by default", () => {
+      render(<Calendar />);
+      expect(screen.queryByText("HH")).not.toBeInTheDocument();
+    });
+
+    it("should show time picker when showTime is true and value is set", () => {
+      const value: DateTimeValue = { date: new Date(2025, 0, 15), time: { hours: 10, minutes: 0, seconds: 0 } };
+      render(<Calendar mode="single" value={value} showTime />);
+      expect(screen.getByText("HH")).toBeInTheDocument();
+      expect(screen.getByText("MM")).toBeInTheDocument();
+    });
+
+    it("should show seconds when showSeconds is true", () => {
+      const value: DateTimeValue = { date: new Date(2025, 0, 15), time: { hours: 10, minutes: 0, seconds: 0 } };
+      render(<Calendar mode="single" value={value} showTime showSeconds />);
+      expect(screen.getByText("SS")).toBeInTheDocument();
+    });
+
+    it("should show two time pickers in range mode with complete range", () => {
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 10), time: { hours: 9, minutes: 0, seconds: 0 } },
+        end: { date: new Date(2025, 0, 20), time: { hours: 17, minutes: 0, seconds: 0 } },
+      };
+      render(<Calendar mode="range" value={value} showTime />);
+      expect(screen.getByText("Start Time")).toBeInTheDocument();
+      expect(screen.getByText("End Time")).toBeInTheDocument();
+    });
+
+    it("should call onTimeChange when time is changed", () => {
+      const handleTimeChange = vi.fn();
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          onTimeChange={handleTimeChange}
+          classNames={{ timeSelector: "time-selector" }}
+        />
+      );
+
+      // Find hour selector (first time-selector element contains hours)
+      const timeSelectors = container.querySelectorAll(".time-selector");
+      const hourSelector = timeSelectors[0] as HTMLElement;
+      const hourButton = within(hourSelector).getByRole("button", { name: "14" });
+      fireEvent.click(hourButton);
+
+      expect(handleTimeChange).toHaveBeenCalledWith({ hours: 14, minutes: 30, seconds: 0 }, "single");
+    });
+
+    it("should call onTimeChange and update value when changing start time in range mode", () => {
+      const handleChange = vi.fn();
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 10), time: { hours: 9, minutes: 0, seconds: 0 } },
+        end: { date: new Date(2025, 0, 20), time: { hours: 17, minutes: 0, seconds: 0 } },
+      };
+
+      const { container } = render(
+        <Calendar
+          mode="range"
+          value={value}
+          showTime
+          onChange={handleChange}
+          classNames={{ timeSelector: "time-selector" }}
+        />
+      );
+
+      // Find first time picker's hour selector (start time - first pair of selectors)
+      const timeSelectors = container.querySelectorAll(".time-selector");
+      const startHourSelector = timeSelectors[0] as HTMLElement;
+      const hourButton = within(startHourSelector).getByRole("button", { name: "10" });
+      fireEvent.click(hourButton);
+
+      expect(handleChange).toHaveBeenCalled();
+      const newValue = getMockCallArg<DateRangeValue>(handleChange, 0, 0);
+      expect(newValue.start?.time?.hours).toBe(10);
+    });
+
+    it("should call onTimeChange and update value when changing end time in range mode", () => {
+      const handleChange = vi.fn();
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 10), time: { hours: 9, minutes: 0, seconds: 0 } },
+        end: { date: new Date(2025, 0, 20), time: { hours: 17, minutes: 0, seconds: 0 } },
+      };
+
+      const { container } = render(
+        <Calendar
+          mode="range"
+          value={value}
+          showTime
+          onChange={handleChange}
+          classNames={{ timeSelector: "time-selector" }}
+        />
+      );
+
+      // Find second time picker's hour selector (end time - third and fourth selectors after start's hour/minute)
+      const timeSelectors = container.querySelectorAll(".time-selector");
+      const endHourSelector = timeSelectors[2] as HTMLElement;
+      const hourButton = within(endHourSelector).getByRole("button", { name: "18" });
+      fireEvent.click(hourButton);
+
+      expect(handleChange).toHaveBeenCalled();
+      const newValue = getMockCallArg<DateRangeValue>(handleChange, 0, 0);
+      expect(newValue.end?.time?.hours).toBe(18);
+    });
+
+    it("should apply timePickerWrapperBottom class for bottom position", () => {
+      const value: DateTimeValue = { date: new Date(2025, 0, 15), time: { hours: 10, minutes: 0, seconds: 0 } };
+      const { container } = render(
+        <Calendar mode="single" value={value} showTime timePosition="bottom" classNames={{ timePickerWrapperBottom: "time-bottom" }} />
+      );
+      expect(container.querySelector(".time-bottom")).toBeInTheDocument();
+    });
+
+    it("should apply timePickerWrapperTop class for top position", () => {
+      const value: DateTimeValue = { date: new Date(2025, 0, 15), time: { hours: 10, minutes: 0, seconds: 0 } };
+      const { container } = render(
+        <Calendar mode="single" value={value} showTime timePosition="top" classNames={{ timePickerWrapperTop: "time-top" }} />
+      );
+      expect(container.querySelector(".time-top")).toBeInTheDocument();
+    });
+
+    it("should apply timePickerWrapperSide class for side position", () => {
+      const value: DateTimeValue = { date: new Date(2025, 0, 15), time: { hours: 10, minutes: 0, seconds: 0 } };
+      const { container } = render(
+        <Calendar mode="single" value={value} showTime timePosition="side" classNames={{ timePickerWrapperSide: "time-side" }} />
+      );
+      expect(container.querySelector(".time-side")).toBeInTheDocument();
+    });
+
+    it("should apply rootSideLayout class when timePosition is side", () => {
+      const value: DateTimeValue = { date: new Date(2025, 0, 15), time: { hours: 10, minutes: 0, seconds: 0 } };
+      const { container } = render(
+        <Calendar mode="single" value={value} showTime timePosition="side" classNames={{ rootSideLayout: "side-layout" }} />
+      );
+      expect(container.querySelector(".side-layout")).toBeInTheDocument();
+    });
+
+    it("should apply rootDefaultLayout class when timePosition is not side", () => {
+      const value: DateTimeValue = { date: new Date(2025, 0, 15), time: { hours: 10, minutes: 0, seconds: 0 } };
+      const { container } = render(
+        <Calendar mode="single" value={value} showTime timePosition="bottom" classNames={{ rootDefaultLayout: "default-layout" }} />
+      );
+      expect(container.querySelector(".default-layout")).toBeInTheDocument();
+    });
+  });
+
+  describe("custom labels", () => {
+    it("should use custom month names", () => {
+      const customLabels = {
+        months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      };
+      render(<Calendar labels={customLabels} />);
+      expect(screen.getByText("Jan")).toBeInTheDocument();
+    });
+
+    it("should use custom day names", () => {
+      const customLabels = { shortDays: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"] };
+      render(<Calendar labels={customLabels} />);
+      expect(screen.getByText("Su")).toBeInTheDocument();
+      expect(screen.getByText("Mo")).toBeInTheDocument();
+    });
+
+    it("should use custom navigation labels", () => {
+      render(
+        <Calendar
+          labels={{
+            previousYear: "Prev Year",
+            nextYear: "Next Year",
+            previousMonth: "Prev Month",
+            nextMonth: "Next Month",
+          }}
+        />
+      );
+      expect(screen.getByRole("button", { name: "Prev Year" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Next Year" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Prev Month" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Next Month" })).toBeInTheDocument();
+    });
+
+    it("should use custom time labels", () => {
+      const value: DateTimeValue = { date: new Date(2025, 0, 15), time: { hours: 10, minutes: 0, seconds: 0 } };
+      render(<Calendar mode="single" value={value} showTime labels={{ timeLabel: "Select Time", hoursLabel: "Hours", minutesLabel: "Minutes" }} />);
+      expect(screen.getByText("Select Time")).toBeInTheDocument();
+      expect(screen.getByText("Hours")).toBeInTheDocument();
+      expect(screen.getByText("Minutes")).toBeInTheDocument();
+    });
+  });
+
+  describe("custom years prop", () => {
+    it("should use custom years array", () => {
+      const customYears = [2020, 2021, 2022, 2023, 2024, 2025];
+      render(<Calendar years={customYears} />);
+
+      const yearSelect = getCombobox(1);
+      expect(within(yearSelect).getByText("2020")).toBeInTheDocument();
+      expect(within(yearSelect).getByText("2025")).toBeInTheDocument();
+      expect(within(yearSelect).queryByText("2026")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("renderDay prop", () => {
+    it("should render custom day content", () => {
+      const renderDay = (day: DayCell, defaultContent: React.ReactNode) => (
+        <div data-testid={`custom-day-${day.date.getDate()}`}>
+          {defaultContent}
+          {day.isToday && <span>Today!</span>}
+        </div>
+      );
+
+      render(<Calendar renderDay={renderDay} />);
+      expect(screen.getByTestId("custom-day-15")).toBeInTheDocument();
+      expect(screen.getByText("Today!")).toBeInTheDocument();
+    });
+
+    it("should pass day info to renderDay", () => {
+      const renderDay = vi.fn((_day: DayCell, defaultContent: React.ReactNode) => defaultContent);
+      render(<Calendar renderDay={renderDay} />);
+
+      expect(renderDay).toHaveBeenCalled();
+      const firstCall = getMockCallArg<DayCell>(renderDay, 0, 0);
+      expect(firstCall).toHaveProperty("date");
+      expect(firstCall).toHaveProperty("isCurrentMonth");
+      expect(firstCall).toHaveProperty("isToday");
+    });
+  });
+
+  describe("renderHeader prop", () => {
+    it("should render custom header", () => {
+      const renderHeader = () => <div data-testid="custom-header">Custom Header</div>;
+      render(<Calendar renderHeader={renderHeader} />);
+      expect(screen.getByTestId("custom-header")).toBeInTheDocument();
+      expect(screen.getByText("Custom Header")).toBeInTheDocument();
+    });
+
+    it("should pass header props to renderHeader", () => {
+      const renderHeader = vi.fn((props: HeaderRenderProps) => (
+        <div>
+          <span>Month: {props.currentMonth}</span>
+          <span>Year: {props.currentYear}</span>
+        </div>
+      ));
+
+      render(<Calendar renderHeader={renderHeader} />);
+      expect(renderHeader).toHaveBeenCalled();
+      expect(screen.getByText("Month: 0")).toBeInTheDocument();
+      expect(screen.getByText("Year: 2025")).toBeInTheDocument();
+    });
+
+    it("should allow navigation from custom header", () => {
+      const renderHeader = (props: HeaderRenderProps) => (
+        <div>
+          <button onClick={props.onPrevMonth}>Custom Prev</button>
+          <span data-testid="month">{props.currentMonth}</span>
+          <button onClick={props.onNextMonth}>Custom Next</button>
+        </div>
+      );
+
+      render(<Calendar renderHeader={renderHeader} />);
+      expect(screen.getByTestId("month")).toHaveTextContent("0");
+
+      fireEvent.click(screen.getByText("Custom Next"));
+      expect(screen.getByTestId("month")).toHaveTextContent("1");
+
+      fireEvent.click(screen.getByText("Custom Prev"));
+      expect(screen.getByTestId("month")).toHaveTextContent("0");
+    });
+  });
+
+  describe("today highlight", () => {
+    it("should apply today className to current date", () => {
+      render(<Calendar classNames={{ dayToday: "today" }} />);
+      expect(screen.getByRole("button", { name: "15" })).toHaveClass("today");
+    });
+
+    it("should not apply today className to other dates", () => {
+      render(<Calendar classNames={{ dayToday: "today" }} />);
+      expect(screen.getByRole("button", { name: "14" })).not.toHaveClass("today");
+      expect(screen.getByRole("button", { name: "16" })).not.toHaveClass("today");
+    });
+
+    it("should not apply today className when day is selected", () => {
+      render(<Calendar classNames={{ dayToday: "today", daySelected: "selected" }} />);
+
+      const todayButton = screen.getByRole("button", { name: "15" });
+      fireEvent.click(todayButton);
+
+      expect(todayButton).toHaveClass("selected");
+      expect(todayButton).not.toHaveClass("today");
+    });
+  });
+
+  describe("weekend styling", () => {
+    it("should apply weekend className to weekend days", () => {
+      render(<Calendar classNames={{ dayWeekend: "weekend" }} />);
+      // January 2025: 4th is Saturday, 5th is Sunday
+      expect(screen.getByRole("button", { name: "4" })).toHaveClass("weekend");
+      expect(screen.getByRole("button", { name: "5" })).toHaveClass("weekend");
+    });
+
+    it("should apply weekend className to week day headers", () => {
+      const { container } = render(<Calendar classNames={{ weekDayCellWeekend: "weekend-header" }} />);
+      const weekendHeaders = container.querySelectorAll(".weekend-header");
+      expect(weekendHeaders.length).toBe(2);
+    });
+  });
+
+  describe("outside month days", () => {
+    it("should apply outsideMonth className to days from other months", () => {
+      render(<Calendar classNames={{ dayOutsideMonth: "outside" }} />);
+
+      const allDayButtons = screen.getAllByRole("button").filter(
+        (btn) => !isNaN(Number(btn.textContent)) && Number(btn.textContent) > 0
+      );
+      const outsideButtons = allDayButtons.filter((btn) => btn.classList.contains("outside"));
+      expect(outsideButtons.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("view initialization", () => {
+    it("should initialize view to controlled value date", () => {
+      const value: DateTimeValue = { date: new Date(2023, 5, 15), time: undefined };
+      render(<Calendar mode="single" value={value} />);
+      expect(screen.getByText("June")).toBeInTheDocument();
+    });
+
+    it("should initialize view to range start date", () => {
+      const value: DateRangeValue = {
+        start: { date: new Date(2023, 8, 10), time: undefined },
+        end: { date: new Date(2023, 8, 20), time: undefined },
+      };
+      render(<Calendar mode="range" value={value} />);
+      expect(screen.getByText("September")).toBeInTheDocument();
+    });
+
+    it("should initialize view to defaultValue date", () => {
+      const defaultValue: DateTimeValue = { date: new Date(2022, 11, 25), time: undefined };
+      render(<Calendar mode="single" defaultValue={defaultValue} />);
+      expect(screen.getByText("December")).toBeInTheDocument();
+    });
+  });
+
+  describe("time callbacks", () => {
+    it("should call onHourClick callback", () => {
+      const handleHourClick = vi.fn();
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 0, seconds: 0 },
+      };
+
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          onHourClick={handleHourClick}
+          classNames={{ timeSelector: "time-selector" }}
+        />
+      );
+
+      // Find hour selector (first time-selector element contains hours)
+      const timeSelectors = container.querySelectorAll(".time-selector");
+      const hourSelector = timeSelectors[0] as HTMLElement;
+      const hourButton = within(hourSelector).getByRole("button", { name: "14" });
+      fireEvent.click(hourButton);
+
+      expect(handleHourClick).toHaveBeenCalledWith(14, "single");
+    });
+
+    it("should call onMinuteClick callback", () => {
+      const handleMinuteClick = vi.fn();
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 0, seconds: 0 },
+      };
+
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          onMinuteClick={handleMinuteClick}
+          classNames={{ timeSelector: "time-selector" }}
+        />
+      );
+
+      // Find minute selector (second time-selector element contains minutes)
+      const timeSelectors = container.querySelectorAll(".time-selector");
+      const minuteSelector = timeSelectors[1] as HTMLElement;
+      const minuteButton = within(minuteSelector).getByRole("button", { name: "30" });
+      fireEvent.click(minuteButton);
+
+      expect(handleMinuteClick).toHaveBeenCalledWith(30, "single");
+    });
+  });
+
+  describe("edge cases", () => {
+    it("should handle null single value", () => {
+      expect(() => render(<Calendar mode="single" value={null} />)).not.toThrow();
+    });
+
+    it("should handle undefined value", () => {
+      expect(() => render(<Calendar mode="single" value={undefined} />)).not.toThrow();
+    });
+
+    it("should handle empty range value", () => {
+      const value: DateRangeValue = { start: null, end: null };
+      expect(() => render(<Calendar mode="range" value={value} />)).not.toThrow();
+    });
+
+    it("should handle partial range value (start only)", () => {
+      const value: DateRangeValue = {
+        start: { date: new Date(2025, 0, 10), time: undefined },
+        end: null,
+      };
+
+      render(<Calendar mode="range" value={value} classNames={{ dayRangeStart: "range-start" }} />);
+      expect(screen.getByRole("button", { name: "10" })).toHaveClass("range-start");
+    });
+
+    it("should handle all classNames being undefined", () => {
+      expect(() => render(<Calendar classNames={undefined} />)).not.toThrow();
+    });
+
+    it("should handle empty classNames object", () => {
+      expect(() => render(<Calendar classNames={{}} />)).not.toThrow();
+    });
+  });
+
+  describe("minTime and maxTime with time picker", () => {
+    it("should pass minTime to time picker", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 0, seconds: 0 },
+      };
+
+      render(<Calendar mode="single" value={value} showTime minTime={{ hours: 9, minutes: 0, seconds: 0 }} />);
+      expect(screen.getByText("HH")).toBeInTheDocument();
+    });
+
+    it("should pass maxTime to time picker", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 0, seconds: 0 },
+      };
+
+      render(<Calendar mode="single" value={value} showTime maxTime={{ hours: 17, minutes: 0, seconds: 0 }} />);
+      expect(screen.getByText("HH")).toBeInTheDocument();
+    });
+  });
+});
