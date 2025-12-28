@@ -192,9 +192,11 @@ import { Calendar, extendClassNames, defaultClassNames } from '@vakac995/react-c
 | Key | Description |
 |-----|-------------|
 | `root` | Root container element |
+| `rootDisabled` | Root when calendar is disabled |
 | `rootDefaultLayout` | Root when `timePosition` is top/bottom |
 | `rootSideLayout` | Root when `timePosition` is side |
 | `calendarWrapper` | Wrapper around calendar grid |
+| `calendarWrapperDisabled` | Calendar wrapper when disabled |
 
 </details>
 
@@ -204,13 +206,17 @@ import { Calendar, extendClassNames, defaultClassNames } from '@vakac995/react-c
 | Key | Description |
 |-----|-------------|
 | `header` | Header container |
+| `headerDisabled` | Header when calendar is disabled |
 | `headerNavigation` | Navigation buttons container |
 | `headerNavigationButton` | All navigation buttons |
+| `headerNavigationButtonDisabled` | Navigation buttons when disabled |
 | `headerNavigationButtonPrev` | Previous buttons (year/month) |
 | `headerNavigationButtonNext` | Next buttons (year/month) |
 | `headerTitle` | Month/year title area |
 | `headerMonthSelect` | Month dropdown select |
+| `headerMonthSelectDisabled` | Month select when disabled |
 | `headerYearSelect` | Year dropdown select |
+| `headerYearSelectDisabled` | Year select when disabled |
 
 </details>
 
@@ -234,6 +240,7 @@ import { Calendar, extendClassNames, defaultClassNames } from '@vakac995/react-c
 | `body` | Calendar body container |
 | `week` | Week row |
 | `weekNumber` | Week number cell wrapper |
+| `weekNumberDisabled` | Week number when disabled |
 | `weekNumberCell` | Week number button/text |
 
 </details>
@@ -280,15 +287,22 @@ import { Calendar, extendClassNames, defaultClassNames } from '@vakac995/react-c
 | `timePickerWrapperBottom` | Time picker when position=bottom |
 | `timePickerWrapperSide` | Time picker when position=side |
 | `timeContainer` | Individual time section (start/end) |
+| `timeContainerDisabled` | Time container when disabled |
 | `timeLabel` | Time section label |
+| `timeLabelDisabled` | Time label when disabled |
 | `timeSelectors` | Hour/min/sec selectors container |
+| `timeSelectorsDisabled` | Selectors container when disabled |
 | `timeSelector` | Individual selector column |
+| `timeSelectorDisabled` | Selector column when disabled |
 | `timeSelectorLabel` | Selector label (HH/MM/SS) |
+| `timeSelectorLabelDisabled` | Selector label when disabled |
 | `timeSelectorScroll` | Scrollable area |
+| `timeSelectorScrollDisabled` | Scroll area when disabled |
 | `timeSelectorItem` | Time option item |
 | `timeSelectorItemSelected` | Selected time item |
 | `timeSelectorItemDisabled` | Disabled time item |
 | `timeSeparator` | Separator between selectors |
+| `timeSeparatorDisabled` | Separator when disabled |
 
 </details>
 
@@ -298,9 +312,13 @@ import { Calendar, extendClassNames, defaultClassNames } from '@vakac995/react-c
 | Key | Description |
 |-----|-------------|
 | `timePickerCollapsed` | Collapsible time picker wrapper |
+| `timePickerCollapsedDisabled` | Collapsible wrapper when disabled |
 | `timePickerToggle` | Toggle button for expanding/collapsing |
+| `timePickerToggleDisabled` | Toggle button when disabled |
 | `timePickerToggleIcon` | Icon in toggle button |
+| `timePickerToggleIconDisabled` | Toggle icon when disabled |
 | `timePickerToggleText` | Text in toggle button |
+| `timePickerToggleTextDisabled` | Toggle text when disabled |
 | `timePickerContent` | Collapsible content wrapper |
 | `timePickerContentExpanded` | Content when expanded |
 
@@ -367,6 +385,7 @@ See [CalendarClassNames](./src/types/calendar.types.ts) for the complete type de
 | `maxDate` | `Date` | — | Maximum selectable date |
 | `minTime` | `TimeValue` | — | Minimum selectable time |
 | `maxTime` | `TimeValue` | — | Maximum selectable time |
+| `years` | `number[]` | Last 100 years | Available years for year dropdown |
 | `weekStartsOn` | `0-6` | `0` | First day of week (0=Sun) |
 | `showWeekNumbers` | `boolean` | `false` | Show week numbers |
 | `locale` | `string` | — | Locale for formatting |
@@ -382,9 +401,16 @@ See [CalendarClassNames](./src/types/calendar.types.ts) for the complete type de
 |---------|------|-------------|
 | `onChange` | `(value: CalendarValue<TMode>) => void` | Value changed |
 | `onDayClick` | `(date: Date, event: MouseEvent) => void` | Day clicked |
-| `onMonthSelect` | `(month: number, year: number) => void` | Month selected |
-| `onYearChange` | `(year: number) => void` | Year changed |
+| `onWeekClick` | `(weekData: WeekData, event: MouseEvent) => void` | Week number clicked |
+| `onMonthSelect` | `(month: number, year: number) => void` | Month selected from dropdown |
+| `onYearChange` | `(year: number) => void` | Year changed from dropdown |
+| `onPrevMonth` | `(month: number, year: number) => void` | Navigate to previous month |
+| `onNextMonth` | `(month: number, year: number) => void` | Navigate to next month |
+| `onPrevYear` | `(year: number) => void` | Navigate to previous year |
+| `onNextYear` | `(year: number) => void` | Navigate to next year |
 | `onTimeChange` | `(time: TimeValue, target: 'start' \| 'end' \| 'single') => void` | Time changed |
+| `onHourClick` | `(hour: number, target: 'start' \| 'end' \| 'single') => void` | Hour clicked |
+| `onMinuteClick` | `(minute: number, target: 'start' \| 'end' \| 'single') => void` | Minute clicked |
 
 ### Types
 
