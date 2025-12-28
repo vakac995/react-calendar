@@ -93,18 +93,24 @@ export interface CalendarLabels {
 export interface CalendarClassNames {
   // Root
   root?: string;
+  rootDisabled?: string;
   rootDefaultLayout?: string;
   rootSideLayout?: string;
   calendarWrapper?: string;
+  calendarWrapperDisabled?: string;
   // Header
   header?: string;
+  headerDisabled?: string;
   headerNavigation?: string;
   headerNavigationButton?: string;
+  headerNavigationButtonDisabled?: string;
   headerNavigationButtonPrev?: string;
   headerNavigationButtonNext?: string;
   headerTitle?: string;
   headerMonthSelect?: string;
+  headerMonthSelectDisabled?: string;
   headerYearSelect?: string;
+  headerYearSelectDisabled?: string;
   // Week days header
   weekDaysRow?: string;
   weekDayCell?: string;
@@ -114,6 +120,7 @@ export interface CalendarClassNames {
   body?: string;
   week?: string;
   weekNumber?: string;
+  weekNumberDisabled?: string;
   weekNumberCell?: string;
   // Day cells
   day?: string;
@@ -156,9 +163,13 @@ export interface CalendarClassNames {
   timeSeparatorDisabled?: string;
   // Mobile/Responsive time picker
   timePickerCollapsed?: string;
+  timePickerCollapsedDisabled?: string;
   timePickerToggle?: string;
+  timePickerToggleDisabled?: string;
   timePickerToggleIcon?: string;
+  timePickerToggleIconDisabled?: string;
   timePickerToggleText?: string;
+  timePickerToggleTextDisabled?: string;
   timePickerContent?: string;
   timePickerContentExpanded?: string;
 }

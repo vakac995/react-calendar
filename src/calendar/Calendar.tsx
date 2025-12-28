@@ -383,13 +383,21 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
 
   // Default header
   const defaultHeader = (
-    <div className={classNames?.header}>
+    <div
+      className={[classNames?.header, disabled && classNames?.headerDisabled]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div className={classNames?.headerNavigation}>
         <button
           type="button"
           onClick={handlePrevYear}
           disabled={disabled}
-          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonPrev]
+          className={[
+            classNames?.headerNavigationButton,
+            classNames?.headerNavigationButtonPrev,
+            disabled && classNames?.headerNavigationButtonDisabled,
+          ]
             .filter(Boolean)
             .join(" ")}
           aria-label={labels.previousYear}
@@ -400,7 +408,11 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           type="button"
           onClick={handlePrevMonth}
           disabled={disabled}
-          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonPrev]
+          className={[
+            classNames?.headerNavigationButton,
+            classNames?.headerNavigationButtonPrev,
+            disabled && classNames?.headerNavigationButtonDisabled,
+          ]
             .filter(Boolean)
             .join(" ")}
           aria-label={labels.previousMonth}
@@ -414,7 +426,12 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           value={currentMonth}
           onChange={(e) => handleMonthSelectChange(Number(e.target.value))}
           disabled={disabled}
-          className={classNames?.headerMonthSelect}
+          className={[
+            classNames?.headerMonthSelect,
+            disabled && classNames?.headerMonthSelectDisabled,
+          ]
+            .filter(Boolean)
+            .join(" ")}
         >
           {(labels.months ?? defaultLabels.months!).map((month, index) => (
             <option key={month} value={index}>
@@ -426,7 +443,12 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           value={currentYear}
           onChange={(e) => handleYearSelectChange(Number(e.target.value))}
           disabled={disabled}
-          className={classNames?.headerYearSelect}
+          className={[
+            classNames?.headerYearSelect,
+            disabled && classNames?.headerYearSelectDisabled,
+          ]
+            .filter(Boolean)
+            .join(" ")}
         >
           {years.map((year) => (
             <option key={year} value={year}>
@@ -441,7 +463,11 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           type="button"
           onClick={handleNextMonth}
           disabled={disabled}
-          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonNext]
+          className={[
+            classNames?.headerNavigationButton,
+            classNames?.headerNavigationButtonNext,
+            disabled && classNames?.headerNavigationButtonDisabled,
+          ]
             .filter(Boolean)
             .join(" ")}
           aria-label={labels.nextMonth}
@@ -452,7 +478,11 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
           type="button"
           onClick={handleNextYear}
           disabled={disabled}
-          className={[classNames?.headerNavigationButton, classNames?.headerNavigationButtonNext]
+          className={[
+            classNames?.headerNavigationButton,
+            classNames?.headerNavigationButtonNext,
+            disabled && classNames?.headerNavigationButtonDisabled,
+          ]
             .filter(Boolean)
             .join(" ")}
           aria-label={labels.nextYear}
@@ -497,19 +527,43 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
     const isExpanded = timePickerExpanded[target];
 
     return (
-      <div className={classNames?.timePickerCollapsed}>
+      <div
+        className={[
+          classNames?.timePickerCollapsed,
+          isDisabled && classNames?.timePickerCollapsedDisabled,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         <button
           type="button"
           onClick={() => toggleTimePicker(target)}
           disabled={isDisabled}
-          className={classNames?.timePickerToggle}
+          className={[
+            classNames?.timePickerToggle,
+            isDisabled && classNames?.timePickerToggleDisabled,
+          ]
+            .filter(Boolean)
+            .join(" ")}
           aria-expanded={isExpanded}
         >
-          <span className={classNames?.timePickerToggleText}>
+          <span
+            className={[
+              classNames?.timePickerToggleText,
+              isDisabled && classNames?.timePickerToggleTextDisabled,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
             {label ?? "Time"}: {formatTimeDisplay(time)}
           </span>
           <svg
-            className={classNames?.timePickerToggleIcon}
+            className={[
+              classNames?.timePickerToggleIcon,
+              isDisabled && classNames?.timePickerToggleIconDisabled,
+            ]
+              .filter(Boolean)
+              .join(" ")}
             style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
@@ -663,6 +717,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
       ref={rootRef}
       className={[
         classNames?.root,
+        disabled && classNames?.rootDisabled,
         effectiveTimePosition === "side"
           ? classNames?.rootSideLayout
           : classNames?.rootDefaultLayout,
@@ -670,7 +725,11 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
         .filter(Boolean)
         .join(" ")}
     >
-      <div className={classNames?.calendarWrapper}>
+      <div
+        className={[classNames?.calendarWrapper, disabled && classNames?.calendarWrapperDisabled]
+          .filter(Boolean)
+          .join(" ")}
+      >
         {/* Header */}
         {renderHeader ? renderHeader(headerRenderProps) : defaultHeader}
 
@@ -719,7 +778,11 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
                   type="button"
                   onClick={(e) => handleWeekClick(week, e)}
                   disabled={disabled}
-                  className={[classNames?.weekNumber, classNames?.weekNumberCell]
+                  className={[
+                    classNames?.weekNumber,
+                    classNames?.weekNumberCell,
+                    disabled && classNames?.weekNumberDisabled,
+                  ]
                     .filter(Boolean)
                     .join(" ")}
                 >

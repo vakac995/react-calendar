@@ -14,21 +14,27 @@ import type { CalendarClassNames } from "../types";
 export const defaultClassNames: CalendarClassNames = {
   // Root container
   root: "inline-flex bg-white rounded-lg shadow-lg p-4",
+  rootDisabled: "opacity-70 cursor-not-allowed",
   rootDefaultLayout: "flex-col",
   rootSideLayout: "flex-row gap-4",
   calendarWrapper: "flex flex-col",
+  calendarWrapperDisabled: "pointer-events-none",
 
   // Header
   header: "flex items-center justify-between mb-4",
+  headerDisabled: "opacity-60",
   headerNavigation: "flex items-center gap-1",
   headerNavigationButton: "p-1.5 rounded hover:bg-gray-100 disabled:opacity-50",
+  headerNavigationButtonDisabled: "opacity-50 cursor-not-allowed hover:bg-transparent",
   headerNavigationButtonPrev: "",
   headerNavigationButtonNext: "",
   headerTitle: "flex items-center gap-2",
   headerMonthSelect:
     "px-2 py-1 rounded border border-gray-200 bg-white text-sm font-medium hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500",
+  headerMonthSelectDisabled: "opacity-60 cursor-not-allowed bg-gray-50 border-gray-100",
   headerYearSelect:
     "px-2 py-1 rounded border border-gray-200 bg-white text-sm font-medium hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500",
+  headerYearSelectDisabled: "opacity-60 cursor-not-allowed bg-gray-50 border-gray-100",
 
   // Week days header
   weekDaysRow: "grid gap-1 mb-2",
@@ -41,6 +47,7 @@ export const defaultClassNames: CalendarClassNames = {
   week: "grid gap-1",
   weekNumber:
     "w-8 text-xs text-gray-400 flex items-center justify-center hover:bg-gray-100 rounded cursor-pointer",
+  weekNumberDisabled: "cursor-not-allowed hover:bg-transparent opacity-50",
   weekNumberCell: "",
 
   // Day cells
@@ -89,10 +96,14 @@ export const defaultClassNames: CalendarClassNames = {
 
   // Mobile/Responsive time picker (collapsible)
   timePickerCollapsed: "w-full",
+  timePickerCollapsedDisabled: "opacity-60",
   timePickerToggle:
     "w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer",
+  timePickerToggleDisabled: "cursor-not-allowed hover:bg-gray-50 opacity-60",
   timePickerToggleIcon: "w-4 h-4 text-gray-500 transition-transform",
+  timePickerToggleIconDisabled: "text-gray-400",
   timePickerToggleText: "text-sm font-medium text-gray-700",
+  timePickerToggleTextDisabled: "text-gray-400",
   timePickerContent: "overflow-hidden transition-all duration-200 ease-in-out",
   timePickerContentExpanded: "mt-3",
 };

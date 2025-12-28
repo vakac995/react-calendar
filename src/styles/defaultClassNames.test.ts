@@ -11,18 +11,24 @@ describe("defaultClassNames", () => {
 
     it("should have all root-level keys defined", () => {
       expect(defaultClassNames.root).toBeDefined();
+      expect(defaultClassNames.rootDisabled).toBeDefined();
       expect(defaultClassNames.rootDefaultLayout).toBeDefined();
       expect(defaultClassNames.rootSideLayout).toBeDefined();
       expect(defaultClassNames.calendarWrapper).toBeDefined();
+      expect(defaultClassNames.calendarWrapperDisabled).toBeDefined();
     });
 
     it("should have all header keys defined", () => {
       expect(defaultClassNames.header).toBeDefined();
+      expect(defaultClassNames.headerDisabled).toBeDefined();
       expect(defaultClassNames.headerNavigation).toBeDefined();
       expect(defaultClassNames.headerNavigationButton).toBeDefined();
+      expect(defaultClassNames.headerNavigationButtonDisabled).toBeDefined();
       expect(defaultClassNames.headerTitle).toBeDefined();
       expect(defaultClassNames.headerMonthSelect).toBeDefined();
+      expect(defaultClassNames.headerMonthSelectDisabled).toBeDefined();
       expect(defaultClassNames.headerYearSelect).toBeDefined();
+      expect(defaultClassNames.headerYearSelectDisabled).toBeDefined();
     });
 
     it("should have all day cell keys defined", () => {
@@ -45,6 +51,24 @@ describe("defaultClassNames", () => {
       expect(defaultClassNames.dayRangeBackgroundMiddle).toBeDefined();
       expect(defaultClassNames.dayRangeBackgroundFirstOfWeek).toBeDefined();
       expect(defaultClassNames.dayRangeBackgroundLastOfWeek).toBeDefined();
+    });
+
+    it("should have all week number keys defined", () => {
+      expect(defaultClassNames.weekNumberPlaceholder).toBeDefined();
+      expect(defaultClassNames.weekNumber).toBeDefined();
+      expect(defaultClassNames.weekNumberDisabled).toBeDefined();
+      expect(defaultClassNames.weekNumberCell).toBeDefined();
+    });
+
+    it("should have all collapsible time picker keys defined", () => {
+      expect(defaultClassNames.timePickerCollapsed).toBeDefined();
+      expect(defaultClassNames.timePickerCollapsedDisabled).toBeDefined();
+      expect(defaultClassNames.timePickerToggle).toBeDefined();
+      expect(defaultClassNames.timePickerToggleDisabled).toBeDefined();
+      expect(defaultClassNames.timePickerToggleText).toBeDefined();
+      expect(defaultClassNames.timePickerToggleTextDisabled).toBeDefined();
+      expect(defaultClassNames.timePickerToggleIcon).toBeDefined();
+      expect(defaultClassNames.timePickerToggleIconDisabled).toBeDefined();
     });
 
     it("should have all time picker keys defined", () => {

@@ -1703,6 +1703,63 @@ describe("Calendar", () => {
       expect(container.querySelectorAll(".nav-container").length).toBe(2);
     });
 
+    it("should apply rootDisabled className when disabled", () => {
+      const { container } = render(
+        <Calendar disabled classNames={{ rootDisabled: "root-disabled" }} />
+      );
+      expect(container.querySelector(".root-disabled")).toBeInTheDocument();
+    });
+
+    it("should apply headerDisabled className when disabled", () => {
+      const { container } = render(
+        <Calendar disabled classNames={{ headerDisabled: "header-disabled" }} />
+      );
+      expect(container.querySelectorAll(".header-disabled").length).toBe(1);
+    });
+
+    it("should apply headerNavigationButtonDisabled className when disabled", () => {
+      const { container } = render(
+        <Calendar disabled classNames={{ headerNavigationButtonDisabled: "nav-btn-disabled" }} />
+      );
+      expect(container.querySelectorAll(".nav-btn-disabled").length).toBe(4);
+    });
+
+    it("should apply headerMonthSelectDisabled className when disabled", () => {
+      const { container } = render(
+        <Calendar disabled classNames={{ headerMonthSelectDisabled: "month-select-disabled" }} />
+      );
+      expect(container.querySelector(".month-select-disabled")).toBeInTheDocument();
+    });
+
+    it("should apply headerYearSelectDisabled className when disabled", () => {
+      const { container } = render(
+        <Calendar disabled classNames={{ headerYearSelectDisabled: "year-select-disabled" }} />
+      );
+      expect(container.querySelector(".year-select-disabled")).toBeInTheDocument();
+    });
+
+    it("should apply weekNumberDisabled className when disabled and showWeekNumbers", () => {
+      const { container } = render(
+        <Calendar disabled showWeekNumbers classNames={{ weekNumberDisabled: "week-disabled" }} />
+      );
+      expect(container.querySelectorAll(".week-disabled").length).toBeGreaterThan(0);
+    });
+
+    it("should not apply disabled classNames when not disabled", () => {
+      const { container } = render(
+        <Calendar
+          classNames={{
+            rootDisabled: "root-disabled",
+            headerDisabled: "header-disabled",
+            headerNavigationButtonDisabled: "nav-btn-disabled",
+          }}
+        />
+      );
+      expect(container.querySelector(".root-disabled")).not.toBeInTheDocument();
+      expect(container.querySelector(".header-disabled")).not.toBeInTheDocument();
+      expect(container.querySelector(".nav-btn-disabled")).not.toBeInTheDocument();
+    });
+
     it("should not trigger handleWeekClick when disabled", () => {
       const onChange = vi.fn();
       const onWeekClick = vi.fn();
