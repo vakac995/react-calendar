@@ -578,7 +578,7 @@ function Header(): ReactElement {
         <span className="text-5xl">📅</span>
         <div className="text-left">
           <h1 className="text-4xl font-bold text-white">React Calendar</h1>
-          <p className="font-mono text-sm text-blue-400">@nickotime_dev/react-calendar</p>
+          <p className="font-mono text-sm text-blue-400">@vakac995/react-calendar</p>
         </div>
       </div>
       <p className="mx-auto max-w-2xl text-slate-400">
@@ -587,7 +587,7 @@ function Header(): ReactElement {
       </p>
       <div className="mt-6 flex justify-center gap-3">
         <a
-          href="https://www.npmjs.com/package/@nickotime_dev/react-calendar"
+          href="https://www.npmjs.com/package/@vakac995/react-calendar"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
@@ -598,7 +598,7 @@ function Header(): ReactElement {
           npm
         </a>
         <a
-          href="https://github.com/nickotime/react-calendar"
+          href="https://github.com/vakac995/react-calendar"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-600"
@@ -977,14 +977,14 @@ export default function App(): ReactElement {
           <p className="text-sm">
             MIT License •{" "}
             <a
-              href="https://github.com/nickotime/react-calendar"
+              href="https://github.com/vakac995/react-calendar"
               className="text-blue-400 hover:underline"
             >
               GitHub
             </a>{" "}
             •{" "}
             <a
-              href="https://www.npmjs.com/package/@nickotime_dev/react-calendar"
+              href="https://www.npmjs.com/package/@vakac995/react-calendar"
               className="text-blue-400 hover:underline"
             >
               npm
