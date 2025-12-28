@@ -53,15 +53,22 @@ describe("defaultClassNames", () => {
       expect(defaultClassNames.timePickerWrapperBottom).toBeDefined();
       expect(defaultClassNames.timePickerWrapperSide).toBeDefined();
       expect(defaultClassNames.timeContainer).toBeDefined();
+      expect(defaultClassNames.timeContainerDisabled).toBeDefined();
       expect(defaultClassNames.timeLabel).toBeDefined();
+      expect(defaultClassNames.timeLabelDisabled).toBeDefined();
       expect(defaultClassNames.timeSelectors).toBeDefined();
+      expect(defaultClassNames.timeSelectorsDisabled).toBeDefined();
       expect(defaultClassNames.timeSelector).toBeDefined();
+      expect(defaultClassNames.timeSelectorDisabled).toBeDefined();
       expect(defaultClassNames.timeSelectorLabel).toBeDefined();
+      expect(defaultClassNames.timeSelectorLabelDisabled).toBeDefined();
       expect(defaultClassNames.timeSelectorScroll).toBeDefined();
+      expect(defaultClassNames.timeSelectorScrollDisabled).toBeDefined();
       expect(defaultClassNames.timeSelectorItem).toBeDefined();
       expect(defaultClassNames.timeSelectorItemSelected).toBeDefined();
       expect(defaultClassNames.timeSelectorItemDisabled).toBeDefined();
       expect(defaultClassNames.timeSeparator).toBeDefined();
+      expect(defaultClassNames.timeSeparatorDisabled).toBeDefined();
     });
 
     it("should have all values as strings", () => {

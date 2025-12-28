@@ -81,9 +81,25 @@ export function TimePicker({
   );
 
   return (
-    <div className={classNames?.timeContainer}>
-      {label && <span className={classNames?.timeLabel}>{label}</span>}
-      <div className={classNames?.timeSelectors}>
+    <div
+      className={[classNames?.timeContainer, disabled && classNames?.timeContainerDisabled]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {label && (
+        <span
+          className={[classNames?.timeLabel, disabled && classNames?.timeLabelDisabled]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {label}
+        </span>
+      )}
+      <div
+        className={[classNames?.timeSelectors, disabled && classNames?.timeSelectorsDisabled]
+          .filter(Boolean)
+          .join(" ")}
+      >
         <TimeSelector
           value={time.hours}
           max={23}
@@ -97,7 +113,13 @@ export function TimePicker({
             onHourSelect?.(h, target);
           }}
         />
-        <span className={classNames?.timeSeparator}>:</span>
+        <span
+          className={[classNames?.timeSeparator, disabled && classNames?.timeSeparatorDisabled]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          :
+        </span>
         <TimeSelector
           value={time.minutes}
           max={59}
@@ -113,7 +135,13 @@ export function TimePicker({
         />
         {showSeconds && (
           <>
-            <span className={classNames?.timeSeparator}>:</span>
+            <span
+              className={[classNames?.timeSeparator, disabled && classNames?.timeSeparatorDisabled]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              :
+            </span>
             <TimeSelector
               value={time.seconds}
               max={59}

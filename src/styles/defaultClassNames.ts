@@ -68,17 +68,24 @@ export const defaultClassNames: CalendarClassNames = {
   timePickerWrapperBottom: "flex-row justify-center mt-4 pt-4 border-t",
   timePickerWrapperSide: "flex-col border-l pl-4 items-center",
   timeContainer: "flex flex-col gap-2",
+  timeContainerDisabled: "opacity-60",
   timeLabel: "text-sm font-medium text-gray-700",
+  timeLabelDisabled: "text-gray-400",
   timeSelectors: "flex items-center gap-1",
+  timeSelectorsDisabled: "pointer-events-none",
   timeSelector: "flex flex-col items-center",
+  timeSelectorDisabled: "opacity-50",
   timeSelectorLabel: "text-xs text-gray-500 mb-1 font-medium",
+  timeSelectorLabelDisabled: "text-gray-400",
   timeSelectorScroll:
     "h-32 w-12 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 border border-gray-200 rounded-md bg-white",
+  timeSelectorScrollDisabled: "bg-gray-50 border-gray-100",
   timeSelectorItem:
     "w-full py-1.5 text-center text-sm transition-colors hover:bg-gray-100 focus:outline-none focus:bg-gray-100",
   timeSelectorItemSelected: "bg-blue-500 text-white hover:bg-blue-600 focus:bg-blue-600",
   timeSelectorItemDisabled: "opacity-40 cursor-not-allowed hover:bg-transparent",
   timeSeparator: "text-xl text-gray-400 mt-5",
+  timeSeparatorDisabled: "text-gray-300",
 
   // Mobile/Responsive time picker (collapsible)
   timePickerCollapsed: "w-full",

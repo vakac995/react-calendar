@@ -41,9 +41,29 @@ export function TimeSelector({
   );
 
   return (
-    <div className={classNames?.timeSelector}>
-      <span className={classNames?.timeSelectorLabel}>{label}</span>
-      <div className={classNames?.timeSelectorScroll}>
+    <div
+      className={[classNames?.timeSelector, disabled && classNames?.timeSelectorDisabled]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <span
+        className={[
+          classNames?.timeSelectorLabel,
+          disabled && classNames?.timeSelectorLabelDisabled,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {label}
+      </span>
+      <div
+        className={[
+          classNames?.timeSelectorScroll,
+          disabled && classNames?.timeSelectorScrollDisabled,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         {items.map((item) => {
           const itemDisabled = disabled ?? isDisabled?.(item);
           const isSelected = item === value;

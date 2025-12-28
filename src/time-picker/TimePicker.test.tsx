@@ -386,6 +386,74 @@ describe("TimePicker", () => {
 
       expect(onHourClick).not.toHaveBeenCalled();
     });
+
+    it("should apply disabled classNames to container when disabled", () => {
+      const classNames = {
+        timeContainer: "time-container",
+        timeContainerDisabled: "time-container-disabled",
+        timeSelectors: "time-selectors",
+        timeSelectorsDisabled: "time-selectors-disabled",
+      };
+
+      const { container } = render(
+        <TimePicker {...defaultProps} disabled classNames={classNames} />
+      );
+
+      const timeContainer = container.querySelector(".time-container");
+      expect(timeContainer).toHaveClass("time-container-disabled");
+
+      const timeSelectors = container.querySelector(".time-selectors");
+      expect(timeSelectors).toHaveClass("time-selectors-disabled");
+    });
+
+    it("should apply disabled classNames to label when disabled", () => {
+      const classNames = {
+        timeLabel: "time-label",
+        timeLabelDisabled: "time-label-disabled",
+      };
+
+      const { container } = render(
+        <TimePicker {...defaultProps} disabled label="Test Label" classNames={classNames} />
+      );
+
+      const timeLabel = container.querySelector(".time-label");
+      expect(timeLabel).toHaveClass("time-label-disabled");
+    });
+
+    it("should apply disabled classNames to separators when disabled", () => {
+      const classNames = {
+        timeSeparator: "time-separator",
+        timeSeparatorDisabled: "time-separator-disabled",
+      };
+
+      const { container } = render(
+        <TimePicker {...defaultProps} disabled classNames={classNames} />
+      );
+
+      const separators = container.querySelectorAll(".time-separator");
+      separators.forEach((separator) => {
+        expect(separator).toHaveClass("time-separator-disabled");
+      });
+    });
+
+    it("should not apply disabled classNames when not disabled", () => {
+      const classNames = {
+        timeContainer: "time-container",
+        timeContainerDisabled: "time-container-disabled",
+        timeLabel: "time-label",
+        timeLabelDisabled: "time-label-disabled",
+      };
+
+      const { container } = render(
+        <TimePicker {...defaultProps} disabled={false} label="Test Label" classNames={classNames} />
+      );
+
+      const timeContainer = container.querySelector(".time-container");
+      expect(timeContainer).not.toHaveClass("time-container-disabled");
+
+      const timeLabel = container.querySelector(".time-label");
+      expect(timeLabel).not.toHaveClass("time-label-disabled");
+    });
   });
 
   describe("minTime and maxTime constraints", () => {

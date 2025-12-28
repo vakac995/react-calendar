@@ -271,6 +271,88 @@ describe("TimeSelector", () => {
         expect(button).toHaveClass("item-disabled");
       });
     });
+
+    it("should apply disabled classNames to wrapper when disabled", () => {
+      const { container } = render(
+        <TimeSelector
+          value={0}
+          max={5}
+          label="Test"
+          disabled={true}
+          classNames={{
+            timeSelector: "selector",
+            timeSelectorDisabled: "selector-disabled",
+          }}
+        />
+      );
+
+      const selector = container.querySelector(".selector");
+      expect(selector).toHaveClass("selector-disabled");
+    });
+
+    it("should apply disabled classNames to label when disabled", () => {
+      const { container } = render(
+        <TimeSelector
+          value={0}
+          max={5}
+          label="Test"
+          disabled={true}
+          classNames={{
+            timeSelectorLabel: "label",
+            timeSelectorLabelDisabled: "label-disabled",
+          }}
+        />
+      );
+
+      const label = container.querySelector(".label");
+      expect(label).toHaveClass("label-disabled");
+    });
+
+    it("should apply disabled classNames to scroll container when disabled", () => {
+      const { container } = render(
+        <TimeSelector
+          value={0}
+          max={5}
+          label="Test"
+          disabled={true}
+          classNames={{
+            timeSelectorScroll: "scroll",
+            timeSelectorScrollDisabled: "scroll-disabled",
+          }}
+        />
+      );
+
+      const scroll = container.querySelector(".scroll");
+      expect(scroll).toHaveClass("scroll-disabled");
+    });
+
+    it("should not apply disabled classNames when not disabled", () => {
+      const { container } = render(
+        <TimeSelector
+          value={0}
+          max={5}
+          label="Test"
+          disabled={false}
+          classNames={{
+            timeSelector: "selector",
+            timeSelectorDisabled: "selector-disabled",
+            timeSelectorLabel: "label",
+            timeSelectorLabelDisabled: "label-disabled",
+            timeSelectorScroll: "scroll",
+            timeSelectorScrollDisabled: "scroll-disabled",
+          }}
+        />
+      );
+
+      const selector = container.querySelector(".selector");
+      expect(selector).not.toHaveClass("selector-disabled");
+
+      const label = container.querySelector(".label");
+      expect(label).not.toHaveClass("label-disabled");
+
+      const scroll = container.querySelector(".scroll");
+      expect(scroll).not.toHaveClass("scroll-disabled");
+    });
   });
 
   describe("isDisabled callback", () => {

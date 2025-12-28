@@ -138,15 +138,22 @@ export interface CalendarClassNames {
   timePickerWrapperBottom?: string;
   timePickerWrapperSide?: string;
   timeContainer?: string;
+  timeContainerDisabled?: string;
   timeLabel?: string;
+  timeLabelDisabled?: string;
   timeSelectors?: string;
+  timeSelectorsDisabled?: string;
   timeSelector?: string;
+  timeSelectorDisabled?: string;
   timeSelectorLabel?: string;
+  timeSelectorLabelDisabled?: string;
   timeSelectorScroll?: string;
+  timeSelectorScrollDisabled?: string;
   timeSelectorItem?: string;
   timeSelectorItemSelected?: string;
   timeSelectorItemDisabled?: string;
   timeSeparator?: string;
+  timeSeparatorDisabled?: string;
   // Mobile/Responsive time picker
   timePickerCollapsed?: string;
   timePickerToggle?: string;
