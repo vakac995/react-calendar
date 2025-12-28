@@ -27,6 +27,7 @@ export default defineConfig({
         "src/main.tsx",
         "src/App.tsx",
         "src/**/index.ts",
+        "src/demo-helpers/**",
       ],
       // Coverage thresholds
       thresholds: {

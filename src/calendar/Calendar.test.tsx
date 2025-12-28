@@ -1,5 +1,15 @@
-import { describe, it, expect, vi, beforeEach, beforeAll, afterAll, type Mock } from "vitest";
-import { render, screen, within, fireEvent } from "@testing-library/react";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  beforeAll,
+  afterAll,
+  type Mock,
+  afterEach,
+} from "vitest";
+import { render, screen, within, fireEvent, act } from "@testing-library/react";
 import { queryAsHtmlElement } from "../test";
 import { Calendar } from "./Calendar";
 import type { DateTimeValue, DateRangeValue, DayCell, HeaderRenderProps } from "../types";
@@ -2247,6 +2257,491 @@ describe("Calendar", () => {
       }
       expect(onDayClick).not.toHaveBeenCalled();
       expect(onChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("layout modes", () => {
+    it("should use desktop layout by default", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          timePosition="side"
+          classNames={{ rootSideLayout: "side-layout" }}
+        />
+      );
+      expect(container.querySelector(".side-layout")).toBeInTheDocument();
+    });
+
+    it("should use mobile layout when layout='mobile'", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          layout="mobile"
+          classNames={{ timePickerCollapsed: "collapsed-time" }}
+        />
+      );
+      expect(container.querySelector(".collapsed-time")).toBeInTheDocument();
+    });
+
+    it("should force timePosition to 'bottom' in mobile layout when timePosition was 'side'", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          layout="mobile"
+          timePosition="side"
+          classNames={{ rootSideLayout: "side-layout", rootDefaultLayout: "default-layout" }}
+        />
+      );
+      // Should not have side layout in mobile mode
+      expect(container.querySelector(".side-layout")).not.toBeInTheDocument();
+      expect(container.querySelector(".default-layout")).toBeInTheDocument();
+    });
+
+    it("should keep timePosition when layout is desktop", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          layout="desktop"
+          timePosition="side"
+          classNames={{ rootSideLayout: "side-layout" }}
+        />
+      );
+      expect(container.querySelector(".side-layout")).toBeInTheDocument();
+    });
+  });
+
+  describe("collapsible time picker (mobile layout)", () => {
+    it("should render collapsible time picker in mobile layout with single mode", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          layout="mobile"
+          classNames={{
+            timePickerCollapsed: "collapsed-time",
+            timePickerToggle: "toggle-btn",
+          }}
+        />
+      );
+      expect(container.querySelector(".collapsed-time")).toBeInTheDocument();
+      expect(container.querySelector(".toggle-btn")).toBeInTheDocument();
+    });
+
+    it("should display formatted time in toggle button", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 14, minutes: 35, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          layout="mobile"
+          classNames={{ timePickerToggle: "toggle-btn" }}
+        />
+      );
+      const toggleBtn = container.querySelector(".toggle-btn");
+      expect(toggleBtn?.textContent).toContain("14:35");
+    });
+
+    it("should display formatted time with seconds when showSeconds is true", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 14, minutes: 35, seconds: 45 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          showSeconds
+          layout="mobile"
+          classNames={{ timePickerToggle: "toggle-btn" }}
+        />
+      );
+      const toggleBtn = container.querySelector(".toggle-btn");
+      expect(toggleBtn?.textContent).toContain("14:35:45");
+    });
+
+    it("should expand time picker when toggle button is clicked", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          layout="mobile"
+          classNames={{ timePickerToggle: "toggle-btn" }}
+        />
+      );
+      const toggleBtn = container.querySelector(".toggle-btn")!;
+      expect(toggleBtn.getAttribute("aria-expanded")).toBe("false");
+
+      fireEvent.click(toggleBtn);
+      expect(toggleBtn.getAttribute("aria-expanded")).toBe("true");
+    });
+
+    it("should collapse time picker when toggle button is clicked again", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          layout="mobile"
+          classNames={{ timePickerToggle: "toggle-btn" }}
+        />
+      );
+      const toggleBtn = container.querySelector(".toggle-btn")!;
+
+      // Expand
+      fireEvent.click(toggleBtn);
+      expect(toggleBtn.getAttribute("aria-expanded")).toBe("true");
+
+      // Collapse
+      fireEvent.click(toggleBtn);
+      expect(toggleBtn.getAttribute("aria-expanded")).toBe("false");
+    });
+
+    it("should render two collapsible time pickers in range mode", () => {
+      const value: DateRangeValue = {
+        start: {
+          date: new Date(2025, 0, 10),
+          time: { hours: 9, minutes: 0, seconds: 0 },
+        },
+        end: {
+          date: new Date(2025, 0, 20),
+          time: { hours: 17, minutes: 0, seconds: 0 },
+        },
+      };
+      const { container } = render(
+        <Calendar
+          mode="range"
+          value={value}
+          showTime
+          layout="mobile"
+          classNames={{ timePickerCollapsed: "collapsed-time" }}
+        />
+      );
+      const collapsedPickers = container.querySelectorAll(".collapsed-time");
+      expect(collapsedPickers.length).toBe(2);
+    });
+
+    it("should display start and end time labels in range mode", () => {
+      const value: DateRangeValue = {
+        start: {
+          date: new Date(2025, 0, 10),
+          time: { hours: 9, minutes: 30, seconds: 0 },
+        },
+        end: {
+          date: new Date(2025, 0, 20),
+          time: { hours: 17, minutes: 45, seconds: 0 },
+        },
+      };
+      const { container } = render(
+        <Calendar
+          mode="range"
+          value={value}
+          showTime
+          layout="mobile"
+          classNames={{ timePickerToggle: "toggle-btn" }}
+          labels={{ startTimeLabel: "Start Time", endTimeLabel: "End Time" }}
+        />
+      );
+      const toggleBtns = container.querySelectorAll(".toggle-btn");
+      expect(toggleBtns[0]?.textContent).toContain("Start Time");
+      expect(toggleBtns[0]?.textContent).toContain("09:30");
+      expect(toggleBtns[1]?.textContent).toContain("End Time");
+      expect(toggleBtns[1]?.textContent).toContain("17:45");
+    });
+
+    it("should toggle start and end time pickers independently in range mode", () => {
+      const value: DateRangeValue = {
+        start: {
+          date: new Date(2025, 0, 10),
+          time: { hours: 9, minutes: 0, seconds: 0 },
+        },
+        end: {
+          date: new Date(2025, 0, 20),
+          time: { hours: 17, minutes: 0, seconds: 0 },
+        },
+      };
+      const { container } = render(
+        <Calendar
+          mode="range"
+          value={value}
+          showTime
+          layout="mobile"
+          classNames={{ timePickerToggle: "toggle-btn" }}
+        />
+      );
+      const toggleBtns = container.querySelectorAll(".toggle-btn");
+      const startToggle = toggleBtns[0] as HTMLButtonElement;
+      const endToggle = toggleBtns[1] as HTMLButtonElement;
+
+      // Both should start collapsed
+      expect(startToggle.getAttribute("aria-expanded")).toBe("false");
+      expect(endToggle.getAttribute("aria-expanded")).toBe("false");
+
+      // Expand start
+      fireEvent.click(startToggle);
+      expect(startToggle.getAttribute("aria-expanded")).toBe("true");
+      expect(endToggle.getAttribute("aria-expanded")).toBe("false");
+
+      // Expand end (start remains expanded)
+      fireEvent.click(endToggle);
+      expect(startToggle.getAttribute("aria-expanded")).toBe("true");
+      expect(endToggle.getAttribute("aria-expanded")).toBe("true");
+    });
+
+    it("should disable toggle button when calendar is disabled", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          layout="mobile"
+          disabled
+          classNames={{ timePickerToggle: "toggle-btn" }}
+        />
+      );
+      const toggleBtn = container.querySelector(".toggle-btn")!;
+      expect(toggleBtn).toBeDisabled();
+    });
+
+    it("should apply timePickerToggleDisabled className when disabled", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          layout="mobile"
+          disabled
+          classNames={{
+            timePickerToggle: "toggle-btn",
+            timePickerToggleDisabled: "toggle-disabled",
+          }}
+        />
+      );
+      const toggleBtn = container.querySelector(".toggle-btn");
+      expect(toggleBtn).toHaveClass("toggle-disabled");
+    });
+
+    it("should render time picker icon with rotation when expanded", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          layout="mobile"
+          classNames={{
+            timePickerToggle: "toggle-btn",
+            timePickerToggleIcon: "toggle-icon",
+          }}
+        />
+      );
+      const toggleBtn = container.querySelector(".toggle-btn")!;
+      const icon = container.querySelector(".toggle-icon")!;
+
+      expect((icon as unknown as HTMLElement).style.transform).toBe("rotate(0deg)");
+
+      fireEvent.click(toggleBtn);
+      expect((icon as unknown as HTMLElement).style.transform).toBe("rotate(180deg)");
+    });
+
+    it("should use default 'Time' label when no label provided", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          layout="mobile"
+          classNames={{ timePickerToggle: "toggle-btn" }}
+        />
+      );
+      const toggleBtn = container.querySelector(".toggle-btn");
+      expect(toggleBtn?.textContent).toContain("Time");
+    });
+  });
+
+  describe("auto layout with ResizeObserver", () => {
+    let mockObserve: Mock;
+    let mockDisconnect: Mock;
+    let resizeCallback: ((entries: { contentRect: { width: number } }[]) => void) | null = null;
+
+    beforeEach(() => {
+      mockObserve = vi.fn();
+      mockDisconnect = vi.fn();
+      resizeCallback = null;
+
+      vi.stubGlobal(
+        "ResizeObserver",
+        class MockResizeObserver {
+          constructor(callback: (entries: { contentRect: { width: number } }[]) => void) {
+            resizeCallback = callback;
+          }
+          observe = mockObserve;
+          unobserve = vi.fn();
+          disconnect = mockDisconnect;
+        }
+      );
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("should observe container when layout is auto", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      render(<Calendar mode="single" value={value} showTime layout="auto" />);
+
+      expect(mockObserve).toHaveBeenCalled();
+    });
+
+    it("should not observe container when layout is not auto", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      render(<Calendar mode="single" value={value} showTime layout="desktop" />);
+
+      expect(mockObserve).not.toHaveBeenCalled();
+    });
+
+    it("should disconnect observer on unmount", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { unmount } = render(<Calendar mode="single" value={value} showTime layout="auto" />);
+
+      unmount();
+      expect(mockDisconnect).toHaveBeenCalled();
+    });
+
+    it("should switch to mobile layout when container width is below mobileBreakpoint", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          layout="auto"
+          mobileBreakpoint={600}
+          classNames={{ timePickerCollapsed: "collapsed-time" }}
+        />
+      );
+
+      // Simulate resize to mobile width
+      act(() => {
+        resizeCallback?.([{ contentRect: { width: 400 } }]);
+      });
+
+      expect(container.querySelector(".collapsed-time")).toBeInTheDocument();
+    });
+
+    it("should switch to desktop layout when container width is above mobileBreakpoint", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          timePosition="side"
+          layout="auto"
+          mobileBreakpoint={600}
+          classNames={{ rootSideLayout: "side-layout", timePickerCollapsed: "collapsed-time" }}
+        />
+      );
+
+      // Simulate resize to desktop width
+      act(() => {
+        resizeCallback?.([{ contentRect: { width: 800 } }]);
+      });
+
+      expect(container.querySelector(".side-layout")).toBeInTheDocument();
+      expect(container.querySelector(".collapsed-time")).not.toBeInTheDocument();
+    });
+
+    it("should use default desktop layout before ResizeObserver measures", () => {
+      const value: DateTimeValue = {
+        date: new Date(2025, 0, 15),
+        time: { hours: 10, minutes: 30, seconds: 0 },
+      };
+      const { container } = render(
+        <Calendar
+          mode="single"
+          value={value}
+          showTime
+          timePosition="side"
+          layout="auto"
+          classNames={{ rootSideLayout: "side-layout" }}
+        />
+      );
+
+      // Before any resize callback, should default to desktop
+      expect(container.querySelector(".side-layout")).toBeInTheDocument();
     });
   });
 });
