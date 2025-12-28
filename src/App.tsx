@@ -1,160 +1,28 @@
-import type React from "react";
+import type { ReactElement } from "react";
 import { useState } from "react";
+
+// Calendar imports
 import {
   Calendar,
-  type CalendarValue,
-  type SelectionMode,
   type DateTimeValue,
   type DateRangeValue,
   type DayCell,
+  type LayoutMode,
   defaultClassNames,
   defaultLabels,
   mergeClassNames,
   mergeLabels,
+  MONTHS,
 } from "./index";
 
-// ============================================================================
-// DEMO HELPER COMPONENTS
-// ============================================================================
-
-function CopyButton({ text }: { text: string }): React.ReactElement {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = (): void => {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch((err) => {
-        console.error("Failed to copy:", err);
-      });
-  };
-
-  return (
-    <button
-      onClick={handleCopy}
-      className="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
-      title={copied ? "Copied!" : "Copy to clipboard"}
-    >
-      {copied ? (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 text-green-400"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path
-            fillRule="evenodd"
-            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ) : (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-          <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
-        </svg>
-      )}
-    </button>
-  );
-}
-
-interface DemoCardProps {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-  code: string;
-}
-
-function DemoCard({ title, description, children, code }: DemoCardProps): React.ReactElement {
-  return (
-    <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg">
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
-        {description && <p className="mt-0.5 text-sm text-blue-100">{description}</p>}
-      </div>
-      <div className="flex flex-col">
-        {/* Calendar Section */}
-        <div className="flex flex-col items-center border-b border-gray-100 p-5">{children}</div>
-        {/* Code Section */}
-        <div className="bg-slate-900 p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Usage
-            </span>
-            <CopyButton text={code} />
-          </div>
-          <pre className="overflow-x-auto whitespace-pre font-mono text-sm text-slate-300">
-            <code>{code}</code>
-          </pre>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-interface ValueDisplayProps<TMode extends SelectionMode> {
-  value: CalendarValue<TMode> | undefined;
-  mode: TMode;
-}
-
-function ValueDisplay<TMode extends SelectionMode>({
-  value,
-  mode,
-}: ValueDisplayProps<TMode>): React.ReactElement {
-  const formatDateTime = (dtv: DateTimeValue | null): string => {
-    if (!dtv) return "—";
-    const date = dtv.date.toLocaleDateString();
-    const hours = dtv.time?.hours ?? 0;
-    const minutes = dtv.time?.minutes ?? 0;
-    const seconds = dtv.time?.seconds ?? 0;
-    const time = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-    return `${date} ${time}`;
-  };
-
-  if (mode === "single") {
-    const singleValue = value as DateTimeValue | null | undefined;
-    return (
-      <div className="mt-4 w-full rounded-xl border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-3 text-sm">
-        <div className="flex items-center justify-between">
-          <span className="font-medium text-gray-600">Selected:</span>
-          <span className="font-mono text-blue-600">
-            {singleValue ? formatDateTime(singleValue) : "—"}
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  const rangeValue = value as DateRangeValue | undefined;
-  return (
-    <div className="mt-4 w-full space-y-2 rounded-xl border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-3 text-sm">
-      <div className="flex items-center justify-between">
-        <span className="font-medium text-gray-600">Start:</span>
-        <span className="font-mono text-blue-600">{formatDateTime(rangeValue?.start ?? null)}</span>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="font-medium text-gray-600">End:</span>
-        <span className="font-mono text-emerald-600">
-          {formatDateTime(rangeValue?.end ?? null)}
-        </span>
-      </div>
-    </div>
-  );
-}
+// Demo helper imports
+import { CopyButton, DemoCard, DemoSection, ValueDisplay } from "./demo-helpers";
 
 // ============================================================================
-// DEMO COMPONENTS
+// DEMO COMPONENTS - Basic Selection
 // ============================================================================
 
-function BasicCalendarDemo(): React.ReactElement {
+function BasicSingleDemo(): ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
   return (
@@ -162,18 +30,15 @@ function BasicCalendarDemo(): React.ReactElement {
       <Calendar<"single">
         mode="single"
         value={value}
-        onChange={(v) => setValue(v)}
+        onChange={setValue}
         classNames={defaultClassNames}
-        onDayClick={(date) => console.log("Day clicked:", date)}
-        onMonthSelect={(month, year) => console.log("Month selected:", month, year)}
-        onYearChange={(year) => console.log("Year changed:", year)}
       />
       <ValueDisplay value={value} mode="single" />
     </>
   );
 }
 
-function RangeCalendarDemo(): React.ReactElement {
+function DateRangeDemo(): ReactElement {
   const [value, setValue] = useState<DateRangeValue | null>(null);
 
   return (
@@ -181,11 +46,9 @@ function RangeCalendarDemo(): React.ReactElement {
       <Calendar<"range">
         mode="range"
         value={value}
-        onChange={(v) => setValue(v)}
+        onChange={setValue}
         classNames={defaultClassNames}
         showWeekNumbers
-        onDayClick={(date) => console.log("Range day clicked:", date)}
-        onWeekClick={(week) => console.log("Week selected:", week.weekNumber)}
       />
       <div className="mt-1 text-center text-xs text-gray-500">
         Click week number to select entire week
@@ -195,7 +58,11 @@ function RangeCalendarDemo(): React.ReactElement {
   );
 }
 
-function CalendarWithTimeDemo(): React.ReactElement {
+// ============================================================================
+// DEMO COMPONENTS - Time Picker
+// ============================================================================
+
+function TimePickerBottomDemo(): ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
   return (
@@ -203,22 +70,36 @@ function CalendarWithTimeDemo(): React.ReactElement {
       <Calendar<"single">
         mode="single"
         value={value}
-        onChange={(v) => setValue(v)}
+        onChange={setValue}
         classNames={defaultClassNames}
         showTime
         showSeconds
         timePosition="bottom"
-        onTimeChange={(time, target) => console.log("Time changed:", time, target)}
-        onHourSelect={(hour, target) => console.log("Hour selected:", hour, target)}
-        onMinuteSelect={(minute, target) => console.log("Minute selected:", minute, target)}
-        onSecondsSelect={(seconds, target) => console.log("Seconds selected:", seconds, target)}
       />
       <ValueDisplay value={value} mode="single" />
     </>
   );
 }
 
-function RangeWithTimeDemo(): React.ReactElement {
+function TimePickerTopDemo(): ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        showTime
+        timePosition="top"
+      />
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+function TimePickerSideDemo(): ReactElement {
   const [value, setValue] = useState<DateRangeValue | null>(null);
 
   return (
@@ -226,19 +107,70 @@ function RangeWithTimeDemo(): React.ReactElement {
       <Calendar<"range">
         mode="range"
         value={value}
-        onChange={(v) => setValue(v)}
+        onChange={setValue}
         classNames={defaultClassNames}
         showTime
         showSeconds
         timePosition="side"
-        onTimeChange={(time, target) => console.log("Range time changed:", time, target)}
       />
       <ValueDisplay value={value} mode="range" />
     </>
   );
 }
 
-function MinMaxDatesDemo(): React.ReactElement {
+// ============================================================================
+// DEMO COMPONENTS - Responsive Layout
+// ============================================================================
+
+function ResponsiveLayoutDemo(): ReactElement {
+  const [value, setValue] = useState<DateRangeValue | null>(null);
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>("auto");
+
+  return (
+    <>
+      <div className="mb-4 flex flex-wrap gap-2">
+        {(["auto", "desktop", "mobile"] as const).map((mode) => (
+          <button
+            key={mode}
+            onClick={() => setLayoutMode(mode)}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
+              layoutMode === mode
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            {mode}
+          </button>
+        ))}
+      </div>
+      <Calendar<"range">
+        mode="range"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        showTime
+        showSeconds
+        timePosition="side"
+        layout={layoutMode}
+        mobileBreakpoint={420}
+      />
+      <div className="mt-2 text-center text-xs text-gray-500">
+        {layoutMode === "auto"
+          ? "📱 Resize container to see responsive layout"
+          : layoutMode === "mobile"
+            ? "📱 Mobile: Collapsible time picker"
+            : "🖥️ Desktop: Side time picker"}
+      </div>
+      <ValueDisplay value={value} mode="range" />
+    </>
+  );
+}
+
+// ============================================================================
+// DEMO COMPONENTS - Constraints
+// ============================================================================
+
+function MinMaxDatesDemo(): ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
   const today = new Date();
@@ -250,7 +182,7 @@ function MinMaxDatesDemo(): React.ReactElement {
       <Calendar<"single">
         mode="single"
         value={value}
-        onChange={(v) => setValue(v)}
+        onChange={setValue}
         classNames={defaultClassNames}
         minDate={minDate}
         maxDate={maxDate}
@@ -263,7 +195,7 @@ function MinMaxDatesDemo(): React.ReactElement {
   );
 }
 
-function WeekStartMondayDemo(): React.ReactElement {
+function TimeConstraintsDemo(): ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
   return (
@@ -271,161 +203,120 @@ function WeekStartMondayDemo(): React.ReactElement {
       <Calendar<"single">
         mode="single"
         value={value}
-        onChange={(v) => setValue(v)}
-        classNames={defaultClassNames}
-        weekStartsOn={1}
-        showWeekNumbers
-        onWeekClick={(week, _e) => console.log("Week clicked:", week)}
-        onPrevWeek={(date) => console.log("Prev week from:", date)}
-        onNextWeek={(date) => console.log("Next week from:", date)}
-      />
-      <ValueDisplay value={value} mode="single" />
-    </>
-  );
-}
-
-function CustomYearsDemo(): React.ReactElement {
-  const [value, setValue] = useState<DateTimeValue | null>(null);
-  const years = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030];
-
-  return (
-    <>
-      <Calendar<"single">
-        mode="single"
-        value={value}
-        onChange={(v) => setValue(v)}
-        classNames={defaultClassNames}
-        years={years}
-        onYearChange={(year) => console.log("Custom year changed:", year)}
-        onPrevYear={(year) => console.log("Prev year:", year)}
-        onNextYear={(year) => console.log("Next year:", year)}
-      />
-      <div className="mt-2 text-center text-xs text-gray-500">
-        📆 Years: {years[0]} – {years[years.length - 1]}
-      </div>
-      <ValueDisplay value={value} mode="single" />
-    </>
-  );
-}
-
-function TimeWithLimitsDemo(): React.ReactElement {
-  const [value, setValue] = useState<DateTimeValue | null>(null);
-
-  return (
-    <>
-      <Calendar<"single">
-        mode="single"
-        value={value}
-        onChange={(v) => setValue(v)}
+        onChange={setValue}
         classNames={defaultClassNames}
         showTime
         minTime={{ hours: 9, minutes: 0, seconds: 0 }}
         maxTime={{ hours: 17, minutes: 30, seconds: 0 }}
       />
-      <div className="mt-2 text-center text-xs text-gray-500">⏰ Business hours: 09:00 – 17:30</div>
+      <div className="mt-2 text-center text-xs text-gray-500">🕘 Business hours: 09:00 – 17:30</div>
       <ValueDisplay value={value} mode="single" />
     </>
   );
 }
 
-function CustomStylesDemo(): React.ReactElement {
-  const [mode, setMode] = useState<"single" | "range">("single");
-  const [singleValue, setSingleValue] = useState<DateTimeValue | null>(null);
-  const [rangeValue, setRangeValue] = useState<DateRangeValue | null>(null);
+// ============================================================================
+// DEMO COMPONENTS - Week Configuration
+// ============================================================================
 
-  // Shadcn-inspired minimal design - black, gray, white
-  // mergeClassNames replaces default classes, so we provide complete class strings
+function WeekConfigDemo(): ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        weekStartsOn={1}
+        showWeekNumbers
+      />
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+function CustomYearsDemo(): ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  const years = Array.from({ length: 5 }, (_, i) => 2024 + i);
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        years={years}
+      />
+      <div className="mt-2 text-center text-xs text-gray-500">
+        Years: {years[0]} – {years[years.length - 1]}
+      </div>
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+// ============================================================================
+// DEMO COMPONENTS - Customization
+// ============================================================================
+
+function CustomStylesDemo(): ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
   const shadcnClassNames = mergeClassNames(defaultClassNames, {
-    root: "inline-flex flex-col bg-white border border-gray-200 rounded-lg shadow-sm p-4",
-    header: "flex items-center justify-between mb-4 border-b border-gray-100 pb-3",
-    headerNavigation: "flex items-center gap-1",
-    headerNavigationButton:
-      "p-1.5 h-7 w-7 bg-transparent hover:bg-gray-100 rounded-md text-gray-600 hover:text-gray-900 transition-colors",
-    headerTitle: "flex items-center gap-2",
+    root: "bg-white rounded-lg shadow-sm border border-gray-200 p-4 font-sans",
+    header: "border-b border-gray-100 pb-3 mb-3",
+    headerTitle: "flex items-center gap-1",
     headerMonthSelect:
-      "px-2 py-1 h-8 border-0 bg-transparent font-medium text-gray-900 rounded-md cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-0",
+      "appearance-none bg-transparent text-sm font-medium text-gray-900 cursor-pointer hover:text-gray-600 focus:outline-none",
     headerYearSelect:
-      "px-2 py-1 h-8 border-0 bg-transparent font-medium text-gray-900 rounded-md cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-0",
-    weekDayCell: "text-center text-xs font-medium text-gray-500 py-1 uppercase tracking-wide",
-    weekDayCellWeekend: "text-gray-400",
+      "appearance-none bg-transparent text-sm font-medium text-gray-900 cursor-pointer hover:text-gray-600 focus:outline-none",
+    headerNavigationButton:
+      "inline-flex items-center justify-center h-7 w-7 rounded-md bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors",
     dayButton:
-      "w-9 h-9 rounded-md flex items-center justify-center text-sm font-normal relative z-10 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 hover:bg-gray-100",
+      "relative w-9 h-9 text-sm rounded-md text-gray-900 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1",
+    daySelected: "bg-gray-900 text-white hover:bg-gray-800 focus:ring-gray-900",
     dayToday: "bg-gray-100 font-semibold",
-    daySelected: "bg-gray-900 text-white hover:bg-gray-800 font-medium",
-    dayInRange: "bg-gray-200 rounded-none hover:bg-gray-300",
-    dayRangeStart: "bg-gray-900 text-white rounded-l-md rounded-r-none hover:bg-gray-800",
-    dayRangeEnd: "bg-gray-900 text-white rounded-r-md rounded-l-none hover:bg-gray-800",
-    dayRangeBackground: "absolute inset-y-0 bg-gray-200",
-    dayRangeBackgroundStart: "left-1/2 right-0",
-    dayRangeBackgroundEnd: "left-0 right-1/2",
-    dayRangeBackgroundMiddle: "left-0 right-0",
-    dayRangeBackgroundFirstOfWeek: "rounded-l-md",
-    dayRangeBackgroundLastOfWeek: "rounded-r-md",
-    dayWeekend: "text-gray-600",
-    dayDisabled: "text-gray-300 opacity-50 cursor-not-allowed hover:bg-transparent",
+    dayInRange: "bg-gray-100 text-gray-900",
+    dayRangeStart: "bg-gray-900 text-white rounded-l-md",
+    dayRangeEnd: "bg-gray-900 text-white rounded-r-md",
+    dayDisabled: "text-gray-300 cursor-not-allowed hover:bg-transparent",
     dayOutsideMonth: "text-gray-300",
   });
 
   return (
     <>
-      <div className="mb-4 flex gap-2">
-        <button
-          onClick={() => setMode("single")}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-            mode === "single"
-              ? "bg-gray-900 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Single
-        </button>
-        <button
-          onClick={() => setMode("range")}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-            mode === "range"
-              ? "bg-gray-900 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Range
-        </button>
-      </div>
-      {mode === "single" ? (
-        <>
-          <Calendar<"single">
-            mode="single"
-            value={singleValue}
-            onChange={(v) => setSingleValue(v)}
-            classNames={shadcnClassNames}
-          />
-          <ValueDisplay value={singleValue} mode="single" />
-        </>
-      ) : (
-        <>
-          <Calendar<"range">
-            mode="range"
-            value={rangeValue}
-            onChange={(v) => setRangeValue(v)}
-            classNames={shadcnClassNames}
-          />
-          <ValueDisplay value={rangeValue} mode="range" />
-        </>
-      )}
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={setValue}
+        classNames={shadcnClassNames}
+      />
+      <ValueDisplay value={value} mode="single" />
     </>
   );
 }
 
-function CustomLabelsDemo(): React.ReactElement {
+function CustomLabelsDemo(): ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
-  // Custom English labels - merge with defaults, only override specific ones
   const customLabels = mergeLabels(defaultLabels, {
     timeLabel: "Select Time",
     hoursLabel: "Hr",
     minutesLabel: "Min",
     secondsLabel: "Sec",
-    shortDays: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"] as const,
-    // Custom text-based navigation buttons instead of icons
+    shortDays: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"] as [
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+    ],
     previousYearIcon: "««",
     previousMonthIcon: "«",
     nextMonthIcon: "»",
@@ -437,23 +328,22 @@ function CustomLabelsDemo(): React.ReactElement {
       <Calendar<"single">
         mode="single"
         value={value}
-        showTime
-        onChange={(v) => setValue(v)}
+        onChange={setValue}
         classNames={defaultClassNames}
         labels={customLabels}
+        showTime
       />
       <div className="mt-2 text-center text-xs text-gray-500">
-        🏷️ Custom labels &amp; text nav via mergeLabels()
+        🏷️ Custom labels via mergeLabels()
       </div>
       <ValueDisplay value={value} mode="single" />
     </>
   );
 }
 
-function CustomDayRendererDemo(): React.ReactElement {
+function CustomDayRendererDemo(): ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
 
-  // Example: Mark some dates as having events
   const eventDates = [5, 12, 15, 22, 28];
 
   const renderDay = (day: DayCell, defaultRender: React.ReactNode): React.ReactNode => {
@@ -474,7 +364,7 @@ function CustomDayRendererDemo(): React.ReactElement {
       <Calendar<"single">
         mode="single"
         value={value}
-        onChange={(v) => setValue(v)}
+        onChange={setValue}
         classNames={defaultClassNames}
         renderDay={renderDay}
       />
@@ -486,7 +376,48 @@ function CustomDayRendererDemo(): React.ReactElement {
   );
 }
 
-function DisabledCalendarDemo(): React.ReactElement {
+function CustomHeaderDemo(): ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        renderHeader={({ currentMonth, currentYear, onPrevMonth, onNextMonth }) => (
+          <div className="mb-4 flex items-center justify-between rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 p-3 text-white">
+            <button
+              onClick={onPrevMonth}
+              className="rounded-full p-1 hover:bg-white/20"
+              aria-label="Previous month"
+            >
+              ←
+            </button>
+            <span className="text-lg font-bold">
+              {MONTHS[currentMonth]} {currentYear}
+            </span>
+            <button
+              onClick={onNextMonth}
+              className="rounded-full p-1 hover:bg-white/20"
+              aria-label="Next month"
+            >
+              →
+            </button>
+          </div>
+        )}
+      />
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+// ============================================================================
+// DEMO COMPONENTS - States
+// ============================================================================
+
+function DisabledDemo(): ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>({
     date: new Date(),
     time: { hours: 14, minutes: 30, seconds: 0 },
@@ -497,7 +428,7 @@ function DisabledCalendarDemo(): React.ReactElement {
       <Calendar<"single">
         mode="single"
         value={value}
-        onChange={(v) => setValue(v)}
+        onChange={setValue}
         classNames={defaultClassNames}
         showTime
         disabled
@@ -507,26 +438,7 @@ function DisabledCalendarDemo(): React.ReactElement {
   );
 }
 
-function TimeTopDemo(): React.ReactElement {
-  const [value, setValue] = useState<DateTimeValue | null>(null);
-
-  return (
-    <>
-      <Calendar<"single">
-        mode="single"
-        value={value}
-        onChange={(v) => setValue(v)}
-        classNames={defaultClassNames}
-        showTime
-        timePosition="top"
-      />
-      <ValueDisplay value={value} mode="single" />
-    </>
-  );
-}
-
-function PreselectedDateDemo(): React.ReactElement {
-  // Pre-select Christmas 2025
+function PreselectedDemo(): ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>({
     date: new Date(2025, 11, 25),
   });
@@ -536,56 +448,16 @@ function PreselectedDateDemo(): React.ReactElement {
       <Calendar<"single">
         mode="single"
         value={value}
-        onChange={(v) => setValue(v)}
+        onChange={setValue}
         classNames={defaultClassNames}
       />
+      <div className="mt-2 text-center text-xs text-gray-500">🎄 Christmas 2025</div>
       <ValueDisplay value={value} mode="single" />
     </>
   );
 }
 
-function BookingCalendarDemo(): React.ReactElement {
-  const [value, setValue] = useState<DateTimeValue | null>(null);
-
-  // Simulate booked/unavailable dates
-  const bookedDates = [3, 4, 10, 11, 17, 18, 24, 25];
-  const today = new Date();
-
-  const renderDay = (day: DayCell, defaultRender: React.ReactNode): React.ReactNode => {
-    const isBooked = day.isCurrentMonth && bookedDates.includes(day.date.getDate());
-    const isPast = day.date < today && !day.isToday;
-
-    if (isBooked || isPast) {
-      return (
-        <div className="relative">
-          <div className="line-through opacity-40">{defaultRender}</div>
-        </div>
-      );
-    }
-
-    return defaultRender;
-  };
-
-  return (
-    <>
-      <Calendar<"single">
-        mode="single"
-        value={value}
-        onChange={(v) => setValue(v)}
-        classNames={defaultClassNames}
-        renderDay={renderDay}
-        minDate={today}
-      />
-      <div className="mt-2 text-center text-xs text-gray-500">
-        📅 Strikethrough = booked/unavailable
-      </div>
-      <ValueDisplay value={value} mode="single" />
-    </>
-  );
-}
-
-function ControlledRangeDemo(): React.ReactElement {
-  // Initialize with current week (Sunday to Saturday)
+function ControlledRangeDemo(): ReactElement {
   const getThisWeek = (): DateRangeValue => {
     const today = new Date();
     const startOfWeek = new Date(today);
@@ -600,20 +472,17 @@ function ControlledRangeDemo(): React.ReactElement {
 
   const [value, setValue] = useState<DateRangeValue | null>(getThisWeek());
 
-  const clearSelection = () => setValue(null);
-  const selectThisWeek = () => setValue(getThisWeek());
-
   return (
     <>
       <div className="mb-3 flex gap-2">
         <button
-          onClick={selectThisWeek}
+          onClick={() => setValue(getThisWeek())}
           className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700"
         >
           This Week
         </button>
         <button
-          onClick={clearSelection}
+          onClick={() => setValue(null)}
           className="rounded-lg bg-gray-200 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-300"
         >
           Clear
@@ -622,7 +491,7 @@ function ControlledRangeDemo(): React.ReactElement {
       <Calendar<"range">
         mode="range"
         value={value}
-        onChange={(v) => setValue(v)}
+        onChange={setValue}
         classNames={defaultClassNames}
       />
       <ValueDisplay value={value} mode="range" />
@@ -630,11 +499,15 @@ function ControlledRangeDemo(): React.ReactElement {
   );
 }
 
-function AllCallbacksDemo(): React.ReactElement {
+// ============================================================================
+// DEMO COMPONENTS - Events
+// ============================================================================
+
+function AllCallbacksDemo(): ReactElement {
   const [value, setValue] = useState<DateTimeValue | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
 
-  const addLog = (message: string) => {
+  const addLog = (message: string): void => {
     setLogs((prev) => [...prev.slice(-9), `${new Date().toLocaleTimeString()}: ${message}`]);
   };
 
@@ -680,7 +553,7 @@ function AllCallbacksDemo(): React.ReactElement {
             <div className="space-y-1.5">
               {logs.map((log, i) => (
                 <div
-                  key={i}
+                  key={`${log}-${i}`}
                   className="rounded bg-gray-800 px-2 py-1 font-mono text-xs text-green-300"
                 >
                   {log}
@@ -695,351 +568,428 @@ function AllCallbacksDemo(): React.ReactElement {
 }
 
 // ============================================================================
+// HEADER COMPONENT
+// ============================================================================
+
+function Header(): ReactElement {
+  return (
+    <header className="mb-12 text-center">
+      <div className="mb-4 inline-flex items-center gap-3">
+        <span className="text-5xl">📅</span>
+        <div className="text-left">
+          <h1 className="text-4xl font-bold text-white">React Calendar</h1>
+          <p className="font-mono text-sm text-blue-400">@nickotime_dev/react-calendar</p>
+        </div>
+      </div>
+      <p className="mx-auto max-w-2xl text-slate-400">
+        A flexible, customizable React calendar component with date range and time picker support.
+        Fully typed with TypeScript generics.
+      </p>
+      <div className="mt-6 flex justify-center gap-3">
+        <a
+          href="https://www.npmjs.com/package/@nickotime_dev/react-calendar"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M0 0v24h24V0H0zm6.672 19.992H3.996V6.996h2.676v13.002-.006zm6.672 0H10.68V10.668H8.004V6.996h8.016v3.672h-2.676v9.324zm6.66 0h-2.676V10.668h2.676v9.324z" />
+          </svg>
+          npm
+        </a>
+        <a
+          href="https://github.com/nickotime/react-calendar"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-600"
+        >
+          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+          </svg>
+          GitHub
+        </a>
+      </div>
+    </header>
+  );
+}
+
+// ============================================================================
 // MAIN APP
 // ============================================================================
 
-export default function App(): React.ReactElement {
+export default function App(): ReactElement {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-10">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
-        <header className="mb-12 text-center">
-          <div className="mb-4 inline-flex items-center gap-3">
-            <span className="text-5xl">📅</span>
-            <div className="text-left">
-              <h1 className="text-4xl font-bold text-white">React Calendar</h1>
-              <p className="font-mono text-sm text-blue-400">@vakac995/react-calendar</p>
-            </div>
-          </div>
-          <p className="mx-auto max-w-2xl text-slate-400">
-            A flexible, customizable React calendar component with date range and time picker
-            support. Fully typed with TypeScript generics.
-          </p>
-          <div className="mt-6 flex justify-center gap-3">
-            <a
-              href="https://www.npmjs.com/package/@vakac995/react-calendar"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M0 0v24h24V0H0zm6.672 19.992H3.996V6.996h2.676v13.002-.006zm6.672 0H10.68V10.668H8.004V6.996h8.016v3.672h-2.676v9.324zm6.66 0h-2.676V10.668h2.676v9.324z" />
-              </svg>
-              npm
-            </a>
-            <a
-              href="https://github.com/vakac995/react-calendar"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-600"
-            >
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-              </svg>
-              GitHub
-            </a>
-          </div>
-        </header>
+        <Header />
 
-        {/* Demo Grid */}
-        <div className="flex flex-col gap-6">
-          <DemoCard
-            title="Basic Single Date"
-            description="Simple date picker with single selection"
-            code={`<Calendar
+        <div className="flex flex-col gap-12">
+          {/* Basic Selection */}
+          <DemoSection
+            id="basic"
+            title="Basic Selection"
+            description="Single date and date range selection modes"
+            icon="📅"
+          >
+            <DemoCard
+              title="Single Date"
+              description="Simple date picker with single selection"
+              code={`<Calendar
   mode="single"
   value={value}
   onChange={setValue}
   classNames={defaultClassNames}
 />`}
-          >
-            <BasicCalendarDemo />
-          </DemoCard>
+            >
+              <BasicSingleDemo />
+            </DemoCard>
 
-          <DemoCard
-            title="Date Range Selection"
-            description="Select start and end dates"
-            code={`<Calendar
+            <DemoCard
+              title="Date Range"
+              description="Select start and end dates with week number selection"
+              code={`<Calendar
   mode="range"
   value={value}
   onChange={setValue}
   classNames={defaultClassNames}
   showWeekNumbers
 />`}
-          >
-            <RangeCalendarDemo />
-          </DemoCard>
+            >
+              <DateRangeDemo />
+            </DemoCard>
+          </DemoSection>
 
-          <DemoCard
-            title="Date & Time (Bottom)"
-            description="With scrollable time selectors"
-            code={`<Calendar
+          {/* Time Picker */}
+          <DemoSection
+            id="time"
+            title="Time Picker"
+            description="Integrated time selection with flexible positioning"
+            icon="⏰"
+          >
+            <DemoCard
+              title="Time Picker (Bottom)"
+              description="Time selector below the calendar"
+              code={`<Calendar
   mode="single"
   value={value}
   onChange={setValue}
-  classNames={defaultClassNames}
   showTime
   showSeconds
   timePosition="bottom"
 />`}
-          >
-            <CalendarWithTimeDemo />
-          </DemoCard>
+            >
+              <TimePickerBottomDemo />
+            </DemoCard>
 
-          <DemoCard
-            title="Range with Time (Side)"
-            description="Independent start/end time pickers"
-            code={`<Calendar
+            <DemoCard
+              title="Time Picker (Top)"
+              description="Time selector above the calendar"
+              code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  showTime
+  timePosition="top"
+/>`}
+            >
+              <TimePickerTopDemo />
+            </DemoCard>
+
+            <DemoCard
+              title="Range with Time (Side)"
+              description="Independent start/end time pickers beside the calendar"
+              code={`<Calendar
   mode="range"
   value={value}
   onChange={setValue}
-  classNames={defaultClassNames}
   showTime
   showSeconds
   timePosition="side"
 />`}
-          >
-            <RangeWithTimeDemo />
-          </DemoCard>
+            >
+              <TimePickerSideDemo />
+            </DemoCard>
+          </DemoSection>
 
-          <DemoCard
-            title="Min/Max Constraints"
-            description="Limited date range selection"
-            code={`<Calendar
-  mode="single"
+          {/* Responsive Layout */}
+          <DemoSection
+            id="responsive"
+            title="Responsive Layout"
+            description="Auto-adapting layout for different screen sizes"
+            icon="📱"
+          >
+            <DemoCard
+              title="Responsive Mode"
+              description="Automatically switches to mobile layout with collapsible time picker"
+              badge="New"
+              badgeVariant="green"
+              code={`<Calendar
+  mode="range"
   value={value}
   onChange={setValue}
-  classNames={defaultClassNames}
-  minDate={new Date()} // today
-  maxDate={addDays(new Date(), 30)}
+  showTime
+  timePosition="side"
+  layout="auto"        // "auto" | "desktop" | "mobile"
+  mobileBreakpoint={420} // default: 420px
 />`}
-          >
-            <MinMaxDatesDemo />
-          </DemoCard>
+            >
+              <ResponsiveLayoutDemo />
+            </DemoCard>
+          </DemoSection>
 
-          <DemoCard
-            title="Week Numbers + Monday Start"
-            description="Clickable week numbers"
-            code={`<Calendar
+          {/* Constraints */}
+          <DemoSection
+            id="constraints"
+            title="Constraints"
+            description="Date and time restrictions"
+            icon="🔒"
+          >
+            <DemoCard
+              title="Min/Max Dates"
+              description="Limit selectable date range"
+              code={`<Calendar
   mode="single"
   value={value}
   onChange={setValue}
-  classNames={defaultClassNames}
-  weekStartsOn={1} // Monday
-  showWeekNumbers
+  minDate={new Date(2024, 0, 1)}
+  maxDate={new Date(2024, 11, 31)}
 />`}
-          >
-            <WeekStartMondayDemo />
-          </DemoCard>
+            >
+              <MinMaxDatesDemo />
+            </DemoCard>
 
-          <DemoCard
-            title="Custom Year Range"
-            description="Limited year selection"
-            code={`<Calendar
+            <DemoCard
+              title="Business Hours"
+              description="Time restricted to 09:00–17:30"
+              code={`<Calendar
   mode="single"
   value={value}
   onChange={setValue}
-  classNames={defaultClassNames}
-  years={[2020, 2021, 2022, ...]}
-/>`}
-          >
-            <CustomYearsDemo />
-          </DemoCard>
-
-          <DemoCard
-            title="Business Hours Only"
-            description="Time restricted to 09:00–17:30"
-            code={`<Calendar
-  mode="single"
-  value={value}
-  onChange={setValue}
-  classNames={defaultClassNames}
   showTime
   minTime={{ hours: 9, minutes: 0, seconds: 0 }}
   maxTime={{ hours: 17, minutes: 30, seconds: 0 }}
 />`}
-          >
-            <TimeWithLimitsDemo />
-          </DemoCard>
+            >
+              <TimeConstraintsDemo />
+            </DemoCard>
+          </DemoSection>
 
-          <DemoCard
-            title="Custom Styling"
-            description="Shadcn-inspired minimal theme via classNames prop"
-            code={`const shadcnClassNames = mergeClassNames(
+          {/* Week Configuration */}
+          <DemoSection
+            id="week"
+            title="Week Configuration"
+            description="Customize week display and behavior"
+            icon="📆"
+          >
+            <DemoCard
+              title="Monday Start + Week Numbers"
+              description="European style with ISO week numbers"
+              code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  weekStartsOn={1}  // Monday
+  showWeekNumbers
+/>`}
+            >
+              <WeekConfigDemo />
+            </DemoCard>
+
+            <DemoCard
+              title="Custom Year Range"
+              description="Limited year selection in dropdown"
+              code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  years={[2024, 2025, 2026, 2027, 2028]}
+/>`}
+            >
+              <CustomYearsDemo />
+            </DemoCard>
+          </DemoSection>
+
+          {/* Customization */}
+          <DemoSection
+            id="customization"
+            title="Customization"
+            description="Custom styling, labels, and rendering"
+            icon="🎨"
+          >
+            <DemoCard
+              title="Custom Styling"
+              description="Shadcn-inspired minimal theme via classNames"
+              code={`const shadcnClassNames = mergeClassNames(
   defaultClassNames,
   {
-    root: "bg-white border-gray-200 rounded-lg shadow-sm",
-    header: "border-b border-gray-100 pb-3 mb-3",
-    monthYearButton: "text-sm font-medium text-gray-900",
-    navButton: "h-7 w-7 bg-transparent hover:bg-gray-100 rounded-md",
-    daySelected: "bg-gray-900 text-white hover:bg-gray-800",
+    root: "bg-white rounded-lg shadow-sm",
+    daySelected: "bg-gray-900 text-white",
     dayToday: "bg-gray-100 font-semibold",
-    dayHover: "hover:bg-gray-50",
-    // ... minimal black, gray, white palette
+    // ... minimal palette
   }
 );
 
 <Calendar classNames={shadcnClassNames} />`}
-          >
-            <CustomStylesDemo />
-          </DemoCard>
+            >
+              <CustomStylesDemo />
+            </DemoCard>
 
-          <DemoCard
-            title="Custom Labels"
-            description="Override labels via mergeLabels()"
-            code={`const customLabels = mergeLabels(
+            <DemoCard
+              title="Custom Labels"
+              description="Override text and icons via mergeLabels()"
+              code={`const customLabels = mergeLabels(
   defaultLabels,
   {
     timeLabel: "Select Time",
-    hoursLabel: "Hr",
-    minutesLabel: "Min",
     shortDays: ["Su", "Mo", "Tu", ...],
     previousMonthIcon: "«",
     nextMonthIcon: "»",
   }
 );
 
-<Calendar labels={customLabels} />`}
+<Calendar labels={customLabels} showTime />`}
+            >
+              <CustomLabelsDemo />
+            </DemoCard>
+
+            <DemoCard
+              title="Custom Day Renderer"
+              description="Add event indicators with renderDay"
+              code={`<Calendar
+  renderDay={(day, defaultRender) => (
+    <div className="relative">
+      {defaultRender}
+      {hasEvent(day.date) && (
+        <span className="... bg-red-500" />
+      )}
+    </div>
+  )}
+/>`}
+            >
+              <CustomDayRendererDemo />
+            </DemoCard>
+
+            <DemoCard
+              title="Custom Header"
+              description="Fully custom header with renderHeader"
+              code={`<Calendar
+  renderHeader={({ currentMonth, currentYear, onPrevMonth, onNextMonth }) => (
+    <div className="...">
+      <button onClick={onPrevMonth}>←</button>
+      <span>{MONTHS[currentMonth]} {currentYear}</span>
+      <button onClick={onNextMonth}>→</button>
+    </div>
+  )}
+/>`}
+            >
+              <CustomHeaderDemo />
+            </DemoCard>
+          </DemoSection>
+
+          {/* States */}
+          <DemoSection
+            id="states"
+            title="States"
+            description="Disabled, preselected, and controlled values"
+            icon="⚙️"
           >
-            <CustomLabelsDemo />
-          </DemoCard>
-
-          <DemoCard
-            title="Custom Day Renderer"
-            description="Event indicators with renderDay"
-            code={`const renderDay = (day, defaultRender) => (
-  <div className="relative">
-    {defaultRender}
-    {hasEvent(day.date) && (
-      <span className="absolute bottom-0.5
-        w-1.5 h-1.5 bg-red-500 rounded-full" />
-    )}
-  </div>
-);
-
-<Calendar renderDay={renderDay} />`}
-          >
-            <CustomDayRendererDemo />
-          </DemoCard>
-
-          <DemoCard
-            title="Disabled State"
-            description="Non-interactive calendar"
-            code={`<Calendar
+            <DemoCard
+              title="Disabled State"
+              description="Non-interactive calendar"
+              code={`<Calendar
   mode="single"
   value={value}
   onChange={setValue}
-  classNames={defaultClassNames}
   showTime
   disabled
 />`}
-          >
-            <DisabledCalendarDemo />
-          </DemoCard>
+            >
+              <DisabledDemo />
+            </DemoCard>
 
-          <DemoCard
-            title="Time Picker (Top)"
-            description="Time selector above calendar"
-            code={`<Calendar
-  mode="single"
-  value={value}
-  onChange={setValue}
-  classNames={defaultClassNames}
-  showTime
-  timePosition="top"
-/>`}
-          >
-            <TimeTopDemo />
-          </DemoCard>
-
-          <DemoCard
-            title="Preselected Date"
-            description="Calendar with initial value"
-            code={`const [value, setValue] = useState({
-  date: new Date(2025, 11, 25), // Dec 25
+            <DemoCard
+              title="Preselected Date"
+              description="Calendar with initial value"
+              code={`const [value, setValue] = useState({
+  date: new Date(2025, 11, 25),
 });
 
-<Calendar
-  mode="single"
-  value={value}
-  onChange={setValue}
-  classNames={defaultClassNames}
-/>`}
-          >
-            <PreselectedDateDemo />
-          </DemoCard>
+<Calendar value={value} onChange={setValue} />`}
+            >
+              <PreselectedDemo />
+            </DemoCard>
 
-          <DemoCard
-            title="Booking Calendar"
-            description="With unavailable dates"
-            code={`const renderDay = (day, defaultRender) => {
-  const isBooked = bookedDates.includes(day.date.getDate());
-  if (isBooked) {
-    return (
-      <div className="opacity-40 line-through">
-        {defaultRender}
-      </div>
-    );
-  }
-  return defaultRender;
-};
+            <DemoCard
+              title="Programmatic Control"
+              description="External buttons to set value"
+              code={`const [value, setValue] = useState(getThisWeek());
 
-<Calendar
-  renderDay={renderDay}
-  minDate={new Date()}
-/>`}
-          >
-            <BookingCalendarDemo />
-          </DemoCard>
-
-          <DemoCard
-            title="Controlled Range"
-            description="Programmatic selection control"
-            code={`const selectThisWeek = () => {
-  const start = getStartOfWeek(new Date());
-  const end = addDays(start, 6);
-  setValue({ start: { date: start }, end: { date: end } });
-};
-
-<button onClick={selectThisWeek}>This Week</button>
-<button onClick={() => setValue({ start: null, end: null })}>
+<button onClick={() => setValue(getThisWeek())}>
+  This Week
+</button>
+<button onClick={() => setValue(null)}>
   Clear
 </button>
-<Calendar mode="range" value={value} onChange={setValue} />`}
-          >
-            <ControlledRangeDemo />
-          </DemoCard>
 
-          <DemoCard
-            title="All Callbacks Demo"
-            description="Interactive event log"
-            code={`<Calendar
-  mode="range"
-  onDayClick={(date, e) => {}}
-  onWeekClick={(week, e) => {}}
-  onMonthSelect={(month, year) => {}}
-  onYearChange={(year) => {}}
-  onPrevMonth={(month, year) => {}}
-  onNextMonth={(month, year) => {}}
-  onPrevYear={(year) => {}}
-  onNextYear={(year) => {}}
-  onTimeChange={(time, target) => {}}
-  onHourClick={(hour, target) => {}}
-  onMinuteClick={(minute, target) => {}}
-  // ... and more
-/>`}
+<Calendar mode="range" value={value} onChange={setValue} />`}
+            >
+              <ControlledRangeDemo />
+            </DemoCard>
+          </DemoSection>
+
+          {/* Events */}
+          <DemoSection
+            id="events"
+            title="Event Handlers"
+            description="All available callback functions"
+            icon="🔔"
           >
-            <AllCallbacksDemo />
-          </DemoCard>
+            <DemoCard
+              title="All Callbacks"
+              description="Live event log showing all handler invocations"
+              code={`<Calendar
+  onDayClick={(date) => ...}
+  onWeekClick={(week) => ...}
+  onMonthClick={(month, year) => ...}
+  onMonthSelect={(month, year) => ...}
+  onYearChange={(year) => ...}
+  onPrevMonth={(month, year) => ...}
+  onNextMonth={(month, year) => ...}
+  onPrevYear={(year) => ...}
+  onNextYear={(year) => ...}
+  onTimeChange={(time, target) => ...}
+  onHourSelect={(hour, target) => ...}
+  onMinuteSelect={(minute, target) => ...}
+  onSecondsSelect={(seconds, target) => ...}
+/>`}
+            >
+              <AllCallbacksDemo />
+            </DemoCard>
+          </DemoSection>
         </div>
 
         {/* Footer */}
-        <footer className="mt-12 pb-8 text-center text-sm text-slate-500">
-          <p>Built with React + TypeScript + Tailwind CSS</p>
+        <footer className="mt-16 border-t border-slate-700 pt-8 text-center text-slate-500">
           <div className="mt-3 inline-flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2">
             <code className="text-blue-400">npm install @vakac995/react-calendar</code>
             <CopyButton text="npm install @vakac995/react-calendar" />
           </div>
+          <p className="text-sm">
+            MIT License •{" "}
+            <a
+              href="https://github.com/nickotime/react-calendar"
+              className="text-blue-400 hover:underline"
+            >
+              GitHub
+            </a>{" "}
+            •{" "}
+            <a
+              href="https://www.npmjs.com/package/@nickotime_dev/react-calendar"
+              className="text-blue-400 hover:underline"
+            >
+              npm
+            </a>
+          </p>
         </footer>
       </div>
     </div>

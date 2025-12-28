@@ -6,6 +6,9 @@ export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 /** Time position relative to calendar */
 export type TimePosition = "bottom" | "top" | "side";
 
+/** Layout mode for responsive behavior */
+export type LayoutMode = "auto" | "desktop" | "mobile";
+
 /** Selection mode */
 export type SelectionMode = "single" | "range";
 
@@ -144,6 +147,13 @@ export interface CalendarClassNames {
   timeSelectorItemSelected?: string;
   timeSelectorItemDisabled?: string;
   timeSeparator?: string;
+  // Mobile/Responsive time picker
+  timePickerCollapsed?: string;
+  timePickerToggle?: string;
+  timePickerToggleIcon?: string;
+  timePickerToggleText?: string;
+  timePickerContent?: string;
+  timePickerContentExpanded?: string;
 }
 
 /** Event handlers */
@@ -209,6 +219,10 @@ export interface CalendarProps<
   labels?: CalendarLabels;
   /** Disabled state */
   disabled?: boolean;
+  /** Layout mode: "auto" (default) detects container width, "desktop"/"mobile" forces layout */
+  layout?: LayoutMode;
+  /** Breakpoint in pixels for auto layout detection (default: 420) */
+  mobileBreakpoint?: number;
   /** Custom day renderer */
   renderDay?: (day: DayCell, defaultRender: ReactNode) => ReactNode;
   /** Custom header renderer */

@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState, useMemo, useCallback, type MouseEvent } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect, type MouseEvent } from "react";
 
 import type {
   SelectionMode,
@@ -12,12 +12,16 @@ import type {
   CalendarProps,
   HeaderRenderProps,
   CalendarLabels,
+  LayoutMode,
 } from "../types";
 
 import { DAYS_IN_WEEK } from "../constants";
 import { defaultLabels } from "../styles/defaultLabels";
 import { getDefaultYears, isSameDay, addMonths, getMonthData } from "../utils";
 import { TimePicker } from "../time-picker";
+
+// Default breakpoint for mobile layout detection
+const DEFAULT_MOBILE_BREAKPOINT = 420;
 
 // ============================================================================
 // MAIN CALENDAR COMPONENT
@@ -43,6 +47,8 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
     classNames,
     labels: customLabels,
     disabled = false,
+    layout = "auto",
+    mobileBreakpoint = DEFAULT_MOBILE_BREAKPOINT,
     renderDay,
     renderHeader,
     // Event handlers
@@ -72,6 +78,9 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
     [customLabels]
   );
 
+  // Ref for container width detection
+  const rootRef = useRef<HTMLDivElement>(null);
+
   // State
   const [internalValue, setInternalValue] = useState<CalendarValue<TMode> | undefined>(
     defaultValue
@@ -87,6 +96,46 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
 
   // For range selection, track which date we're selecting
   const [rangeSelectState, setRangeSelectState] = useState<"start" | "end">("start");
+
+  // Container width for responsive layout detection
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
+
+  // Collapsible time picker state for mobile
+  const [timePickerExpanded, setTimePickerExpanded] = useState<{
+    single: boolean;
+    start: boolean;
+    end: boolean;
+  }>({ single: false, start: false, end: false });
+
+  // ResizeObserver for container width detection
+  useEffect(() => {
+    if (layout !== "auto" || !rootRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+
+    observer.observe(rootRef.current);
+    return () => observer.disconnect();
+  }, [layout]);
+
+  // Determine effective layout based on props and container width
+  const effectiveLayout: Exclude<LayoutMode, "auto"> = useMemo(() => {
+    if (layout !== "auto") return layout;
+    if (containerWidth === null) return "desktop"; // Default before measurement
+    return containerWidth < mobileBreakpoint ? "mobile" : "desktop";
+  }, [layout, containerWidth, mobileBreakpoint]);
+
+  // In mobile layout, force timePosition to "bottom" if it was "side"
+  const effectiveTimePosition = useMemo(() => {
+    if (effectiveLayout === "mobile" && timePosition === "side") {
+      return "bottom";
+    }
+    return timePosition;
+  }, [effectiveLayout, timePosition]);
 
   const isControlled = controlledValue !== undefined;
   const currentValue = isControlled ? controlledValue : internalValue;
@@ -416,13 +465,131 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
 
   // Time pickers
   const timePickerPositionClass =
-    timePosition === "top"
+    effectiveTimePosition === "top"
       ? classNames?.timePickerWrapperTop
-      : timePosition === "bottom"
+      : effectiveTimePosition === "bottom"
         ? classNames?.timePickerWrapperBottom
         : classNames?.timePickerWrapperSide;
 
-  const timePickers = showTime && (
+  // Helper to format time for display in collapsed state
+  const formatTimeDisplay = (time: TimeValue): string => {
+    const h = String(time.hours).padStart(2, "0");
+    const m = String(time.minutes).padStart(2, "0");
+    const s = String(time.seconds).padStart(2, "0");
+    return showSeconds ? `${h}:${m}:${s}` : `${h}:${m}`;
+  };
+
+  // Toggle handler for collapsible time picker
+  const toggleTimePicker = useCallback((target: "single" | "start" | "end") => {
+    setTimePickerExpanded((prev) => ({
+      ...prev,
+      [target]: !prev[target],
+    }));
+  }, []);
+
+  // Collapsible time picker wrapper for mobile
+  const renderCollapsibleTimePicker = (
+    time: TimeValue,
+    label: string | undefined,
+    target: "single" | "start" | "end",
+    isDisabled: boolean
+  ): React.ReactElement => {
+    const isExpanded = timePickerExpanded[target];
+
+    return (
+      <div className={classNames?.timePickerCollapsed}>
+        <button
+          type="button"
+          onClick={() => toggleTimePicker(target)}
+          disabled={isDisabled}
+          className={classNames?.timePickerToggle}
+          aria-expanded={isExpanded}
+        >
+          <span className={classNames?.timePickerToggleText}>
+            {label ?? "Time"}: {formatTimeDisplay(time)}
+          </span>
+          <svg
+            className={classNames?.timePickerToggleIcon}
+            style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </button>
+        <div
+          className={[
+            classNames?.timePickerContent,
+            isExpanded && classNames?.timePickerContentExpanded,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          style={{
+            maxHeight: isExpanded ? "200px" : "0",
+            opacity: isExpanded ? 1 : 0,
+          }}
+        >
+          <TimePicker
+            time={time}
+            label={undefined} // Label shown in toggle button
+            showSeconds={showSeconds}
+            disabled={isDisabled}
+            minTime={minTime}
+            maxTime={maxTime}
+            classNames={classNames}
+            labels={labels}
+            target={target}
+            onTimeChange={handleTimeChange}
+            onHourClick={onHourClick}
+            onHourSelect={onHourSelect}
+            onMinuteClick={onMinuteClick}
+            onMinuteSelect={onMinuteSelect}
+            onSecondsClick={onSecondsClick}
+            onSecondsSelect={onSecondsSelect}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  // Mobile time pickers (collapsible)
+  const mobileTimePickers = showTime && effectiveLayout === "mobile" && (
+    <div
+      className={[classNames?.timePickerWrapper, timePickerPositionClass].filter(Boolean).join(" ")}
+    >
+      {mode === "single" ? (
+        renderCollapsibleTimePicker(
+          singleValue?.time ?? { hours: 0, minutes: 0, seconds: 0 },
+          labels.timeLabel,
+          "single",
+          disabled || !singleValue
+        )
+      ) : (
+        <div className="flex w-full flex-col gap-2">
+          {renderCollapsibleTimePicker(
+            rangeValue?.start?.time ?? { hours: 0, minutes: 0, seconds: 0 },
+            labels.startTimeLabel,
+            "start",
+            disabled || !rangeValue?.start
+          )}
+          {renderCollapsibleTimePicker(
+            rangeValue?.end?.time ?? { hours: 23, minutes: 59, seconds: 59 },
+            labels.endTimeLabel,
+            "end",
+            disabled || !rangeValue?.end
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  // Desktop time pickers (standard)
+  const desktopTimePickers = showTime && effectiveLayout === "desktop" && (
     <div
       className={[classNames?.timePickerWrapper, timePickerPositionClass].filter(Boolean).join(" ")}
     >
@@ -488,11 +655,17 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
     </div>
   );
 
+  // Combined time pickers - renders either mobile or desktop version
+  const timePickers = mobileTimePickers || desktopTimePickers;
+
   return (
     <div
+      ref={rootRef}
       className={[
         classNames?.root,
-        timePosition === "side" ? classNames?.rootSideLayout : classNames?.rootDefaultLayout,
+        effectiveTimePosition === "side"
+          ? classNames?.rootSideLayout
+          : classNames?.rootDefaultLayout,
       ]
         .filter(Boolean)
         .join(" ")}
@@ -502,7 +675,7 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
         {renderHeader ? renderHeader(headerRenderProps) : defaultHeader}
 
         {/* Time picker - top position */}
-        {timePosition === "top" && timePickers}
+        {effectiveTimePosition === "top" && timePickers}
 
         {/* Week day headers */}
         <div
@@ -630,11 +803,11 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
         </div>
 
         {/* Time picker - bottom position */}
-        {timePosition === "bottom" && timePickers}
+        {effectiveTimePosition === "bottom" && timePickers}
       </div>
 
       {/* Time picker - side position */}
-      {timePosition === "side" && timePickers}
+      {effectiveTimePosition === "side" && timePickers}
     </div>
   );
 }

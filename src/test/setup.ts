@@ -22,12 +22,53 @@ Object.defineProperty(window, "matchMedia", {
   })),
 });
 
-// Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+// Mock ResizeObserver with proper callback handling
+class MockResizeObserver {
+  private callback: ResizeObserverCallback;
+  private elements = new Set<Element>();
+
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback;
+  }
+
+  observe(target: Element): void {
+    this.elements.add(target);
+    // Immediately call callback with mock entry for initial render
+    // Use setTimeout to avoid React act() warnings
+    setTimeout(() => {
+      const entries: ResizeObserverEntry[] = [
+        {
+          target,
+          contentRect: {
+            width: 800,
+            height: 600,
+            top: 0,
+            left: 0,
+            bottom: 600,
+            right: 800,
+            x: 0,
+            y: 0,
+            toJSON: () => ({}),
+          },
+          borderBoxSize: [{ inlineSize: 800, blockSize: 600 }],
+          contentBoxSize: [{ inlineSize: 800, blockSize: 600 }],
+          devicePixelContentBoxSize: [{ inlineSize: 800, blockSize: 600 }],
+        },
+      ];
+      this.callback(entries, this);
+    }, 0);
+  }
+
+  unobserve(target: Element): void {
+    this.elements.delete(target);
+  }
+
+  disconnect(): void {
+    this.elements.clear();
+  }
+}
+
+global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 // Mock scrollIntoView (used by time picker)
 Element.prototype.scrollIntoView = vi.fn();

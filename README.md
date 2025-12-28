@@ -103,6 +103,31 @@ Time picker supports three positions:
 - `"top"` — Time picker above the calendar  
 - `"side"` — Time picker to the right of the calendar
 
+### Responsive Layout
+
+The calendar automatically adapts to its container width using ResizeObserver:
+
+```tsx
+<Calendar
+  mode="range"
+  value={value}
+  onChange={setValue}
+  showTime
+  timePosition="side"
+  layout="auto"        // Auto-detect based on container width
+  mobileBreakpoint={420} // Switch to mobile below 420px
+/>
+```
+
+Layout modes:
+- `"auto"` (default) — Automatically switches based on container width
+- `"desktop"` — Always use desktop layout  
+- `"mobile"` — Always use mobile layout
+
+On mobile layout:
+- `timePosition="side"` is automatically converted to `"bottom"`
+- Time pickers become collapsible accordions to save space
+
 ### Date Constraints
 
 ```tsx
@@ -267,6 +292,20 @@ import { Calendar, extendClassNames, defaultClassNames } from '@vakac995/react-c
 
 </details>
 
+<details>
+<summary><strong>Mobile Time Picker (Responsive)</strong></summary>
+
+| Key | Description |
+|-----|-------------|
+| `timePickerCollapsed` | Collapsible time picker wrapper |
+| `timePickerToggle` | Toggle button for expanding/collapsing |
+| `timePickerToggleIcon` | Icon in toggle button |
+| `timePickerToggleText` | Text in toggle button |
+| `timePickerContent` | Collapsible content wrapper |
+| `timePickerContentExpanded` | Content when expanded |
+
+</details>
+
 See [CalendarClassNames](./src/types/calendar.types.ts) for the complete type definition.
 
 ## Custom Rendering
@@ -322,6 +361,8 @@ See [CalendarClassNames](./src/types/calendar.types.ts) for the complete type de
 | `showTime` | `boolean` | `false` | Show time picker |
 | `timePosition` | `'bottom' \| 'top' \| 'side'` | `'bottom'` | Time picker position |
 | `showSeconds` | `boolean` | `false` | Show seconds selector |
+| `layout` | `'auto' \| 'desktop' \| 'mobile'` | `'auto'` | Responsive layout mode |
+| `mobileBreakpoint` | `number` | `420` | Container width (px) for mobile layout |
 | `minDate` | `Date` | — | Minimum selectable date |
 | `maxDate` | `Date` | — | Maximum selectable date |
 | `minTime` | `TimeValue` | — | Minimum selectable time |
@@ -369,6 +410,7 @@ import type {
   // Config
   SelectionMode,
   TimePosition,
+  LayoutMode,
   DayOfWeek,
 } from '@vakac995/react-calendar';
 ```

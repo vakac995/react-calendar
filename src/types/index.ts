@@ -1,6 +1,7 @@
 export type {
   DayOfWeek,
   TimePosition,
+  LayoutMode,
   SelectionMode,
   TimeValue,
   DateTimeValue,

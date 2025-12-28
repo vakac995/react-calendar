@@ -79,6 +79,15 @@ export const defaultClassNames: CalendarClassNames = {
   timeSelectorItemSelected: "bg-blue-500 text-white hover:bg-blue-600 focus:bg-blue-600",
   timeSelectorItemDisabled: "opacity-40 cursor-not-allowed hover:bg-transparent",
   timeSeparator: "text-xl text-gray-400 mt-5",
+
+  // Mobile/Responsive time picker (collapsible)
+  timePickerCollapsed: "w-full",
+  timePickerToggle:
+    "w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer",
+  timePickerToggleIcon: "w-4 h-4 text-gray-500 transition-transform",
+  timePickerToggleText: "text-sm font-medium text-gray-700",
+  timePickerContent: "overflow-hidden transition-all duration-200 ease-in-out",
+  timePickerContentExpanded: "mt-3",
 };
 
 /**
