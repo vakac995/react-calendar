@@ -1165,6 +1165,54 @@ describe("Calendar", () => {
       expect(value.end?.time).toEqual({ hours: 23, minutes: 59, seconds: 59 });
     });
 
+    it("should use default times for new same day range selection when controlled", () => {
+      const handleChange = vi.fn();
+      const existingEndTime = { hours: 17, minutes: 30, seconds: 45 };
+      let currentValue: DateRangeValue | null = {
+        start: { date: new Date(2025, 0, 25), time: { hours: 9, minutes: 0, seconds: 0 } },
+        end: { date: new Date(2025, 0, 26), time: existingEndTime },
+      };
+
+      const { container, rerender } = render(
+        <Calendar
+          mode="range"
+          showTime
+          value={currentValue}
+          onChange={(newValue) => {
+            currentValue = newValue;
+            handleChange(newValue);
+          }}
+          classNames={{ body: "cal-body" }}
+        />
+      );
+
+      // Click on a new day to start new selection
+      const calBody = queryAsHtmlElement(container, ".cal-body");
+      fireEvent.click(within(calBody).getByRole("button", { name: "27" }));
+
+      // Simulate controlled component by re-rendering with updated value
+      rerender(
+        <Calendar
+          mode="range"
+          showTime
+          value={currentValue}
+          onChange={(newValue) => {
+            currentValue = newValue;
+            handleChange(newValue);
+          }}
+          classNames={{ body: "cal-body" }}
+        />
+      );
+
+      // Click same day to complete the range
+      fireEvent.click(within(calBody).getByRole("button", { name: "27" }));
+
+      // Should use default times for the new selection
+      const value = getMockCallArg<DateRangeValue>(handleChange, 1, 0);
+      expect(value.start?.time).toEqual({ hours: 0, minutes: 0, seconds: 0 });
+      expect(value.end?.time).toEqual({ hours: 23, minutes: 59, seconds: 59 });
+    });
+
     it("should handle same day range selection without showTime", () => {
       const handleChange = vi.fn();
       render(<Calendar mode="range" showTime={false} onChange={handleChange} />);

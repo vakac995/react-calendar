@@ -412,10 +412,10 @@ describe("TimeSelector", () => {
     });
 
     it("should apply disabled className to items where isDisabled returns true", () => {
-      // Note: Due to the ?? operator in TimeSelector, isDisabled result is only used
-      // when disabled prop is undefined/null. The itemDisabled calculation is:
-      // const itemDisabled = disabled ?? isDisabled?.(item);
-      // This means isDisabled is ignored when disabled is explicitly false
+      // With the || operator in TimeSelector, isDisabled result is correctly used
+      // when disabled prop is false. The itemDisabled calculation is:
+      // const itemDisabled = disabled || isDisabled?.(item);
+      // This means isDisabled is properly evaluated when disabled is false
       const isDisabled = vi.fn((v) => v >= 5);
 
       render(
@@ -465,6 +465,26 @@ describe("TimeSelector", () => {
       // Clicking enabled item (value >= 5) should trigger callback
       await user.click(screen.getByRole("button", { name: "07" }));
       expect(handleClick).toHaveBeenCalledWith(7);
+    });
+
+    it("should set native disabled attribute on buttons based on isDisabled callback", () => {
+      const isDisabled = vi.fn((v) => v >= 5);
+
+      render(
+        <TimeSelector value={0} max={9} label="Test" disabled={false} isDisabled={isDisabled} />
+      );
+
+      // Items 0-4 should NOT have disabled attribute
+      for (let i = 0; i < 5; i++) {
+        const button = screen.getByRole("button", { name: String(i).padStart(2, "0") });
+        expect(button).not.toBeDisabled();
+      }
+
+      // Items 5-9 should have disabled attribute (from isDisabled callback)
+      for (let i = 5; i <= 9; i++) {
+        const button = screen.getByRole("button", { name: String(i).padStart(2, "0") });
+        expect(button).toBeDisabled();
+      }
     });
   });
 

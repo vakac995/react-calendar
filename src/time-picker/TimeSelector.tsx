@@ -65,7 +65,8 @@ export function TimeSelector({
           .join(" ")}
       >
         {items.map((item) => {
-          const itemDisabled = disabled ?? isDisabled?.(item);
+          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+          const itemDisabled = disabled || isDisabled?.(item);
           const isSelected = item === value;
 
           return (
