@@ -140,6 +140,33 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
   const isControlled = controlledValue !== undefined;
   const currentValue = isControlled ? controlledValue : internalValue;
 
+  // Sync viewDate when controlled value changes programmatically
+  // This ensures the calendar focuses on the selected date(s)
+  useEffect(() => {
+    if (!isControlled) return;
+
+    let targetDate: Date | null = null;
+
+    if (mode === "range") {
+      const rangeVal = controlledValue as DateRangeValue | null | undefined;
+      // For range, focus on start date if available, otherwise end date
+      targetDate = rangeVal?.start?.date ?? rangeVal?.end?.date ?? null;
+    } else {
+      const singleVal = controlledValue as DateTimeValue | null | undefined;
+      targetDate = singleVal?.date ?? null;
+    }
+
+    // Only update viewDate if the target date is in a different month/year
+    if (targetDate) {
+      const targetMonth = targetDate.getMonth();
+      const targetYear = targetDate.getFullYear();
+      if (targetMonth !== viewDate.getMonth() || targetYear !== viewDate.getFullYear()) {
+        setViewDate(new Date(targetYear, targetMonth, 1));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isControlled, controlledValue, mode]); // Intentionally excluding viewDate to avoid loops
+
   const currentMonth = viewDate.getMonth();
   const currentYear = viewDate.getFullYear();
 
@@ -794,7 +821,8 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
                 const isWeekend = dayIndex === 0 || dayIndex === 6;
 
                 // Determine range background styling
-                const showRangeBackground = day.isInRange && day.isCurrentMonth;
+                // Show range background for all in-range days, including outside-month days
+                const showRangeBackground = day.isInRange;
                 const isFirstDayOfWeek = week.days.indexOf(day) === 0;
                 const isLastDayOfWeek = week.days.indexOf(day) === DAYS_IN_WEEK - 1;
 
@@ -810,12 +838,12 @@ function CalendarComponent<TMode extends SelectionMode = "single">(
                       day.isInRange &&
                         !day.isRangeStart &&
                         !day.isRangeEnd &&
-                        day.isCurrentMonth &&
                         classNames?.dayInRange,
                       day.isRangeStart && classNames?.dayRangeStart,
                       day.isRangeEnd && classNames?.dayRangeEnd,
                       day.isDisabled && classNames?.dayDisabled,
-                      !day.isCurrentMonth && classNames?.dayOutsideMonth,
+                      // Only apply outside month styling when not in range (range styling takes precedence)
+                      !day.isCurrentMonth && !day.isInRange && classNames?.dayOutsideMonth,
                       isWeekend &&
                         day.isCurrentMonth &&
                         !day.isSelected &&

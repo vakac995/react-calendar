@@ -1580,7 +1580,7 @@ describe("Calendar", () => {
       });
     });
 
-    it("should apply dayInRange only for current month days", () => {
+    it("should apply dayInRange without dayOutsideMonth for outside month days in range", () => {
       const { container } = render(
         <Calendar
           mode="range"
@@ -1595,9 +1595,11 @@ describe("Calendar", () => {
         />
       );
 
-      // Days from February shown in January view shouldn't have in-range class applied
-      // (they're outside the current month)
+      // Days in range should have in-range class (for visual continuity)
+      // but NOT outside class (so text remains visible with proper contrast)
       const inRangeButtons = container.querySelectorAll(".in-range");
+      expect(inRangeButtons.length).toBeGreaterThan(0);
+      // Range days should not have the outside class when in range
       inRangeButtons.forEach((btn) => {
         expect(btn).not.toHaveClass("outside");
       });
@@ -2201,7 +2203,7 @@ describe("Calendar", () => {
       expect(rangeEnds[0]).not.toHaveClass("weekend");
     });
 
-    it("should not show dayInRange for outside month days", () => {
+    it("should apply dayInRange without dayOutsideMonth for outside month days in range", () => {
       // Range that extends into next month
       const value: DateRangeValue = {
         start: { date: new Date(2025, 0, 28), time: undefined },
@@ -2219,11 +2221,12 @@ describe("Calendar", () => {
         />
       );
 
-      // Days in February (outside January view) should not have in-range
-      const outsideDays = container.querySelectorAll(".outside");
-      outsideDays.forEach((day) => {
-        // Outside month days shouldn't have in-range styling
-        expect(day).not.toHaveClass("in-range");
+      // Days in range should have the in-range styling
+      const inRangeDays = container.querySelectorAll(".in-range");
+      expect(inRangeDays.length).toBeGreaterThan(0);
+      // In-range days should not have outside styling (for proper text contrast)
+      inRangeDays.forEach((day) => {
+        expect(day).not.toHaveClass("outside");
       });
     });
   });
