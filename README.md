@@ -3,15 +3,17 @@
 [![CI](https://github.com/vakac995/react-calendar/actions/workflows/ci.yml/badge.svg)](https://github.com/vakac995/react-calendar/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@vakac995/react-calendar)](https://www.npmjs.com/package/@vakac995/react-calendar)
 [![npm bundle size](https://img.shields.io/bundlephobia/minzip/@vakac995/react-calendar)](https://bundlephobia.com/package/@vakac995/react-calendar)
-[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/vakac995/react-calendar)
+[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)](https://github.com/vakac995/react-calendar)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A flexible, customizable React calendar component with date range and time picker support.
 
-- 📅 Single date and date range selection
+- 📅 **Multiple selection modes**: Single, Range, Multiple dates, Week, Quarter
 - ⏰ Integrated time picker with hours, minutes, seconds
+- 📆 **DatePicker component** with text input and popover calendar
 - 🎨 Fully customizable via `classNames` prop (works with Tailwind, CSS Modules, etc.)
+- 🌍 **Locale support** with automatic day/month name localization
 - 💪 Full TypeScript support
 - 📦 Tree-shakeable ES modules
 - 🪶 Zero dependencies (only React as peer dependency)
@@ -98,6 +100,87 @@ function App() {
 />
 ```
 
+### Multiple Dates Selection
+
+```tsx
+import { useState } from 'react';
+import { Calendar, type MultipleDatesValue } from '@vakac995/react-calendar';
+
+function App() {
+  const [dates, setDates] = useState<MultipleDatesValue>([]);
+
+  return (
+    <Calendar
+      mode="multiple"
+      value={dates}
+      onChange={setDates}
+      showClearButton
+    />
+  );
+}
+```
+
+### Week Picker
+
+```tsx
+import { useState } from 'react';
+import { Calendar, type WeekValue } from '@vakac995/react-calendar';
+
+function App() {
+  const [week, setWeek] = useState<WeekValue | null>(null);
+
+  return (
+    <Calendar
+      mode="week"
+      value={week}
+      onChange={setWeek}
+      showWeekNumbers
+    />
+  );
+}
+```
+
+### Quarter Picker
+
+```tsx
+import { useState } from 'react';
+import { Calendar, type QuarterValue } from '@vakac995/react-calendar';
+
+function App() {
+  const [quarter, setQuarter] = useState<QuarterValue | null>(null);
+
+  return (
+    <Calendar
+      mode="quarter"
+      value={quarter}
+      onChange={setQuarter}
+    />
+  );
+}
+```
+
+### Today & Clear Buttons
+
+```tsx
+<Calendar
+  value={value}
+  onChange={setValue}
+  showTodayButton   // Jump to today and select it
+  showClearButton   // Clear the selection
+/>
+```
+
+### Multi-Month View
+
+```tsx
+<Calendar
+  mode="range"
+  value={value}
+  onChange={setValue}
+  numberOfMonths={2}  // Show 2 months side by side
+/>
+```
+
 Time picker supports three positions:
 - `"bottom"` (default) — Time picker below the calendar
 - `"top"` — Time picker above the calendar  
@@ -139,6 +222,41 @@ On mobile layout:
 />
 ```
 
+### Highlighted Dates
+
+```tsx
+<Calendar
+  value={value}
+  onChange={setValue}
+  highlightedDates={[
+    new Date(2024, 5, 15),
+    new Date(2024, 5, 20),
+    new Date(2024, 5, 25),
+  ]}
+/>
+```
+
+### Custom Date Disabling
+
+```tsx
+<Calendar
+  value={value}
+  onChange={setValue}
+  isDateDisabled={(date) => date.getDay() === 0} // Disable Sundays
+/>
+```
+
+### Locale Support
+
+```tsx
+<Calendar
+  value={value}
+  onChange={setValue}
+  locale="fr-FR"  // French locale - auto-localizes day/month names
+  weekStartsOn={1}
+/>
+```
+
 ### Week Configuration
 
 ```tsx
@@ -149,6 +267,66 @@ On mobile layout:
   showWeekNumbers       // Show ISO week numbers
 />
 ```
+
+## DatePicker Component
+
+The `DatePicker` combines a text input with a popover calendar for a complete date picking experience.
+
+### Basic DatePicker
+
+```tsx
+import { useState } from 'react';
+import { DatePicker, defaultClassNames } from '@vakac995/react-calendar';
+
+function App() {
+  const [date, setDate] = useState<Date | null>(null);
+
+  return (
+    <DatePicker
+      value={date}
+      onChange={setDate}
+      placeholder="Select a date..."
+      dateFormat="MM/DD/YYYY"
+      calendarClassNames={defaultClassNames}  // Style the calendar
+    />
+  );
+}
+```
+
+### DatePicker with Constraints
+
+```tsx
+<DatePicker
+  value={date}
+  onChange={setDate}
+  dateFormat="DD/MM/YYYY"
+  minDate={new Date(2024, 0, 1)}
+  maxDate={new Date(2024, 11, 31)}
+  isClearable
+  placeholder="Select date..."
+  calendarClassNames={defaultClassNames}
+/>
+```
+
+### DatePicker Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `value` | `Date \| null` | — | Selected date |
+| `onChange` | `(date: Date \| null) => void` | — | Called when date changes |
+| `dateFormat` | `string` | `"MM/DD/YYYY"` | Date format pattern |
+| `placeholder` | `string` | — | Input placeholder |
+| `minDate` | `Date` | — | Minimum selectable date |
+| `maxDate` | `Date` | — | Maximum selectable date |
+| `disabled` | `boolean` | `false` | Disable the picker |
+| `readOnly` | `boolean` | `false` | Make input read-only |
+| `isClearable` | `boolean` | `true` | Show clear button |
+| `showIcon` | `boolean` | `true` | Show calendar icon |
+| `iconPosition` | `'left' \| 'right'` | `'right'` | Icon position |
+| `placement` | `PopoverPlacement` | `'bottom-start'` | Popover placement |
+| `openOnFocus` | `boolean` | `false` | Open calendar on input focus |
+| `closeOnSelect` | `boolean` | `true` | Close after selecting date |
+| `calendarClassNames` | `CalendarClassNames` | — | Styles for the calendar |
 
 ## Styling
 
@@ -372,23 +550,29 @@ See [CalendarClassNames](./src/types/calendar.types.ts) for the complete type de
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `mode` | `'single' \| 'range'` | `'single'` | Selection mode |
-| `value` | `DateTimeValue \| DateRangeValue \| null` | — | Controlled value |
-| `defaultValue` | `DateTimeValue \| DateRangeValue \| null` | — | Uncontrolled default |
+| `mode` | `'single' \| 'range' \| 'multiple' \| 'week' \| 'quarter'` | `'single'` | Selection mode |
+| `value` | `DateTimeValue \| DateRangeValue \| MultipleDatesValue \| WeekValue \| QuarterValue \| null` | — | Controlled value |
+| `defaultValue` | Same as `value` | — | Uncontrolled default |
 | `onChange` | `(value) => void` | — | Called when value changes |
 | `showTime` | `boolean` | `false` | Show time picker |
 | `timePosition` | `'bottom' \| 'top' \| 'side'` | `'bottom'` | Time picker position |
 | `showSeconds` | `boolean` | `false` | Show seconds selector |
+| `showTodayButton` | `boolean` | `false` | Show "Today" button |
+| `showClearButton` | `boolean` | `false` | Show "Clear" button |
+| `numberOfMonths` | `number` | `1` | Number of months to display |
 | `layout` | `'auto' \| 'desktop' \| 'mobile'` | `'auto'` | Responsive layout mode |
 | `mobileBreakpoint` | `number` | `420` | Container width (px) for mobile layout |
 | `minDate` | `Date` | — | Minimum selectable date |
 | `maxDate` | `Date` | — | Maximum selectable date |
 | `minTime` | `TimeValue` | — | Minimum selectable time |
 | `maxTime` | `TimeValue` | — | Maximum selectable time |
+| `highlightedDates` | `Date[] \| HighlightedDate[]` | — | Dates to highlight |
+| `isDateDisabled` | `(date: Date) => boolean` | — | Custom date disable function |
 | `years` | `number[]` | Last 100 years | Available years for year dropdown |
 | `weekStartsOn` | `0-6` | `0` | First day of week (0=Sun) |
 | `showWeekNumbers` | `boolean` | `false` | Show week numbers |
-| `locale` | `string` | — | Locale for formatting |
+| `locale` | `string` | — | Locale for formatting (e.g. `'fr-FR'`) |
+| `autoFocus` | `boolean` | `false` | Auto-focus on mount |
 | `disabled` | `boolean` | `false` | Disable the calendar |
 | `classNames` | `CalendarClassNames` | — | Custom class names (see Styling) |
 | `labels` | `CalendarLabels` | — | Custom labels for i18n (see below) |
@@ -421,23 +605,30 @@ import type {
   CalendarClassNames,
   CalendarLabels,
   HeaderRenderProps,
+  DatePickerProps,
+  DateInputProps,
   
   // Values
   CalendarValue,
   DateTimeValue,
   DateRangeValue,
+  MultipleDatesValue,
+  WeekValue,
+  QuarterValue,
   TimeValue,
   
   // Data
   DayCell,
   WeekData,
   MonthData,
+  HighlightedDate,
   
   // Config
   SelectionMode,
   TimePosition,
   LayoutMode,
   DayOfWeek,
+  PopoverPlacement,
 } from '@vakac995/react-calendar';
 ```
 
@@ -454,6 +645,25 @@ interface DateTimeValue {
 interface DateRangeValue {
   start: DateTimeValue | null;
   end: DateTimeValue | null;
+}
+
+// Multiple dates
+type MultipleDatesValue = DateTimeValue[];
+
+// Week selection
+interface WeekValue {
+  weekNumber: number;
+  year: number;
+  startDate: Date;
+  endDate: Date;
+}
+
+// Quarter selection
+interface QuarterValue {
+  quarter: 1 | 2 | 3 | 4;
+  year: number;
+  startDate: Date;
+  endDate: Date;
 }
 
 // Time value
@@ -507,8 +717,16 @@ isDateInRange(date, start, end);    // Check if date in range
 import {
   // Components
   Calendar,
+  DatePicker,
+  DateInput,
   TimePicker,
   TimeSelector,
+  Popover,
+  Portal,
+  
+  // Hooks
+  useClickOutside,
+  usePopoverPosition,
   
   // Styling utilities
   defaultClassNames,
