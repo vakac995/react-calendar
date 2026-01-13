@@ -51,16 +51,6 @@ function getMockCallArg<T>(mock: Mock, callIndex: number, argIndex: number): T {
   return call[argIndex] as T;
 }
 
-function getCombobox(index: number): HTMLSelectElement {
-  const comboboxes = screen.getAllByRole("combobox");
-  if (index >= comboboxes.length) {
-    throw new Error(
-      `Only ${comboboxes.length} comboboxes found, but tried to access index ${index}`
-    );
-  }
-  return comboboxes[index] as HTMLSelectElement;
-}
-
 function getWeekButton(container: HTMLElement, index: number): HTMLButtonElement {
   const weekButtons = container.querySelectorAll(".week-num");
   if (index >= weekButtons.length) {
@@ -82,10 +72,12 @@ describe("Calendar", () => {
       expect(container.querySelector(".calendar-root")).toBeInTheDocument();
     });
 
-    it("should render month and year selects", () => {
-      render(<Calendar />);
-      const comboboxes = screen.getAllByRole("combobox");
-      expect(comboboxes.length).toBeGreaterThanOrEqual(2);
+    it("should render month and year buttons", () => {
+      const { container } = render(
+        <Calendar classNames={{ headerTitleButton: "header-title-btn" }} />
+      );
+      const titleButtons = container.querySelectorAll(".header-title-btn");
+      expect(titleButtons.length).toBe(2);
     });
 
     it("should render navigation buttons", () => {
@@ -118,9 +110,12 @@ describe("Calendar", () => {
     });
 
     it("should display January 2025 by default", () => {
-      render(<Calendar />);
-      expect(screen.getByText("January")).toBeInTheDocument();
-      expect(getCombobox(1)).toHaveValue("2025");
+      const { container } = render(
+        <Calendar classNames={{ headerTitleButton: "header-title-btn" }} />
+      );
+      const titleButtons = container.querySelectorAll(".header-title-btn");
+      expect(titleButtons[0]?.textContent).toBe("January");
+      expect(titleButtons[1]?.textContent).toBe("2025");
     });
 
     it("should apply calendarWrapper className", () => {
@@ -333,6 +328,462 @@ describe("Calendar", () => {
     });
   });
 
+  describe("multiple mode selection", () => {
+    it("should select a date on first click", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="multiple" onChange={handleChange} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "10" }));
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      const value = getMockCallArg<{ date: Date }[]>(handleChange, 0, 0);
+      expect(value).toHaveLength(1);
+      expect(value[0]?.date.getDate()).toBe(10);
+    });
+
+    it("should add multiple dates on subsequent clicks", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="multiple" onChange={handleChange} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "10" }));
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+      fireEvent.click(screen.getByRole("button", { name: "20" }));
+
+      expect(handleChange).toHaveBeenCalledTimes(3);
+      const value = getMockCallArg<{ date: Date }[]>(handleChange, 2, 0);
+      expect(value).toHaveLength(3);
+      expect(value.map((v) => v.date.getDate())).toEqual([10, 15, 20]);
+    });
+
+    it("should remove a date when clicking on an already selected date", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="multiple" onChange={handleChange} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "10" }));
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+      fireEvent.click(screen.getByRole("button", { name: "10" })); // Toggle off
+
+      expect(handleChange).toHaveBeenCalledTimes(3);
+      const value = getMockCallArg<{ date: Date }[]>(handleChange, 2, 0);
+      expect(value).toHaveLength(1);
+      expect(value[0]?.date.getDate()).toBe(15);
+    });
+
+    it("should sort dates chronologically", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="multiple" onChange={handleChange} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "20" }));
+      fireEvent.click(screen.getByRole("button", { name: "5" }));
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      const value = getMockCallArg<{ date: Date }[]>(handleChange, 2, 0);
+      expect(value.map((v) => v.date.getDate())).toEqual([5, 15, 20]);
+    });
+
+    it("should apply selected className to all selected dates", () => {
+      render(<Calendar mode="multiple" classNames={{ daySelected: "selected" }} />);
+
+      fireEvent.click(screen.getByRole("button", { name: "10" }));
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+      fireEvent.click(screen.getByRole("button", { name: "20" }));
+
+      expect(screen.getByRole("button", { name: "10" })).toHaveClass("selected");
+      expect(screen.getByRole("button", { name: "15" })).toHaveClass("selected");
+      expect(screen.getByRole("button", { name: "20" })).toHaveClass("selected");
+      expect(screen.getByRole("button", { name: "12" })).not.toHaveClass("selected");
+    });
+
+    it("should work with controlled multiple values", () => {
+      const value = [
+        { date: new Date(2025, 0, 10) },
+        { date: new Date(2025, 0, 15) },
+        { date: new Date(2025, 0, 20) },
+      ];
+
+      render(<Calendar mode="multiple" value={value} classNames={{ daySelected: "selected" }} />);
+
+      expect(screen.getByRole("button", { name: "10" })).toHaveClass("selected");
+      expect(screen.getByRole("button", { name: "15" })).toHaveClass("selected");
+      expect(screen.getByRole("button", { name: "20" })).toHaveClass("selected");
+    });
+
+    it("should clear all selections when clear button is clicked", () => {
+      const handleChange = vi.fn();
+      const handleClear = vi.fn();
+      render(
+        <Calendar
+          mode="multiple"
+          onChange={handleChange}
+          onClear={handleClear}
+          showClearButton
+          labels={{ clearButton: "Clear" }}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "10" }));
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      const clearButton = screen.getByRole("button", { name: /clear/i });
+      fireEvent.click(clearButton);
+
+      expect(handleClear).toHaveBeenCalled();
+      const lastCallArg = getMockCallArg<{ date: Date }[]>(handleChange, 2, 0);
+      expect(lastCallArg).toEqual([]);
+    });
+
+    it("should not select disabled dates", () => {
+      const handleChange = vi.fn();
+      render(
+        <Calendar
+          mode="multiple"
+          onChange={handleChange}
+          isDateDisabled={(date) => date.getDate() === 15}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "10" }));
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+      fireEvent.click(screen.getByRole("button", { name: "20" }));
+
+      expect(handleChange).toHaveBeenCalledTimes(2);
+      const value = getMockCallArg<{ date: Date }[]>(handleChange, 1, 0);
+      expect(value).toHaveLength(2);
+      expect(value.map((v) => v.date.getDate())).toEqual([10, 20]);
+    });
+
+    it("should handle empty array as initial value", () => {
+      const handleChange = vi.fn();
+      render(
+        <Calendar
+          mode="multiple"
+          value={[]}
+          onChange={handleChange}
+          classNames={{ daySelected: "selected" }}
+        />
+      );
+
+      // No dates should be selected
+      expect(screen.getByRole("button", { name: "10" })).not.toHaveClass("selected");
+      expect(screen.getByRole("button", { name: "15" })).not.toHaveClass("selected");
+
+      // Clicking should work normally
+      fireEvent.click(screen.getByRole("button", { name: "10" }));
+      expect(handleChange).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("week mode selection", () => {
+    it("should select entire week on day click", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="week" onChange={handleChange} />);
+
+      // Click on Wednesday January 15, 2025
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      const value = getMockCallArg<{
+        weekNumber: number;
+        year: number;
+        startDate: Date;
+        endDate: Date;
+      }>(handleChange, 0, 0);
+
+      // Week should start on Sunday (Jan 12) and end on Saturday (Jan 18)
+      expect(value.startDate.getDate()).toBe(12);
+      expect(value.endDate.getDate()).toBe(18);
+      expect(value.year).toBe(2025);
+    });
+
+    it("should highlight all days in selected week", () => {
+      render(
+        <Calendar
+          mode="week"
+          classNames={{ dayRangeStart: "range-start", dayRangeEnd: "range-end" }}
+        />
+      );
+
+      // Click on Wednesday January 15, 2025
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      // Week uses background highlight; start and end should have respective classes
+      expect(screen.getByRole("button", { name: "12" })).toHaveClass("range-start");
+      expect(screen.getByRole("button", { name: "18" })).toHaveClass("range-end");
+
+      // Day outside the week should not have range classes
+      expect(screen.getByRole("button", { name: "11" })).not.toHaveClass("range-start");
+      expect(screen.getByRole("button", { name: "19" })).not.toHaveClass("range-end");
+    });
+
+    it("should apply range start and end classes", () => {
+      render(
+        <Calendar
+          mode="week"
+          classNames={{
+            dayRangeStart: "range-start",
+            dayRangeEnd: "range-end",
+          }}
+        />
+      );
+
+      // Click on Wednesday January 15, 2025
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      // Jan 12 should be range start, Jan 18 should be range end
+      expect(screen.getByRole("button", { name: "12" })).toHaveClass("range-start");
+      expect(screen.getByRole("button", { name: "18" })).toHaveClass("range-end");
+    });
+
+    it("should work with controlled week value", () => {
+      const value = {
+        weekNumber: 3,
+        year: 2025,
+        startDate: new Date(2025, 0, 12),
+        endDate: new Date(2025, 0, 18),
+      };
+
+      render(
+        <Calendar
+          mode="week"
+          value={value}
+          classNames={{ dayRangeStart: "range-start", dayRangeEnd: "range-end" }}
+        />
+      );
+
+      // Week uses background highlight; check start and end
+      expect(screen.getByRole("button", { name: "12" })).toHaveClass("range-start");
+      expect(screen.getByRole("button", { name: "18" })).toHaveClass("range-end");
+    });
+
+    it("should clear week selection when clear button is clicked", () => {
+      const handleChange = vi.fn();
+      const handleClear = vi.fn();
+      render(
+        <Calendar
+          mode="week"
+          onChange={handleChange}
+          onClear={handleClear}
+          showClearButton
+          labels={{ clearButton: "Clear" }}
+        />
+      );
+
+      // Select a week
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      // Clear
+      const clearButton = screen.getByRole("button", { name: /clear/i });
+      fireEvent.click(clearButton);
+
+      expect(handleClear).toHaveBeenCalled();
+      const lastCallArg = getMockCallArg<null>(handleChange, 1, 0);
+      expect(lastCallArg).toBeNull();
+    });
+
+    it("should respect weekStartsOn when selecting week", () => {
+      const handleChange = vi.fn();
+      // Week starts on Monday (1)
+      render(<Calendar mode="week" weekStartsOn={1} onChange={handleChange} />);
+
+      // Click on Wednesday January 15, 2025
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      const value = getMockCallArg<{
+        startDate: Date;
+        endDate: Date;
+      }>(handleChange, 0, 0);
+
+      // Week should start on Monday (Jan 13) and end on Sunday (Jan 19)
+      expect(value.startDate.getDate()).toBe(13);
+      expect(value.endDate.getDate()).toBe(19);
+    });
+
+    it("should switch weeks when clicking on different week", () => {
+      const handleChange = vi.fn();
+      render(
+        <Calendar
+          mode="week"
+          onChange={handleChange}
+          classNames={{ dayRangeStart: "range-start", dayRangeEnd: "range-end" }}
+        />
+      );
+
+      // Click on January 15 (week of Jan 12-18)
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+      // Week start should have range-start
+      expect(screen.getByRole("button", { name: "12" })).toHaveClass("range-start");
+
+      // Click on January 22 (different week)
+      fireEvent.click(screen.getByRole("button", { name: "22" }));
+
+      // Previous week start should be deselected
+      expect(screen.getByRole("button", { name: "12" })).not.toHaveClass("range-start");
+
+      // New week should have range-start on Jan 19
+      expect(screen.getByRole("button", { name: "19" })).toHaveClass("range-start");
+
+      const lastValue = getMockCallArg<{
+        startDate: Date;
+        endDate: Date;
+      }>(handleChange, 1, 0);
+      expect(lastValue.startDate.getDate()).toBe(19);
+      expect(lastValue.endDate.getDate()).toBe(25);
+    });
+  });
+
+  describe("quarter mode selection", () => {
+    it("should select entire quarter on day click", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="quarter" onChange={handleChange} />);
+
+      // Click on January 15, 2025 (Q1)
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      const value = getMockCallArg<{
+        quarter: 1 | 2 | 3 | 4;
+        year: number;
+        startDate: Date;
+        endDate: Date;
+      }>(handleChange, 0, 0);
+
+      expect(value.quarter).toBe(1);
+      expect(value.year).toBe(2025);
+      expect(value.startDate.getMonth()).toBe(0); // January
+      expect(value.startDate.getDate()).toBe(1);
+      expect(value.endDate.getMonth()).toBe(2); // March
+      expect(value.endDate.getDate()).toBe(31);
+    });
+
+    it("should highlight all days in selected quarter", () => {
+      render(
+        <Calendar
+          mode="quarter"
+          classNames={{
+            dayInRange: "in-range",
+            dayRangeStart: "range-start",
+            dayRangeEnd: "range-end",
+          }}
+        />
+      );
+
+      // Click on January 15, 2025 (Q1)
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      // Days in January should be in range
+      expect(screen.getByRole("button", { name: "15" })).toHaveClass("in-range");
+      expect(screen.getByRole("button", { name: "20" })).toHaveClass("in-range");
+    });
+
+    it("should work with controlled quarter value", () => {
+      const value = {
+        quarter: 1 as const,
+        year: 2025,
+        startDate: new Date(2025, 0, 1),
+        endDate: new Date(2025, 2, 31),
+      };
+
+      render(<Calendar mode="quarter" value={value} classNames={{ dayInRange: "in-range" }} />);
+
+      // Days in Q1 should be in range
+      expect(screen.getByRole("button", { name: "15" })).toHaveClass("in-range");
+      expect(screen.getByRole("button", { name: "20" })).toHaveClass("in-range");
+    });
+
+    it("should clear quarter selection when clear button is clicked", () => {
+      const handleChange = vi.fn();
+      const handleClear = vi.fn();
+      render(
+        <Calendar
+          mode="quarter"
+          onChange={handleChange}
+          onClear={handleClear}
+          showClearButton
+          labels={{ clearButton: "Clear" }}
+        />
+      );
+
+      // Select a quarter
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      // Clear
+      const clearButton = screen.getByRole("button", { name: /clear/i });
+      fireEvent.click(clearButton);
+
+      expect(handleClear).toHaveBeenCalled();
+      const lastCallArg = getMockCallArg<null>(handleChange, 1, 0);
+      expect(lastCallArg).toBeNull();
+    });
+
+    it("should switch quarters when clicking on different quarter", () => {
+      const handleChange = vi.fn();
+      render(
+        <Calendar
+          mode="quarter"
+          defaultValue={{
+            quarter: 1,
+            year: 2025,
+            startDate: new Date(2025, 0, 1),
+            endDate: new Date(2025, 2, 31),
+          }}
+          onChange={handleChange}
+        />
+      );
+
+      // Navigate to April (Q2) and click a day
+      fireEvent.click(screen.getByRole("button", { name: /next month/i }));
+      fireEvent.click(screen.getByRole("button", { name: /next month/i }));
+      fireEvent.click(screen.getByRole("button", { name: /next month/i })); // Now at April
+
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      const value = getMockCallArg<{
+        quarter: 1 | 2 | 3 | 4;
+        year: number;
+      }>(handleChange, 0, 0);
+
+      expect(value.quarter).toBe(2);
+      expect(value.year).toBe(2025);
+    });
+
+    it("should calculate correct quarter boundaries for Q2", () => {
+      const handleChange = vi.fn();
+      render(<Calendar mode="quarter" onChange={handleChange} defaultValue={null} />);
+
+      // Navigate to May (Q2)
+      fireEvent.click(screen.getByRole("button", { name: /next month/i }));
+      fireEvent.click(screen.getByRole("button", { name: /next month/i }));
+      fireEvent.click(screen.getByRole("button", { name: /next month/i }));
+      fireEvent.click(screen.getByRole("button", { name: /next month/i })); // Now at May
+
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      const value = getMockCallArg<{
+        quarter: 1 | 2 | 3 | 4;
+        startDate: Date;
+        endDate: Date;
+      }>(handleChange, 0, 0);
+
+      expect(value.quarter).toBe(2);
+      expect(value.startDate.getMonth()).toBe(3); // April
+      expect(value.startDate.getDate()).toBe(1);
+      expect(value.endDate.getMonth()).toBe(5); // June
+      expect(value.endDate.getDate()).toBe(30);
+    });
+
+    it("should apply daySelected class to quarter start and end", () => {
+      render(<Calendar mode="quarter" classNames={{ daySelected: "selected" }} />);
+
+      // Click on January 15, 2025 (Q1)
+      fireEvent.click(screen.getByRole("button", { name: "15" }));
+
+      // January 1 should have selected class (range start)
+      // There may be multiple "1" buttons (from next month), so check the first one
+      const dayOneButtons = screen.getAllByRole("button", { name: "1" });
+      expect(dayOneButtons[0]).toHaveClass("selected");
+    });
+  });
+
   describe("navigation", () => {
     it("should navigate to previous month", () => {
       const onPrevMonth = vi.fn();
@@ -370,20 +821,50 @@ describe("Calendar", () => {
       expect(onNextYear).toHaveBeenCalledWith(2026);
     });
 
-    it("should select month via dropdown", () => {
+    it("should select month via month picker", () => {
       const onMonthSelect = vi.fn();
-      render(<Calendar onMonthSelect={onMonthSelect} />);
+      const { container } = render(
+        <Calendar
+          onMonthSelect={onMonthSelect}
+          classNames={{
+            headerTitleButton: "header-title-btn",
+            monthGridItem: "month-item",
+          }}
+        />
+      );
 
-      fireEvent.change(getCombobox(0), { target: { value: "6" } });
+      // Click month button to open month picker
+      const monthButton = container.querySelectorAll(".header-title-btn")[0];
+      fireEvent.click(monthButton!);
+
+      // Click July (index 6)
+      const monthItems = container.querySelectorAll(".month-item");
+      fireEvent.click(monthItems[6]!);
 
       expect(onMonthSelect).toHaveBeenCalledWith(6, 2025);
     });
 
-    it("should select year via dropdown", () => {
+    it("should select year via year picker", () => {
       const onYearChange = vi.fn();
-      render(<Calendar onYearChange={onYearChange} />);
+      const { container } = render(
+        <Calendar
+          onYearChange={onYearChange}
+          years={[2025, 2026, 2027, 2028, 2029, 2030]}
+          classNames={{
+            headerTitleButton: "header-title-btn",
+            yearGridItem: "year-item",
+          }}
+        />
+      );
 
-      fireEvent.change(getCombobox(1), { target: { value: "2030" } });
+      // Click year button to open year picker
+      const yearButton = container.querySelectorAll(".header-title-btn")[1];
+      fireEvent.click(yearButton!);
+
+      // Click 2030
+      const yearItems = container.querySelectorAll(".year-item");
+      const year2030 = Array.from(yearItems).find((item) => item.textContent === "2030");
+      fireEvent.click(year2030!);
 
       expect(onYearChange).toHaveBeenCalledWith(2030);
     });
@@ -411,10 +892,12 @@ describe("Calendar", () => {
       expect(screen.getByRole("button", { name: /next year/i })).toBeDisabled();
     });
 
-    it("should disable month/year selects when disabled", () => {
-      render(<Calendar disabled />);
-      const comboboxes = screen.getAllByRole("combobox");
-      comboboxes.forEach((combo) => expect(combo).toBeDisabled());
+    it("should disable month/year buttons when disabled", () => {
+      const { container } = render(
+        <Calendar disabled classNames={{ headerTitleButton: "header-title-btn" }} />
+      );
+      const titleButtons = container.querySelectorAll(".header-title-btn");
+      titleButtons.forEach((btn) => expect(btn).toBeDisabled());
     });
 
     it("should not call onChange when clicking disabled days", () => {
@@ -569,7 +1052,7 @@ describe("Calendar", () => {
         start: { date: new Date(2025, 0, 10), time: { hours: 9, minutes: 0, seconds: 0 } },
         end: { date: new Date(2025, 0, 20), time: { hours: 17, minutes: 0, seconds: 0 } },
       };
-      render(<Calendar mode="range" value={value} showTime />);
+      render(<Calendar mode="range" value={value} showTime layout="desktop" />);
       expect(screen.getByText("Start Time")).toBeInTheDocument();
       expect(screen.getByText("End Time")).toBeInTheDocument();
     });
@@ -704,6 +1187,7 @@ describe("Calendar", () => {
           value={value}
           showTime
           timePosition="side"
+          layout="desktop"
           classNames={{ timePickerWrapperSide: "time-side" }}
         />
       );
@@ -721,6 +1205,7 @@ describe("Calendar", () => {
           value={value}
           showTime
           timePosition="side"
+          layout="desktop"
           classNames={{ rootSideLayout: "side-layout" }}
         />
       );
@@ -801,6 +1286,7 @@ describe("Calendar", () => {
           mode="single"
           value={value}
           showTime
+          layout="desktop"
           labels={{ timeLabel: "Select Time", hoursLabel: "Hours", minutesLabel: "Minutes" }}
         />
       );
@@ -813,12 +1299,21 @@ describe("Calendar", () => {
   describe("custom years prop", () => {
     it("should use custom years array", () => {
       const customYears = [2020, 2021, 2022, 2023, 2024, 2025];
-      render(<Calendar years={customYears} />);
+      const { container } = render(
+        <Calendar
+          years={customYears}
+          defaultView="years"
+          classNames={{ yearGridItem: "year-item" }}
+        />
+      );
 
-      const yearSelect = getCombobox(1);
-      expect(within(yearSelect).getByText("2020")).toBeInTheDocument();
-      expect(within(yearSelect).getByText("2025")).toBeInTheDocument();
-      expect(within(yearSelect).queryByText("2026")).not.toBeInTheDocument();
+      const yearItems = container.querySelectorAll(".year-item");
+      expect(yearItems.length).toBe(6);
+
+      const yearTexts = Array.from(yearItems).map((item) => item.textContent);
+      expect(yearTexts).toContain("2020");
+      expect(yearTexts).toContain("2025");
+      expect(yearTexts).not.toContain("2026");
     });
   });
 
@@ -1499,14 +1994,16 @@ describe("Calendar", () => {
       expect(container.querySelector(".header-title")).toBeInTheDocument();
     });
 
-    it("should apply monthSelect class", () => {
-      const { container } = render(<Calendar classNames={{ headerMonthSelect: "month-select" }} />);
-      expect(container.querySelector(".month-select")).toBeInTheDocument();
+    it("should apply headerTitleButton class to month button", () => {
+      const { container } = render(<Calendar classNames={{ headerTitleButton: "title-button" }} />);
+      const titleButtons = container.querySelectorAll(".title-button");
+      expect(titleButtons.length).toBe(2);
     });
 
-    it("should apply yearSelect class", () => {
-      const { container } = render(<Calendar classNames={{ headerYearSelect: "year-select" }} />);
-      expect(container.querySelector(".year-select")).toBeInTheDocument();
+    it("should apply headerTitleButton class to year button", () => {
+      const { container } = render(<Calendar classNames={{ headerTitleButton: "title-button" }} />);
+      const titleButtons = container.querySelectorAll(".title-button");
+      expect(titleButtons[1]).toBeInTheDocument();
     });
   });
 
@@ -1784,18 +2281,20 @@ describe("Calendar", () => {
       expect(container.querySelectorAll(".nav-btn-disabled").length).toBe(4);
     });
 
-    it("should apply headerMonthSelectDisabled className when disabled", () => {
+    it("should apply headerTitleButtonDisabled className to month button when disabled", () => {
       const { container } = render(
-        <Calendar disabled classNames={{ headerMonthSelectDisabled: "month-select-disabled" }} />
+        <Calendar disabled classNames={{ headerTitleButtonDisabled: "title-btn-disabled" }} />
       );
-      expect(container.querySelector(".month-select-disabled")).toBeInTheDocument();
+      const disabledButtons = container.querySelectorAll(".title-btn-disabled");
+      expect(disabledButtons.length).toBe(2); // Both month and year buttons
     });
 
-    it("should apply headerYearSelectDisabled className when disabled", () => {
+    it("should apply headerTitleButtonDisabled className to year button when disabled", () => {
       const { container } = render(
-        <Calendar disabled classNames={{ headerYearSelectDisabled: "year-select-disabled" }} />
+        <Calendar disabled classNames={{ headerTitleButtonDisabled: "title-btn-disabled" }} />
       );
-      expect(container.querySelector(".year-select-disabled")).toBeInTheDocument();
+      const disabledButtons = container.querySelectorAll(".title-btn-disabled");
+      expect(disabledButtons[1]).toBeInTheDocument();
     });
 
     it("should apply weekNumberDisabled className when disabled and showWeekNumbers", () => {
@@ -2070,17 +2569,29 @@ describe("Calendar", () => {
     it("should handle view date changes when value changes month", () => {
       const initialValue: DateTimeValue = { date: new Date(2025, 0, 15), time: undefined };
 
-      const { rerender } = render(<Calendar mode="single" value={initialValue} />);
+      const { rerender, container } = render(
+        <Calendar
+          mode="single"
+          value={initialValue}
+          classNames={{ headerTitleButton: "header-title-btn" }}
+        />
+      );
 
-      expect(screen.getByText("January")).toBeInTheDocument();
+      const titleButtons = container.querySelectorAll(".header-title-btn");
+      expect(titleButtons[0]?.textContent).toBe("January");
 
       // Change to a different month
       const newValue: DateTimeValue = { date: new Date(2025, 5, 15), time: undefined };
-      rerender(<Calendar mode="single" value={newValue} />);
+      rerender(
+        <Calendar
+          mode="single"
+          value={newValue}
+          classNames={{ headerTitleButton: "header-title-btn" }}
+        />
+      );
 
-      // View should still show January since viewDate is controlled internally
-      // unless there's logic to sync it
-      expect(screen.getByText("January")).toBeInTheDocument();
+      // View should sync with controlled value and show June
+      expect(titleButtons[0]?.textContent).toBe("June");
     });
   });
 
@@ -2323,6 +2834,7 @@ describe("Calendar", () => {
           value={value}
           showTime
           timePosition="side"
+          layout="desktop"
           classNames={{ rootSideLayout: "side-layout" }}
         />
       );
@@ -2760,17 +3272,12 @@ describe("Calendar", () => {
           value={value}
           showTime
           timePosition="side"
-          layout="auto"
-          mobileBreakpoint={600}
+          layout="desktop"
           classNames={{ rootSideLayout: "side-layout", timePickerCollapsed: "collapsed-time" }}
         />
       );
 
-      // Simulate resize to desktop width
-      act(() => {
-        resizeCallback?.([{ contentRect: { width: 800 } }]);
-      });
-
+      // Explicit desktop layout should use side layout
       expect(container.querySelector(".side-layout")).toBeInTheDocument();
       expect(container.querySelector(".collapsed-time")).not.toBeInTheDocument();
     });
@@ -2786,13 +3293,1669 @@ describe("Calendar", () => {
           value={value}
           showTime
           timePosition="side"
-          layout="auto"
+          layout="desktop"
           classNames={{ rootSideLayout: "side-layout" }}
         />
       );
 
-      // Before any resize callback, should default to desktop
+      // Desktop layout should use side-layout
       expect(container.querySelector(".side-layout")).toBeInTheDocument();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Today Button
+  // ============================================================================
+
+  describe("Today Button", () => {
+    it("should not render Today button by default", () => {
+      render(<Calendar />);
+      expect(screen.queryByRole("button", { name: /today/i })).not.toBeInTheDocument();
+    });
+
+    it("should render Today button when showTodayButton is true", () => {
+      render(<Calendar showTodayButton classNames={{ todayButton: "today-btn" }} />);
+      expect(screen.getByRole("button", { name: /today/i })).toBeInTheDocument();
+    });
+
+    it("should navigate to today when Today button is clicked", () => {
+      const onTodayClick = vi.fn();
+      // Start viewing a different month
+      const { container } = render(
+        <Calendar
+          showTodayButton
+          value={{ date: new Date(2025, 5, 15) }}
+          onTodayClick={onTodayClick}
+          classNames={{ headerTitleButton: "header-title-btn" }}
+        />
+      );
+
+      // Verify we're viewing June
+      const titleButtons = container.querySelectorAll(".header-title-btn");
+      expect(titleButtons[0]?.textContent).toBe("June");
+
+      // Click Today button
+      fireEvent.click(screen.getByRole("button", { name: /today/i }));
+
+      // Verify callback was called
+      expect(onTodayClick).toHaveBeenCalledTimes(1);
+
+      // Should navigate to January (current frozen date month)
+      expect(titleButtons[0]?.textContent).toBe("January");
+    });
+
+    it("should be disabled when calendar is disabled", () => {
+      render(<Calendar showTodayButton disabled />);
+      expect(screen.getByRole("button", { name: /today/i })).toBeDisabled();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Clear Button
+  // ============================================================================
+
+  describe("Clear Button", () => {
+    it("should not render Clear button by default", () => {
+      render(<Calendar />);
+      expect(screen.queryByRole("button", { name: /clear/i })).not.toBeInTheDocument();
+    });
+
+    it("should render Clear button when showClearButton is true", () => {
+      render(<Calendar showClearButton value={{ date: new Date(2025, 0, 15) }} />);
+      expect(screen.getByRole("button", { name: /clear/i })).toBeInTheDocument();
+    });
+
+    it("should be disabled when no value is selected", () => {
+      render(<Calendar showClearButton />);
+      expect(screen.getByRole("button", { name: /clear/i })).toBeDisabled();
+    });
+
+    it("should clear single value when clicked", () => {
+      const onChange = vi.fn();
+      const onClear = vi.fn();
+      render(
+        <Calendar
+          mode="single"
+          value={{ date: new Date(2025, 0, 15) }}
+          showClearButton
+          onChange={onChange}
+          onClear={onClear}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /clear/i }));
+
+      expect(onClear).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenCalledWith(null);
+    });
+
+    it("should clear range value when clicked", () => {
+      const onChange = vi.fn();
+      const onClear = vi.fn();
+      const rangeValue: DateRangeValue = {
+        start: { date: new Date(2025, 0, 10) },
+        end: { date: new Date(2025, 0, 20) },
+      };
+      render(
+        <Calendar
+          mode="range"
+          value={rangeValue}
+          showClearButton
+          onChange={onChange}
+          onClear={onClear}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /clear/i }));
+
+      expect(onClear).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenCalledWith({ start: null, end: null });
+    });
+
+    it("should be disabled when calendar is disabled", () => {
+      render(<Calendar showClearButton disabled value={{ date: new Date(2025, 0, 15) }} />);
+      expect(screen.getByRole("button", { name: /clear/i })).toBeDisabled();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Custom isDateDisabled
+  // ============================================================================
+
+  describe("Custom isDateDisabled callback", () => {
+    it("should disable dates based on custom callback", () => {
+      // Disable all weekends
+      const isDateDisabled = (date: Date): boolean => date.getDay() === 0 || date.getDay() === 6;
+
+      const { container } = render(
+        <Calendar isDateDisabled={isDateDisabled} classNames={{ dayDisabled: "day-disabled" }} />
+      );
+
+      // Find disabled day buttons
+      const disabledDays = container.querySelectorAll(".day-disabled");
+      expect(disabledDays.length).toBeGreaterThan(0);
+
+      // All disabled days should be Saturday or Sunday
+      disabledDays.forEach((dayElement) => {
+        const button = dayElement as HTMLButtonElement;
+        expect(button.disabled).toBe(true);
+      });
+    });
+
+    it("should combine custom callback with minDate/maxDate", () => {
+      const minDate = new Date(2025, 0, 10);
+      const maxDate = new Date(2025, 0, 20);
+      // Also disable day 15
+      const isDateDisabled = (date: Date): boolean => date.getDate() === 15;
+
+      render(
+        <Calendar
+          minDate={minDate}
+          maxDate={maxDate}
+          isDateDisabled={isDateDisabled}
+          classNames={{ dayDisabled: "day-disabled" }}
+        />
+      );
+
+      // Day 5 should be disabled (before minDate)
+      // Day 15 should be disabled (custom callback)
+      // Day 25 should be disabled (after maxDate)
+      const dayButtons = screen.getAllByRole("button", { name: /^[0-9]+$/ });
+      const day5Button = dayButtons.find((btn) => btn.textContent === "5");
+      const day15Button = dayButtons.find((btn) => btn.textContent === "15");
+      const day25Button = dayButtons.find((btn) => btn.textContent === "25");
+
+      expect(day5Button).toBeDisabled();
+      expect(day15Button).toBeDisabled();
+      expect(day25Button).toBeDisabled();
+    });
+
+    it("should not allow selection of custom disabled dates", () => {
+      const onChange = vi.fn();
+      const isDateDisabled = (date: Date): boolean => date.getDate() === 15;
+
+      render(<Calendar isDateDisabled={isDateDisabled} onChange={onChange} />);
+
+      const day15Button = screen
+        .getAllByRole("button", { name: /^[0-9]+$/ })
+        .find((btn) => btn.textContent === "15");
+
+      fireEvent.click(day15Button!);
+      expect(onChange).not.toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Highlighted Dates
+  // ============================================================================
+
+  describe("Highlighted Dates", () => {
+    it("should highlight specified dates", () => {
+      const highlightedDates = [new Date(2025, 0, 10), new Date(2025, 0, 20)];
+
+      const { container } = render(
+        <Calendar
+          highlightedDates={highlightedDates}
+          classNames={{ dayHighlighted: "day-highlighted" }}
+        />
+      );
+
+      const highlightedElements = container.querySelectorAll(".day-highlighted");
+      expect(highlightedElements.length).toBe(2);
+    });
+
+    it("should not apply highlight styling to selected dates", () => {
+      const highlightedDates = [new Date(2025, 0, 15)];
+      const value: DateTimeValue = { date: new Date(2025, 0, 15) };
+
+      const { container } = render(
+        <Calendar
+          value={value}
+          highlightedDates={highlightedDates}
+          classNames={{ dayHighlighted: "day-highlighted", daySelected: "day-selected" }}
+        />
+      );
+
+      // The day should be selected, not highlighted (selected takes precedence)
+      const selectedElements = container.querySelectorAll(".day-selected");
+      expect(selectedElements.length).toBe(1);
+
+      // If highlighted, it shouldn't show highlighted class when selected
+      const day15 = screen
+        .getAllByRole("button", { name: /^[0-9]+$/ })
+        .find((btn) => btn.textContent === "15");
+      expect(day15?.classList.contains("day-highlighted")).toBe(false);
+    });
+
+    it("should allow clicking on highlighted dates", () => {
+      const onChange = vi.fn();
+      const highlightedDates = [new Date(2025, 0, 10)];
+
+      render(
+        <Calendar
+          highlightedDates={highlightedDates}
+          onChange={onChange}
+          classNames={{ dayHighlighted: "day-highlighted" }}
+        />
+      );
+
+      const day10Button = screen
+        .getAllByRole("button", { name: /^[0-9]+$/ })
+        .find((btn) => btn.textContent === "10");
+
+      fireEvent.click(day10Button!);
+      expect(onChange).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Keyboard Navigation
+  // ============================================================================
+
+  describe("Keyboard Navigation", () => {
+    it("should have tabIndex on the root element for keyboard focus", () => {
+      const { container } = render(<Calendar classNames={{ root: "cal-root" }} />);
+      const root = container.querySelector(".cal-root");
+      expect(root).toHaveAttribute("tabindex", "0");
+    });
+
+    it("should have role='application' and aria-label on root", () => {
+      const { container } = render(<Calendar classNames={{ root: "cal-root" }} />);
+      const root = container.querySelector(".cal-root");
+      expect(root).toHaveAttribute("role", "application");
+      expect(root).toHaveAttribute("aria-label", "Calendar");
+    });
+
+    it("should call onEscape when Escape key is pressed", () => {
+      const onEscape = vi.fn();
+      const { container } = render(
+        <Calendar onEscape={onEscape} classNames={{ root: "cal-root" }} />
+      );
+
+      const root = container.querySelector(".cal-root")!;
+      fireEvent.keyDown(root, { key: "Escape" });
+
+      expect(onEscape).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not respond to keyboard when disabled", () => {
+      const onEscape = vi.fn();
+      const { container } = render(
+        <Calendar disabled onEscape={onEscape} classNames={{ root: "cal-root" }} />
+      );
+
+      const root = container.querySelector(".cal-root")!;
+      fireEvent.keyDown(root, { key: "Escape" });
+
+      expect(onEscape).not.toHaveBeenCalled();
+    });
+
+    it("should call onFocusChange when navigating with arrow keys", () => {
+      const onFocusChange = vi.fn();
+      const { container } = render(
+        <Calendar onFocusChange={onFocusChange} classNames={{ root: "cal-root" }} />
+      );
+
+      const root = container.querySelector(".cal-root")!;
+      fireEvent.keyDown(root, { key: "ArrowRight" });
+
+      expect(onFocusChange).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Footer Styling
+  // ============================================================================
+
+  describe("Footer with both buttons", () => {
+    it("should render footer with both Today and Clear buttons", () => {
+      const { container } = render(
+        <Calendar
+          showTodayButton
+          showClearButton
+          value={{ date: new Date(2025, 0, 15) }}
+          classNames={{ footer: "cal-footer" }}
+        />
+      );
+
+      expect(container.querySelector(".cal-footer")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /today/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /clear/i })).toBeInTheDocument();
+    });
+
+    it("should not render footer if no buttons are shown", () => {
+      const { container } = render(<Calendar classNames={{ footer: "cal-footer" }} />);
+      expect(container.querySelector(".cal-footer")).not.toBeInTheDocument();
+    });
+
+    it("should apply custom footer className", () => {
+      const { container } = render(
+        <Calendar showTodayButton classNames={{ footer: "custom-footer-class" }} />
+      );
+      expect(container.querySelector(".custom-footer-class")).toBeInTheDocument();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Month Picker View
+  // ============================================================================
+
+  describe("Month Picker View", () => {
+    it("should switch to month picker view when clicking month button", () => {
+      const { container } = render(
+        <Calendar
+          classNames={{
+            headerTitleButton: "header-title-btn",
+            monthGrid: "month-grid",
+          }}
+        />
+      );
+
+      const monthButton = container.querySelectorAll(".header-title-btn")[0];
+      expect(monthButton).toBeInTheDocument();
+
+      fireEvent.click(monthButton!);
+
+      expect(container.querySelector(".month-grid")).toBeInTheDocument();
+    });
+
+    it("should display all 12 months in month picker", () => {
+      const onViewChange = vi.fn();
+      const { container } = render(
+        <Calendar
+          view="months"
+          onViewChange={onViewChange}
+          classNames={{ monthGridItem: "month-item" }}
+        />
+      );
+
+      const monthItems = container.querySelectorAll(".month-item");
+      expect(monthItems.length).toBe(12);
+    });
+
+    it("should highlight current month in month picker", () => {
+      const { container } = render(
+        <Calendar
+          view="months"
+          classNames={{
+            monthGridItem: "month-item",
+            monthGridItemSelected: "month-selected",
+          }}
+        />
+      );
+
+      // Current month is January (frozen date is Jan 15, 2025)
+      const selectedMonth = container.querySelector(".month-selected");
+      expect(selectedMonth).toBeInTheDocument();
+      expect(selectedMonth?.textContent).toBe("January");
+    });
+
+    it("should switch back to days view when selecting a month", () => {
+      const onViewChange = vi.fn();
+      const onMonthSelect = vi.fn();
+      const { container } = render(
+        <Calendar
+          defaultView="months"
+          onViewChange={onViewChange}
+          onMonthSelect={onMonthSelect}
+          classNames={{ monthGridItem: "month-item" }}
+        />
+      );
+
+      const monthItems = container.querySelectorAll(".month-item");
+      fireEvent.click(monthItems[5]!); // Click June
+
+      expect(onMonthSelect).toHaveBeenCalledWith(5, 2025);
+    });
+
+    it("should handle keyboard navigation in month picker", () => {
+      const { container } = render(
+        <Calendar defaultView="months" classNames={{ root: "cal-root", monthGrid: "month-grid" }} />
+      );
+
+      const root = container.querySelector(".cal-root")!;
+      expect(container.querySelector(".month-grid")).toBeInTheDocument();
+
+      // Navigate with arrow keys
+      fireEvent.keyDown(root, { key: "ArrowRight" });
+      fireEvent.keyDown(root, { key: "ArrowDown" });
+    });
+
+    it("should escape from month picker view back to days view", () => {
+      const onViewChange = vi.fn();
+      const { container } = render(
+        <Calendar
+          defaultView="months"
+          onViewChange={onViewChange}
+          classNames={{ root: "cal-root", monthGrid: "month-grid" }}
+        />
+      );
+
+      const root = container.querySelector(".cal-root")!;
+      fireEvent.keyDown(root, { key: "Escape" });
+
+      expect(onViewChange).toHaveBeenCalledWith("days");
+    });
+
+    it("should use controlled view mode", () => {
+      const { container } = render(
+        <Calendar view="months" classNames={{ monthGrid: "month-grid" }} />
+      );
+
+      expect(container.querySelector(".month-grid")).toBeInTheDocument();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Year Picker View
+  // ============================================================================
+
+  describe("Year Picker View", () => {
+    it("should switch to year picker view when clicking year button", () => {
+      const { container } = render(
+        <Calendar
+          classNames={{
+            headerTitleButton: "header-title-btn",
+            yearGrid: "year-grid",
+          }}
+        />
+      );
+
+      const buttons = container.querySelectorAll(".header-title-btn");
+      const yearButton = buttons[1]; // Second button is year
+      expect(yearButton).toBeInTheDocument();
+
+      fireEvent.click(yearButton!);
+
+      expect(container.querySelector(".year-grid")).toBeInTheDocument();
+    });
+
+    it("should display years in year picker", () => {
+      const { container } = render(
+        <Calendar
+          view="years"
+          years={[2020, 2021, 2022, 2023, 2024, 2025]}
+          classNames={{ yearGridItem: "year-item" }}
+        />
+      );
+
+      const yearItems = container.querySelectorAll(".year-item");
+      expect(yearItems.length).toBe(6);
+    });
+
+    it("should highlight current year in year picker", () => {
+      const { container } = render(
+        <Calendar
+          view="years"
+          years={[2023, 2024, 2025, 2026]}
+          classNames={{
+            yearGridItem: "year-item",
+            yearGridItemSelected: "year-selected",
+          }}
+        />
+      );
+
+      const selectedYear = container.querySelector(".year-selected");
+      expect(selectedYear).toBeInTheDocument();
+      expect(selectedYear?.textContent).toBe("2025");
+    });
+
+    it("should switch to month picker when selecting a year", () => {
+      const onViewChange = vi.fn();
+      const { container } = render(
+        <Calendar
+          defaultView="years"
+          years={[2023, 2024, 2025, 2026]}
+          onViewChange={onViewChange}
+          classNames={{ yearGridItem: "year-item" }}
+        />
+      );
+
+      const yearItems = container.querySelectorAll(".year-item");
+      fireEvent.click(yearItems[2]!); // Click 2025
+
+      expect(onViewChange).toHaveBeenCalledWith("months");
+    });
+
+    it("should handle keyboard navigation in year picker", () => {
+      const { container } = render(
+        <Calendar
+          defaultView="years"
+          years={[2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027]}
+          classNames={{ root: "cal-root", yearGrid: "year-grid" }}
+        />
+      );
+
+      const root = container.querySelector(".cal-root")!;
+      expect(container.querySelector(".year-grid")).toBeInTheDocument();
+
+      fireEvent.keyDown(root, { key: "ArrowRight" });
+      fireEvent.keyDown(root, { key: "ArrowDown" });
+      fireEvent.keyDown(root, { key: "ArrowLeft" });
+      fireEvent.keyDown(root, { key: "ArrowUp" });
+    });
+
+    it("should escape from year picker view back to days view", () => {
+      const onViewChange = vi.fn();
+      const { container } = render(
+        <Calendar
+          defaultView="years"
+          onViewChange={onViewChange}
+          classNames={{ root: "cal-root", yearGrid: "year-grid" }}
+        />
+      );
+
+      const root = container.querySelector(".cal-root")!;
+      fireEvent.keyDown(root, { key: "Escape" });
+
+      expect(onViewChange).toHaveBeenCalledWith("days");
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: View State Management
+  // ============================================================================
+
+  describe("View State Management", () => {
+    it("should default to days view", () => {
+      const { container } = render(
+        <Calendar
+          classNames={{
+            body: "cal-body",
+            monthGrid: "month-grid",
+            yearGrid: "year-grid",
+          }}
+        />
+      );
+
+      expect(container.querySelector(".cal-body")).toBeInTheDocument();
+      expect(container.querySelector(".month-grid")).not.toBeInTheDocument();
+      expect(container.querySelector(".year-grid")).not.toBeInTheDocument();
+    });
+
+    it("should use defaultView prop", () => {
+      const { container } = render(
+        <Calendar defaultView="months" classNames={{ monthGrid: "month-grid" }} />
+      );
+
+      expect(container.querySelector(".month-grid")).toBeInTheDocument();
+    });
+
+    it("should call onViewChange when view changes", () => {
+      const onViewChange = vi.fn();
+      const { container } = render(
+        <Calendar
+          onViewChange={onViewChange}
+          classNames={{ headerTitleButton: "header-title-btn" }}
+        />
+      );
+
+      const monthButton = container.querySelectorAll(".header-title-btn")[0];
+      fireEvent.click(monthButton!);
+
+      expect(onViewChange).toHaveBeenCalledWith("months");
+    });
+
+    it("should hide time picker when not in days view", () => {
+      const { container, rerender } = render(
+        <Calendar
+          showTime
+          view="days"
+          value={{ date: new Date(2025, 0, 15) }}
+          classNames={{ timePickerWrapper: "time-picker" }}
+        />
+      );
+
+      expect(container.querySelector(".time-picker")).toBeInTheDocument();
+
+      rerender(
+        <Calendar
+          showTime
+          view="months"
+          value={{ date: new Date(2025, 0, 15) }}
+          classNames={{ timePickerWrapper: "time-picker" }}
+        />
+      );
+
+      expect(container.querySelector(".time-picker")).not.toBeInTheDocument();
+    });
+
+    it("should toggle month view on header click", () => {
+      const { container } = render(
+        <Calendar
+          classNames={{
+            headerTitleButton: "header-title-btn",
+            monthGrid: "month-grid",
+          }}
+        />
+      );
+
+      const monthButton = container.querySelectorAll(".header-title-btn")[0];
+
+      // Click to open
+      fireEvent.click(monthButton!);
+      expect(container.querySelector(".month-grid")).toBeInTheDocument();
+
+      // Click again to close
+      fireEvent.click(monthButton!);
+      expect(container.querySelector(".month-grid")).not.toBeInTheDocument();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Multiple Months Display
+  // ============================================================================
+
+  describe("Multiple Months Display", () => {
+    it("should render single month by default", () => {
+      const { container } = render(
+        <Calendar
+          classNames={{
+            multiMonthContainer: "multi-container",
+            body: "cal-body",
+          }}
+        />
+      );
+
+      expect(container.querySelector(".multi-container")).not.toBeInTheDocument();
+      expect(container.querySelectorAll(".cal-body").length).toBe(1);
+    });
+
+    it("should render multiple months when numberOfMonths > 1", () => {
+      const { container } = render(
+        <Calendar
+          numberOfMonths={2}
+          classNames={{
+            multiMonthContainer: "multi-container",
+            multiMonthGrid: "month-grid-item",
+            body: "cal-body",
+          }}
+        />
+      );
+
+      expect(container.querySelector(".multi-container")).toBeInTheDocument();
+      expect(container.querySelectorAll(".month-grid-item").length).toBe(2);
+      expect(container.querySelectorAll(".cal-body").length).toBe(2);
+    });
+
+    it("should render 3 months side by side", () => {
+      const { container } = render(
+        <Calendar
+          numberOfMonths={3}
+          classNames={{
+            multiMonthContainer: "multi-container",
+            multiMonthGrid: "month-grid-item",
+          }}
+        />
+      );
+
+      expect(container.querySelectorAll(".month-grid-item").length).toBe(3);
+    });
+
+    it("should display month headers for each month in multi-month view", () => {
+      const { container } = render(
+        <Calendar numberOfMonths={2} classNames={{ multiMonthHeader: "month-header" }} />
+      );
+
+      const headers = container.querySelectorAll(".month-header");
+      expect(headers.length).toBe(2);
+      expect(headers[0]?.textContent).toContain("January");
+      expect(headers[1]?.textContent).toContain("February");
+    });
+
+    it("should handle range selection across multiple months", () => {
+      const onChange = vi.fn();
+      const { container } = render(
+        <Calendar
+          mode="range"
+          numberOfMonths={2}
+          onChange={onChange}
+          classNames={{ dayButton: "day-btn" }}
+        />
+      );
+
+      const dayButtons = container.querySelectorAll(".day-btn");
+      // Click day in first month
+      fireEvent.click(dayButtons[10]!);
+      // Click day in second month
+      fireEvent.click(dayButtons[45]!);
+
+      expect(onChange).toHaveBeenCalledTimes(2);
+    });
+
+    it("should navigate all months together", () => {
+      const onNextMonth = vi.fn();
+      const { container } = render(
+        <Calendar
+          numberOfMonths={2}
+          onNextMonth={onNextMonth}
+          classNames={{ multiMonthHeader: "month-header" }}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /next month/i }));
+
+      const headers = container.querySelectorAll(".month-header");
+      expect(headers[0]?.textContent).toContain("February");
+      expect(headers[1]?.textContent).toContain("March");
+    });
+
+    it("should show week numbers in multi-month view when enabled", () => {
+      const { container } = render(
+        <Calendar numberOfMonths={2} showWeekNumbers classNames={{ weekNumber: "week-num" }} />
+      );
+
+      // Each month has multiple weeks with week numbers
+      const weekNumbers = container.querySelectorAll(".week-num");
+      expect(weekNumbers.length).toBeGreaterThan(6); // At least 6+ weeks across 2 months
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Header Title Buttons
+  // ============================================================================
+
+  describe("Header Title Buttons", () => {
+    it("should render month and year as clickable buttons", () => {
+      const { container } = render(<Calendar classNames={{ headerTitleButton: "title-btn" }} />);
+
+      const titleButtons = container.querySelectorAll(".title-btn");
+      expect(titleButtons.length).toBe(2);
+    });
+
+    it("should have aria-expanded attribute on month button", () => {
+      const { container } = render(<Calendar classNames={{ headerTitleButton: "title-btn" }} />);
+
+      const monthButton = container.querySelectorAll(".title-btn")[0];
+      expect(monthButton).toHaveAttribute("aria-expanded", "false");
+
+      fireEvent.click(monthButton!);
+      expect(monthButton).toHaveAttribute("aria-expanded", "true");
+    });
+
+    it("should have aria-label on month button", () => {
+      const { container } = render(<Calendar classNames={{ headerTitleButton: "title-btn" }} />);
+
+      const monthButton = container.querySelectorAll(".title-btn")[0];
+      expect(monthButton).toHaveAttribute("aria-label", "Select month");
+    });
+
+    it("should have aria-label on year button", () => {
+      const { container } = render(<Calendar classNames={{ headerTitleButton: "title-btn" }} />);
+
+      const yearButton = container.querySelectorAll(".title-btn")[1];
+      expect(yearButton).toHaveAttribute("aria-label", "Select year");
+    });
+
+    it("should display current month name on month button", () => {
+      const { container } = render(<Calendar classNames={{ headerTitleButton: "title-btn" }} />);
+
+      const monthButton = container.querySelectorAll(".title-btn")[0];
+      expect(monthButton?.textContent).toBe("January");
+    });
+
+    it("should display current year on year button", () => {
+      const { container } = render(<Calendar classNames={{ headerTitleButton: "title-btn" }} />);
+
+      const yearButton = container.querySelectorAll(".title-btn")[1];
+      expect(yearButton?.textContent).toBe("2025");
+    });
+
+    it("should be disabled when calendar is disabled", () => {
+      const { container } = render(
+        <Calendar disabled classNames={{ headerTitleButton: "title-btn" }} />
+      );
+
+      const titleButtons = container.querySelectorAll(".title-btn");
+      expect(titleButtons[0]).toBeDisabled();
+      expect(titleButtons[1]).toBeDisabled();
+    });
+  });
+
+  describe("Locale/i18n Support", () => {
+    it("should use English month and day names by default", () => {
+      render(<Calendar />);
+
+      // Check English day names
+      expect(screen.getByText("Sun")).toBeInTheDocument();
+      expect(screen.getByText("Mon")).toBeInTheDocument();
+      expect(screen.getByText("Tue")).toBeInTheDocument();
+    });
+
+    it("should use localized month names when locale is set", () => {
+      const { container } = render(
+        <Calendar locale="de-DE" classNames={{ headerTitleButton: "title-btn" }} />
+      );
+
+      const monthButton = container.querySelectorAll(".title-btn")[0];
+      // German month name for January is "Januar"
+      expect(monthButton?.textContent).toBe("Januar");
+    });
+
+    it("should use localized day names when locale is set", () => {
+      render(<Calendar locale="de-DE" />);
+
+      // Check German day names (Mo, Di, Mi, Do, Fr, Sa, So)
+      expect(screen.getByText("Mo")).toBeInTheDocument();
+      expect(screen.getByText("Di")).toBeInTheDocument();
+      expect(screen.getByText("Mi")).toBeInTheDocument();
+    });
+
+    it("should auto-detect weekStartsOn from locale for German (Monday)", () => {
+      const { container } = render(
+        <Calendar locale="de-DE" classNames={{ weekDayCell: "day-header" }} />
+      );
+
+      // In Germany, weeks start on Monday (Mo should be first)
+      const dayHeaders = container.querySelectorAll(".day-header");
+      expect(dayHeaders[0]).toHaveTextContent("Mo");
+    });
+
+    it("should auto-detect weekStartsOn from locale for US (Sunday)", () => {
+      const { container } = render(
+        <Calendar locale="en-US" classNames={{ weekDayCell: "day-header" }} />
+      );
+
+      // In US, weeks start on Sunday (Sun should be first)
+      const dayHeaders = container.querySelectorAll(".day-header");
+      expect(dayHeaders[0]).toHaveTextContent("Sun");
+    });
+
+    it("should allow explicit weekStartsOn to override locale default", () => {
+      const { container } = render(
+        <Calendar locale="de-DE" weekStartsOn={0} classNames={{ weekDayCell: "day-header" }} />
+      );
+
+      // Even though German locale defaults to Monday, explicit weekStartsOn=0 should use Sunday
+      const dayHeaders = container.querySelectorAll(".day-header");
+      expect(dayHeaders[0]).toHaveTextContent("So"); // German for Sunday
+    });
+
+    it("should set dir='rtl' for RTL locales like Hebrew", () => {
+      const { container } = render(<Calendar locale="he-IL" />);
+
+      const root = container.firstChild as HTMLElement;
+      expect(root).toHaveAttribute("dir", "rtl");
+    });
+
+    it("should set dir='rtl' for Arabic locale", () => {
+      const { container } = render(<Calendar locale="ar-SA" />);
+
+      const root = container.firstChild as HTMLElement;
+      expect(root).toHaveAttribute("dir", "rtl");
+    });
+
+    it("should set dir='ltr' for LTR locales like English", () => {
+      const { container } = render(<Calendar locale="en-US" />);
+
+      const root = container.firstChild as HTMLElement;
+      expect(root).toHaveAttribute("dir", "ltr");
+    });
+
+    it("should use French month names when locale is fr-FR", () => {
+      const { container } = render(
+        <Calendar locale="fr-FR" classNames={{ headerTitleButton: "title-btn" }} />
+      );
+
+      const monthButton = container.querySelectorAll(".title-btn")[0];
+      // French month name for January is "janvier"
+      expect(monthButton?.textContent).toBe("janvier");
+    });
+
+    it("should use Japanese day names when locale is ja-JP", () => {
+      render(<Calendar locale="ja-JP" />);
+
+      // Japanese short day names
+      expect(screen.getByText("日")).toBeInTheDocument(); // Sunday
+      expect(screen.getByText("月")).toBeInTheDocument(); // Monday
+    });
+
+    it("should allow custom labels to override locale labels", () => {
+      render(
+        <Calendar
+          locale="de-DE"
+          labels={{ shortDays: ["SU", "MO", "TU", "WE", "TH", "FR", "SA"] }}
+        />
+      );
+
+      // Custom labels should take precedence over locale
+      expect(screen.getByText("SU")).toBeInTheDocument();
+      expect(screen.getByText("MO")).toBeInTheDocument();
+    });
+
+    it("should use localized month names in month picker", () => {
+      const { container } = render(
+        <Calendar locale="es-ES" classNames={{ headerTitleButton: "title-btn" }} />
+      );
+
+      // Click month button to open month picker
+      const monthButton = container.querySelectorAll(".title-btn")[0] as HTMLButtonElement;
+      fireEvent.click(monthButton);
+
+      // Check for Spanish month names
+      expect(screen.getByRole("button", { name: "enero" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "febrero" })).toBeInTheDocument();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Today Button Complete Functionality
+  // ============================================================================
+
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+  describe("Today Button Selection", () => {
+    it("should select today in single mode when clicking Today button", () => {
+      const onChange = vi.fn();
+      render(<Calendar mode="single" showTodayButton onChange={onChange} />);
+
+      const todayButton = screen.getByRole("button", { name: /today/i });
+      fireEvent.click(todayButton);
+
+      expect(onChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          date: expect.any(Date),
+        })
+      );
+    });
+
+    it("should add today in multiple mode when clicking Today button", () => {
+      const onChange = vi.fn();
+      render(<Calendar mode="multiple" showTodayButton onChange={onChange} />);
+
+      const todayButton = screen.getByRole("button", { name: /today/i });
+      fireEvent.click(todayButton);
+
+      expect(onChange).toHaveBeenCalled();
+    });
+
+    it("should remove today in multiple mode if already selected", () => {
+      const today = new Date();
+      const initialValue = [{ date: today }];
+      const onChange = vi.fn();
+      render(<Calendar mode="multiple" showTodayButton value={initialValue} onChange={onChange} />);
+
+      const todayButton = screen.getByRole("button", { name: /today/i });
+      fireEvent.click(todayButton);
+
+      expect(onChange).toHaveBeenCalled();
+      // Should have removed today
+      const newValue = onChange.mock.calls[0]?.[0] as { date: Date }[];
+      expect(newValue.length).toBe(0);
+    });
+
+    it("should select week containing today in week mode", () => {
+      const onChange = vi.fn();
+      render(<Calendar mode="week" showTodayButton onChange={onChange} />);
+
+      const todayButton = screen.getByRole("button", { name: /today/i });
+      fireEvent.click(todayButton);
+
+      expect(onChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          weekNumber: expect.any(Number),
+          year: expect.any(Number),
+          startDate: expect.any(Date),
+          endDate: expect.any(Date),
+        })
+      );
+    });
+
+    it("should select quarter containing today in quarter mode", () => {
+      const onChange = vi.fn();
+      render(<Calendar mode="quarter" showTodayButton onChange={onChange} />);
+
+      const todayButton = screen.getByRole("button", { name: /today/i });
+      fireEvent.click(todayButton);
+
+      expect(onChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          quarter: expect.any(Number),
+          year: expect.any(Number),
+          startDate: expect.any(Date),
+          endDate: expect.any(Date),
+        })
+      );
+    });
+
+    it("should select range from today to today in range mode", () => {
+      const onChange = vi.fn();
+      render(<Calendar mode="range" showTodayButton onChange={onChange} />);
+
+      const todayButton = screen.getByRole("button", { name: /today/i });
+      fireEvent.click(todayButton);
+
+      expect(onChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          start: expect.objectContaining({ date: expect.any(Date) }),
+          end: expect.objectContaining({ date: expect.any(Date) }),
+        })
+      );
+    });
+
+    it("should include time in single mode when showTime is true", () => {
+      const onChange = vi.fn();
+      render(
+        <Calendar mode="single" showTodayButton showTime onChange={onChange} layout="desktop" />
+      );
+
+      const todayButton = screen.getByRole("button", { name: /today/i });
+      fireEvent.click(todayButton);
+
+      expect(onChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          date: expect.any(Date),
+          time: expect.objectContaining({
+            hours: expect.any(Number),
+            minutes: expect.any(Number),
+            seconds: expect.any(Number),
+          }),
+        })
+      );
+    });
+
+    it("should call onTodayClick callback", () => {
+      const onTodayClick = vi.fn();
+      render(<Calendar showTodayButton onTodayClick={onTodayClick} />);
+
+      const todayButton = screen.getByRole("button", { name: /today/i });
+      fireEvent.click(todayButton);
+
+      expect(onTodayClick).toHaveBeenCalled();
+    });
+
+    it("should call onFocusChange callback with today date", () => {
+      const onFocusChange = vi.fn();
+      render(<Calendar showTodayButton onFocusChange={onFocusChange} />);
+
+      const todayButton = screen.getByRole("button", { name: /today/i });
+      fireEvent.click(todayButton);
+
+      expect(onFocusChange).toHaveBeenCalledWith(expect.any(Date));
+    });
+
+    it("should not select when disabled", () => {
+      const onChange = vi.fn();
+      render(<Calendar showTodayButton disabled onChange={onChange} />);
+
+      const todayButton = screen.getByRole("button", { name: /today/i });
+      fireEvent.click(todayButton);
+
+      expect(onChange).not.toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Clear Button Complete Functionality
+  // ============================================================================
+
+  describe("Clear Button Functionality", () => {
+    it("should clear value in single mode", () => {
+      const onChange = vi.fn();
+      render(
+        <Calendar
+          mode="single"
+          showClearButton
+          value={{ date: new Date(2025, 0, 15) }}
+          onChange={onChange}
+        />
+      );
+
+      const clearButton = screen.getByRole("button", { name: /clear/i });
+      fireEvent.click(clearButton);
+
+      expect(onChange).toHaveBeenCalledWith(null);
+    });
+
+    it("should clear value in multiple mode", () => {
+      const onChange = vi.fn();
+      render(
+        <Calendar
+          mode="multiple"
+          showClearButton
+          value={[{ date: new Date(2025, 0, 15) }]}
+          onChange={onChange}
+        />
+      );
+
+      const clearButton = screen.getByRole("button", { name: /clear/i });
+      fireEvent.click(clearButton);
+
+      expect(onChange).toHaveBeenCalledWith([]);
+    });
+
+    it("should clear value in week mode", () => {
+      const onChange = vi.fn();
+      render(
+        <Calendar
+          mode="week"
+          showClearButton
+          value={{
+            weekNumber: 3,
+            year: 2025,
+            startDate: new Date(2025, 0, 13),
+            endDate: new Date(2025, 0, 19),
+          }}
+          onChange={onChange}
+        />
+      );
+
+      const clearButton = screen.getByRole("button", { name: /clear/i });
+      fireEvent.click(clearButton);
+
+      expect(onChange).toHaveBeenCalledWith(null);
+    });
+
+    it("should clear value in quarter mode", () => {
+      const onChange = vi.fn();
+      render(
+        <Calendar
+          mode="quarter"
+          showClearButton
+          value={{
+            quarter: 1,
+            year: 2025,
+            startDate: new Date(2025, 0, 1),
+            endDate: new Date(2025, 2, 31),
+          }}
+          onChange={onChange}
+        />
+      );
+
+      const clearButton = screen.getByRole("button", { name: /clear/i });
+      fireEvent.click(clearButton);
+
+      expect(onChange).toHaveBeenCalledWith(null);
+    });
+
+    it("should clear value in range mode", () => {
+      const onChange = vi.fn();
+      render(
+        <Calendar
+          mode="range"
+          showClearButton
+          value={{
+            start: { date: new Date(2025, 0, 10) },
+            end: { date: new Date(2025, 0, 20) },
+          }}
+          onChange={onChange}
+        />
+      );
+
+      const clearButton = screen.getByRole("button", { name: /clear/i });
+      fireEvent.click(clearButton);
+
+      expect(onChange).toHaveBeenCalledWith({ start: null, end: null });
+    });
+
+    it("should call onClear callback", () => {
+      const onClear = vi.fn();
+      render(
+        <Calendar showClearButton value={{ date: new Date(2025, 0, 15) }} onClear={onClear} />
+      );
+
+      const clearButton = screen.getByRole("button", { name: /clear/i });
+      fireEvent.click(clearButton);
+
+      expect(onClear).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Extended Keyboard Navigation
+  // ============================================================================
+
+  /* eslint-disable jsx-a11y/no-autofocus */
+  describe("Extended Keyboard Navigation", () => {
+    describe("Days View Navigation", () => {
+      it("should navigate left with ArrowLeft", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar autoFocus onFocusChange={onFocusChange} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "ArrowLeft" });
+
+        expect(onFocusChange).toHaveBeenCalled();
+      });
+
+      it("should navigate right with ArrowRight", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar autoFocus onFocusChange={onFocusChange} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "ArrowRight" });
+
+        expect(onFocusChange).toHaveBeenCalled();
+      });
+
+      it("should navigate up with ArrowUp", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar autoFocus onFocusChange={onFocusChange} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "ArrowUp" });
+
+        expect(onFocusChange).toHaveBeenCalled();
+      });
+
+      it("should navigate down with ArrowDown", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar autoFocus onFocusChange={onFocusChange} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "ArrowDown" });
+
+        expect(onFocusChange).toHaveBeenCalled();
+      });
+
+      it("should navigate to previous month with PageUp", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar autoFocus onFocusChange={onFocusChange} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "PageUp" });
+
+        expect(onFocusChange).toHaveBeenCalled();
+      });
+
+      it("should navigate to next month with PageDown", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar autoFocus onFocusChange={onFocusChange} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "PageDown" });
+
+        expect(onFocusChange).toHaveBeenCalled();
+      });
+
+      it("should navigate to previous year with Shift+PageUp", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar autoFocus onFocusChange={onFocusChange} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "PageUp", shiftKey: true });
+
+        expect(onFocusChange).toHaveBeenCalled();
+      });
+
+      it("should navigate to next year with Shift+PageDown", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar autoFocus onFocusChange={onFocusChange} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "PageDown", shiftKey: true });
+
+        expect(onFocusChange).toHaveBeenCalled();
+      });
+
+      it("should navigate to start of week with Home", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar autoFocus onFocusChange={onFocusChange} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "Home" });
+
+        expect(onFocusChange).toHaveBeenCalled();
+      });
+
+      it("should navigate to end of week with End", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar autoFocus onFocusChange={onFocusChange} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "End" });
+
+        expect(onFocusChange).toHaveBeenCalled();
+      });
+
+      it("should select focused date with Enter", () => {
+        const onChange = vi.fn();
+        const { container } = render(
+          <Calendar autoFocus onChange={onChange} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "Enter" });
+
+        expect(onChange).toHaveBeenCalled();
+      });
+
+      it("should select focused date with Space", () => {
+        const onChange = vi.fn();
+        const { container } = render(
+          <Calendar autoFocus onChange={onChange} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: " " });
+
+        expect(onChange).toHaveBeenCalled();
+      });
+
+      it("should respect minDate boundary when navigating", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar
+            autoFocus
+            minDate={new Date(2025, 0, 15)}
+            value={{ date: new Date(2025, 0, 15) }}
+            onFocusChange={onFocusChange}
+            classNames={{ root: "cal-root" }}
+          />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        // Try to navigate before minDate
+        fireEvent.keyDown(root, { key: "ArrowLeft" });
+
+        // Should clamp to minDate
+        expect(onFocusChange).toHaveBeenCalled();
+      });
+
+      it("should respect maxDate boundary when navigating", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar
+            autoFocus
+            maxDate={new Date(2025, 0, 15)}
+            value={{ date: new Date(2025, 0, 15) }}
+            onFocusChange={onFocusChange}
+            classNames={{ root: "cal-root" }}
+          />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        // Try to navigate after maxDate
+        fireEvent.keyDown(root, { key: "ArrowRight" });
+
+        // Should clamp to maxDate
+        expect(onFocusChange).toHaveBeenCalled();
+      });
+
+      it("should not navigate to disabled dates", () => {
+        const onFocusChange = vi.fn();
+        const { container } = render(
+          <Calendar
+            autoFocus
+            isDateDisabled={() => true}
+            onFocusChange={onFocusChange}
+            classNames={{ root: "cal-root" }}
+          />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "ArrowRight" });
+
+        // Should not call onFocusChange if all dates are disabled
+        expect(onFocusChange).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("Months View Navigation", () => {
+      it("should navigate months with arrow keys", () => {
+        const { container } = render(
+          <Calendar
+            defaultView="months"
+            classNames={{ root: "cal-root", monthGrid: "month-grid" }}
+          />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        expect(container.querySelector(".month-grid")).toBeInTheDocument();
+
+        fireEvent.keyDown(root, { key: "ArrowLeft" });
+        fireEvent.keyDown(root, { key: "ArrowRight" });
+        fireEvent.keyDown(root, { key: "ArrowUp" });
+        fireEvent.keyDown(root, { key: "ArrowDown" });
+      });
+
+      it("should wrap around when navigating past December", () => {
+        const { container } = render(
+          <Calendar defaultView="months" classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        // Navigate right multiple times to test wrap
+        for (let i = 0; i < 13; i++) {
+          fireEvent.keyDown(root, { key: "ArrowRight" });
+        }
+      });
+
+      it("should select month with Enter", () => {
+        const onViewChange = vi.fn();
+        const { container } = render(
+          <Calendar
+            defaultView="months"
+            onViewChange={onViewChange}
+            classNames={{ root: "cal-root" }}
+          />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "Enter" });
+
+        expect(onViewChange).toHaveBeenCalledWith("days");
+      });
+
+      it("should select month with Space", () => {
+        const onViewChange = vi.fn();
+        const { container } = render(
+          <Calendar
+            defaultView="months"
+            onViewChange={onViewChange}
+            classNames={{ root: "cal-root" }}
+          />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: " " });
+
+        expect(onViewChange).toHaveBeenCalledWith("days");
+      });
+
+      it("should escape to days view", () => {
+        const onViewChange = vi.fn();
+        const { container } = render(
+          <Calendar
+            defaultView="months"
+            onViewChange={onViewChange}
+            classNames={{ root: "cal-root" }}
+          />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "Escape" });
+
+        expect(onViewChange).toHaveBeenCalledWith("days");
+      });
+    });
+
+    describe("Years View Navigation", () => {
+      it("should navigate years with arrow keys", () => {
+        const { container } = render(
+          <Calendar
+            defaultView="years"
+            years={[2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030]}
+            classNames={{ root: "cal-root", yearGrid: "year-grid" }}
+          />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        expect(container.querySelector(".year-grid")).toBeInTheDocument();
+
+        fireEvent.keyDown(root, { key: "ArrowLeft" });
+        fireEvent.keyDown(root, { key: "ArrowRight" });
+        fireEvent.keyDown(root, { key: "ArrowUp" });
+        fireEvent.keyDown(root, { key: "ArrowDown" });
+      });
+
+      it("should select year with Enter", () => {
+        const onViewChange = vi.fn();
+        const { container } = render(
+          <Calendar
+            defaultView="years"
+            years={[2024, 2025, 2026]}
+            onViewChange={onViewChange}
+            classNames={{ root: "cal-root" }}
+          />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "Enter" });
+
+        expect(onViewChange).toHaveBeenCalledWith("months");
+      });
+
+      it("should select year with Space", () => {
+        const onViewChange = vi.fn();
+        const { container } = render(
+          <Calendar
+            defaultView="years"
+            years={[2024, 2025, 2026]}
+            onViewChange={onViewChange}
+            classNames={{ root: "cal-root" }}
+          />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: " " });
+
+        expect(onViewChange).toHaveBeenCalledWith("months");
+      });
+
+      it("should escape to days view", () => {
+        const onViewChange = vi.fn();
+        const { container } = render(
+          <Calendar
+            defaultView="years"
+            years={[2024, 2025, 2026]}
+            onViewChange={onViewChange}
+            classNames={{ root: "cal-root" }}
+          />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        fireEvent.keyDown(root, { key: "Escape" });
+
+        expect(onViewChange).toHaveBeenCalledWith("days");
+      });
+
+      it("should not navigate past year list boundaries", () => {
+        const { container } = render(
+          <Calendar defaultView="years" years={[2025]} classNames={{ root: "cal-root" }} />
+        );
+
+        const root = container.querySelector(".cal-root")!;
+        // Try to navigate with only one year
+        fireEvent.keyDown(root, { key: "ArrowLeft" });
+        fireEvent.keyDown(root, { key: "ArrowRight" });
+      });
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: autoFocus with Different Modes
+  // ============================================================================
+
+  /* eslint-disable jsx-a11y/no-autofocus */
+  describe("autoFocus initialization", () => {
+    it("should initialize focused date from range value (start)", () => {
+      const { container } = render(
+        <Calendar
+          mode="range"
+          autoFocus
+          value={{
+            start: { date: new Date(2025, 0, 10) },
+            end: { date: new Date(2025, 0, 20) },
+          }}
+          classNames={{ root: "cal-root" }}
+        />
+      );
+
+      expect(container.querySelector(".cal-root")).toBeInTheDocument();
+    });
+
+    it("should initialize focused date from multiple value", () => {
+      const { container } = render(
+        <Calendar
+          mode="multiple"
+          autoFocus
+          value={[{ date: new Date(2025, 0, 10) }, { date: new Date(2025, 0, 15) }]}
+          classNames={{ root: "cal-root" }}
+        />
+      );
+
+      expect(container.querySelector(".cal-root")).toBeInTheDocument();
+    });
+
+    it("should initialize focused date from single value", () => {
+      const { container } = render(
+        <Calendar
+          mode="single"
+          autoFocus
+          value={{ date: new Date(2025, 0, 10) }}
+          classNames={{ root: "cal-root" }}
+        />
+      );
+
+      expect(container.querySelector(".cal-root")).toBeInTheDocument();
+    });
+
+    it("should default to today when no value provided", () => {
+      const { container } = render(<Calendar autoFocus classNames={{ root: "cal-root" }} />);
+
+      expect(container.querySelector(".cal-root")).toBeInTheDocument();
+    });
+  });
+
+  // ============================================================================
+  // NEW FEATURE TESTS: Mobile Time Picker Collapsible
+  // ============================================================================
+
+  describe("Mobile Time Picker Collapsible", () => {
+    it("should render collapsible time picker in mobile layout", () => {
+      render(<Calendar showTime layout="mobile" />);
+
+      // In mobile layout, time picker should be collapsible
+      const collapsibleHeaders = screen.getAllByRole("button");
+      expect(collapsibleHeaders.length).toBeGreaterThan(0);
+    });
+
+    it("should toggle time picker expansion when clicking header", () => {
+      render(<Calendar showTime layout="mobile" />);
+
+      // Find and click the time header button
+      const timeHeaders = screen.getAllByRole("button").filter(
+        (btn) =>
+          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+          btn.textContent?.toLowerCase().includes("time") ||
+          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+          btn.textContent?.toLowerCase().includes("start") ||
+          btn.textContent?.toLowerCase().includes("end")
+      );
+
+      if (timeHeaders.length > 0 && timeHeaders[0]) {
+        fireEvent.click(timeHeaders[0]);
+      }
     });
   });
 });

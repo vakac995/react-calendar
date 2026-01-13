@@ -13,7 +13,7 @@ export default defineConfig({
 
     // Include patterns
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
-    exclude: ["node_modules", "dist", "demo-dist"],
+    exclude: ["node_modules", "dist", "demo-dist", "src/types/**"],
 
     // Coverage configuration
     coverage: {
@@ -28,6 +28,7 @@ export default defineConfig({
         "src/App.tsx",
         "src/**/index.ts",
         "src/demo-helpers/**",
+        "src/types/**"
       ],
       // Coverage thresholds
       thresholds: {

@@ -10,7 +10,7 @@ export type TimePosition = "bottom" | "top" | "side";
 export type LayoutMode = "auto" | "desktop" | "mobile";
 
 /** Selection mode */
-export type SelectionMode = "single" | "range";
+export type SelectionMode = "single" | "range" | "multiple" | "week" | "quarter";
 
 /** Time unit for granular control */
 export interface TimeValue {
@@ -31,10 +31,35 @@ export interface DateRangeValue {
   end: DateTimeValue | null;
 }
 
-/** Calendar value - either single date or range */
+/** Multiple dates value - array of DateTimeValue */
+export type MultipleDatesValue = DateTimeValue[];
+
+/** Week value for week picker mode */
+export interface WeekValue {
+  weekNumber: number;
+  year: number;
+  startDate: Date;
+  endDate: Date;
+}
+
+/** Quarter value for quarter picker mode */
+export interface QuarterValue {
+  quarter: 1 | 2 | 3 | 4;
+  year: number;
+  startDate: Date;
+  endDate: Date;
+}
+
+/** Calendar value - single date, range, multiple dates, week, or quarter */
 export type CalendarValue<TMode extends SelectionMode> = TMode extends "single"
   ? DateTimeValue | null
-  : DateRangeValue | null;
+  : TMode extends "range"
+    ? DateRangeValue | null
+    : TMode extends "week"
+      ? WeekValue | null
+      : TMode extends "quarter"
+        ? QuarterValue | null
+        : MultipleDatesValue;
 
 /** Day cell data */
 export interface DayCell {
@@ -46,6 +71,7 @@ export interface DayCell {
   isRangeStart: boolean;
   isRangeEnd: boolean;
   isDisabled: boolean;
+  isHighlighted: boolean;
   weekNumber: number;
 }
 
@@ -87,6 +113,12 @@ export interface CalendarLabels {
   months?: readonly string[];
   // Short day names (array of 7, starting from Sunday)
   shortDays?: readonly string[];
+  // Footer buttons
+  todayButton?: string;
+  clearButton?: string;
+  // View picker labels
+  monthPickerLabel?: string;
+  yearPickerLabel?: string;
 }
 
 /** ClassNames for styling every element */
@@ -107,6 +139,8 @@ export interface CalendarClassNames {
   headerNavigationButtonPrev?: string;
   headerNavigationButtonNext?: string;
   headerTitle?: string;
+  headerTitleButton?: string;
+  headerTitleButtonDisabled?: string;
   headerMonthSelect?: string;
   headerMonthSelectDisabled?: string;
   headerYearSelect?: string;
@@ -125,6 +159,7 @@ export interface CalendarClassNames {
   // Day cells
   day?: string;
   dayButton?: string;
+  dayFocused?: string;
   dayToday?: string;
   daySelected?: string;
   dayInRange?: string;
@@ -133,6 +168,7 @@ export interface CalendarClassNames {
   dayDisabled?: string;
   dayOutsideMonth?: string;
   dayWeekend?: string;
+  dayHighlighted?: string;
   dayRangeBackground?: string;
   dayRangeBackgroundStart?: string;
   dayRangeBackgroundEnd?: string;
@@ -172,6 +208,30 @@ export interface CalendarClassNames {
   timePickerToggleTextDisabled?: string;
   timePickerContent?: string;
   timePickerContentExpanded?: string;
+  // Footer buttons
+  footer?: string;
+  footerButton?: string;
+  footerButtonDisabled?: string;
+  todayButton?: string;
+  todayButtonDisabled?: string;
+  clearButton?: string;
+  clearButtonDisabled?: string;
+  // Month picker view
+  monthGrid?: string;
+  monthGridItem?: string;
+  monthGridItemSelected?: string;
+  monthGridItemCurrent?: string;
+  monthGridItemDisabled?: string;
+  // Year picker view
+  yearGrid?: string;
+  yearGridItem?: string;
+  yearGridItemSelected?: string;
+  yearGridItemCurrent?: string;
+  yearGridItemDisabled?: string;
+  // Multiple months container
+  multiMonthContainer?: string;
+  multiMonthGrid?: string;
+  multiMonthHeader?: string;
 }
 
 /** Event handlers */
@@ -197,6 +257,22 @@ export interface CalendarEventHandlers<TMode extends SelectionMode> {
   onMinuteSelect?: (minute: number, target: "start" | "end" | "single") => void;
   onSecondsClick?: (seconds: number, target: "start" | "end" | "single") => void;
   onSecondsSelect?: (seconds: number, target: "start" | "end" | "single") => void;
+  // New event handlers
+  onTodayClick?: () => void;
+  onClear?: () => void;
+  onEscape?: () => void;
+  onViewChange?: (view: CalendarView) => void;
+  onFocusChange?: (date: Date | null) => void;
+}
+
+/** View modes for the calendar */
+export type CalendarView = "days" | "months" | "years";
+
+/** Highlighted date configuration */
+export interface HighlightedDate {
+  date: Date;
+  className?: string;
+  label?: string;
 }
 
 /** Main Calendar Props */
@@ -219,6 +295,8 @@ export interface CalendarProps<
   minDate?: Date;
   /** Maximum selectable date */
   maxDate?: Date;
+  /** Custom function to disable specific dates */
+  isDateDisabled?: (date: Date) => boolean;
   /** Minimum selectable time */
   minTime?: TimeValue;
   /** Maximum selectable time */
@@ -245,6 +323,20 @@ export interface CalendarProps<
   renderDay?: (day: DayCell, defaultRender: ReactNode) => ReactNode;
   /** Custom header renderer */
   renderHeader?: (props: HeaderRenderProps) => ReactNode;
+  /** Show Today button */
+  showTodayButton?: boolean;
+  /** Show Clear button */
+  showClearButton?: boolean;
+  /** Dates to highlight with special styling */
+  highlightedDates?: Date[] | HighlightedDate[];
+  /** Current view mode */
+  view?: CalendarView;
+  /** Default view mode */
+  defaultView?: CalendarView;
+  /** Number of months to display (default: 1) */
+  numberOfMonths?: number;
+  /** Auto-focus the calendar on mount */
+  autoFocus?: boolean;
 }
 
 export interface HeaderRenderProps {

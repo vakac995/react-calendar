@@ -29,6 +29,9 @@ export const defaultClassNames: CalendarClassNames = {
   headerNavigationButtonPrev: "",
   headerNavigationButtonNext: "",
   headerTitle: "flex items-center gap-2",
+  headerTitleButton:
+    "px-2 py-1 rounded text-sm font-medium hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500",
+  headerTitleButtonDisabled: "opacity-60 cursor-not-allowed hover:bg-transparent",
   headerMonthSelect:
     "px-2 py-1 rounded border border-gray-200 bg-white text-sm font-medium hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500",
   headerMonthSelectDisabled: "opacity-60 cursor-not-allowed bg-gray-50 border-gray-100",
@@ -54,14 +57,17 @@ export const defaultClassNames: CalendarClassNames = {
   day: "flex justify-center relative",
   dayButton:
     "w-9 h-9 rounded-full flex items-center justify-center text-sm relative z-10 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 hover:bg-gray-100",
+  dayFocused: "ring-2 ring-blue-500 ring-offset-1",
   dayToday: "border border-blue-500",
-  daySelected: "bg-blue-500 text-white hover:bg-blue-600",
+  // Selected day - on hover switch to lighter background and dark text for readability
+  daySelected: "bg-blue-500 text-white hover:bg-blue-200 hover:text-gray-900",
   dayInRange: "bg-blue-200 text-blue-900",
-  dayRangeStart: "bg-blue-500 text-white hover:bg-blue-600",
-  dayRangeEnd: "bg-blue-500 text-white hover:bg-blue-600",
+  dayRangeStart: "bg-blue-500 text-white hover:bg-blue-200 hover:text-gray-900",
+  dayRangeEnd: "bg-blue-500 text-white hover:bg-blue-200 hover:text-gray-900",
   dayDisabled: "opacity-50 cursor-not-allowed hover:bg-transparent",
   dayOutsideMonth: "text-gray-400",
   dayWeekend: "text-red-500",
+  dayHighlighted: "bg-yellow-100",
   dayRangeBackground: "absolute inset-y-0 bg-blue-200",
   dayRangeBackgroundStart: "left-1/2 right-0",
   dayRangeBackgroundEnd: "left-0 right-1/2",
@@ -89,7 +95,9 @@ export const defaultClassNames: CalendarClassNames = {
   timeSelectorScrollDisabled: "bg-gray-50 border-gray-100",
   timeSelectorItem:
     "w-full py-1.5 text-center text-sm transition-colors hover:bg-gray-100 focus:outline-none focus:bg-gray-100",
-  timeSelectorItemSelected: "bg-blue-500 text-white hover:bg-blue-600 focus:bg-blue-600",
+  // Selected time item - on hover make text dark for contrast
+  timeSelectorItemSelected:
+    "bg-blue-500 text-white hover:bg-blue-200 hover:text-gray-900 focus:bg-blue-200 focus:text-gray-900",
   timeSelectorItemDisabled: "opacity-40 cursor-not-allowed hover:bg-transparent",
   timeSeparator: "text-xl text-gray-400 mt-5",
   timeSeparatorDisabled: "text-gray-300",
@@ -106,6 +114,37 @@ export const defaultClassNames: CalendarClassNames = {
   timePickerToggleTextDisabled: "text-gray-400",
   timePickerContent: "overflow-hidden transition-all duration-200 ease-in-out",
   timePickerContentExpanded: "mt-3",
+
+  // Footer buttons
+  footer: "flex items-center justify-center gap-2 mt-4 pt-4 border-t border-gray-200",
+  footerButton:
+    "px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
+  footerButtonDisabled: "opacity-50 cursor-not-allowed",
+  todayButton: "bg-gray-100 text-gray-700 hover:bg-gray-200",
+  todayButtonDisabled: "hover:bg-gray-100",
+  clearButton: "bg-gray-100 text-gray-700 hover:bg-gray-200",
+  clearButtonDisabled: "hover:bg-gray-100",
+
+  // Month picker view
+  monthGrid: "grid grid-cols-3 gap-2 p-2",
+  monthGridItem:
+    "px-3 py-2 rounded-md text-sm font-medium text-center cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500",
+  monthGridItemSelected: "bg-blue-500 text-white hover:bg-blue-600",
+  monthGridItemCurrent: "border border-blue-500",
+  monthGridItemDisabled: "opacity-50 cursor-not-allowed hover:bg-transparent",
+
+  // Year picker view
+  yearGrid: "grid grid-cols-4 gap-2 p-2 max-h-64 overflow-y-auto",
+  yearGridItem:
+    "px-2 py-2 rounded-md text-sm font-medium text-center cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500",
+  yearGridItemSelected: "bg-blue-500 text-white hover:bg-blue-600",
+  yearGridItemCurrent: "border border-blue-500",
+  yearGridItemDisabled: "opacity-50 cursor-not-allowed hover:bg-transparent",
+
+  // Multiple months container
+  multiMonthContainer: "flex gap-4",
+  multiMonthGrid: "flex flex-col",
+  multiMonthHeader: "text-center text-sm font-medium text-gray-700 mb-2",
 };
 
 /**

@@ -74,6 +74,12 @@ export const defaultLabels: CalendarLabels = {
   ],
   // Short day names (starting from Sunday)
   shortDays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+  // Footer buttons
+  todayButton: "Today",
+  clearButton: "Clear",
+  // View picker labels
+  monthPickerLabel: "Select month",
+  yearPickerLabel: "Select year",
 };
 
 /**

@@ -9,6 +9,11 @@ import {
   addDays,
   addMonths,
   getMonthData,
+  formatDate,
+  formatDateWithPattern,
+  formatTime,
+  parseDate,
+  getRelativeDate,
 } from "./date.utils";
 import type { DateTimeValue, DateRangeValue, DayOfWeek } from "../types";
 
@@ -720,5 +725,221 @@ describe("getMonthData", () => {
         expect(diff).toBe(6);
       });
     });
+  });
+});
+
+// ============================================================================
+// DATE FORMATTING UTILITIES TESTS
+// ============================================================================
+
+describe("formatDateWithPattern", () => {
+  it("should format date with YYYY-MM-DD pattern", () => {
+    const date = new Date(2025, 5, 15); // June 15, 2025
+    expect(formatDateWithPattern(date, "YYYY-MM-DD")).toBe("2025-06-15");
+  });
+
+  it("should format date with MM/DD/YYYY pattern", () => {
+    const date = new Date(2025, 5, 15);
+    expect(formatDateWithPattern(date, "MM/DD/YYYY")).toBe("06/15/2025");
+  });
+
+  it("should format date with DD.MM.YYYY pattern", () => {
+    const date = new Date(2025, 5, 15);
+    expect(formatDateWithPattern(date, "DD.MM.YYYY")).toBe("15.06.2025");
+  });
+
+  it("should handle single digit month and day with M and D tokens", () => {
+    const date = new Date(2025, 0, 5); // January 5, 2025
+    expect(formatDateWithPattern(date, "M/D/YYYY")).toBe("1/5/2025");
+  });
+
+  it("should handle YY for short year", () => {
+    const date = new Date(2025, 5, 15);
+    expect(formatDateWithPattern(date, "YY-MM-DD")).toBe("25-06-15");
+  });
+
+  it("should handle December correctly", () => {
+    const date = new Date(2025, 11, 25); // December 25, 2025
+    expect(formatDateWithPattern(date, "YYYY-MM-DD")).toBe("2025-12-25");
+  });
+
+  it("should handle January correctly", () => {
+    const date = new Date(2025, 0, 1); // January 1, 2025
+    expect(formatDateWithPattern(date, "YYYY-MM-DD")).toBe("2025-01-01");
+  });
+});
+
+describe("formatDate", () => {
+  it("should format date using pattern when provided", () => {
+    const date = new Date(2025, 5, 15);
+    expect(formatDate(date, { pattern: "YYYY-MM-DD" })).toBe("2025-06-15");
+  });
+
+  it("should use medium dateStyle by default", () => {
+    const date = new Date(2025, 5, 15);
+    const result = formatDate(date);
+    // The exact format depends on locale, but it should contain the key parts
+    expect(result).toBeTruthy();
+    expect(typeof result).toBe("string");
+  });
+
+  it("should respect locale option", () => {
+    const date = new Date(2025, 5, 15);
+    const enResult = formatDate(date, { locale: "en-US", dateStyle: "short" });
+    const deResult = formatDate(date, { locale: "de-DE", dateStyle: "short" });
+    // Different locales should potentially produce different formats
+    expect(enResult).toBeTruthy();
+    expect(deResult).toBeTruthy();
+  });
+});
+
+describe("formatTime", () => {
+  it("should format time in 24-hour format by default", () => {
+    expect(formatTime(14, 30, 0)).toBe("14:30");
+  });
+
+  it("should include seconds when showSeconds is true", () => {
+    expect(formatTime(14, 30, 45, { showSeconds: true })).toBe("14:30:45");
+  });
+
+  it("should format time in 12-hour format", () => {
+    expect(formatTime(14, 30, 0, { use24Hour: false })).toBe("02:30 PM");
+  });
+
+  it("should handle AM times in 12-hour format", () => {
+    expect(formatTime(9, 30, 0, { use24Hour: false })).toBe("09:30 AM");
+  });
+
+  it("should handle noon in 12-hour format", () => {
+    expect(formatTime(12, 0, 0, { use24Hour: false })).toBe("12:00 PM");
+  });
+
+  it("should handle midnight in 12-hour format", () => {
+    expect(formatTime(0, 0, 0, { use24Hour: false })).toBe("12:00 AM");
+  });
+
+  it("should include seconds in 12-hour format when requested", () => {
+    expect(formatTime(14, 30, 45, { showSeconds: true, use24Hour: false })).toBe("02:30:45 PM");
+  });
+
+  it("should pad single digit hours and minutes", () => {
+    expect(formatTime(5, 3, 7)).toBe("05:03");
+    expect(formatTime(5, 3, 7, { showSeconds: true })).toBe("05:03:07");
+  });
+});
+
+describe("parseDate", () => {
+  it("should parse YYYY-MM-DD format", () => {
+    const result = parseDate("2025-06-15");
+    expect(result).not.toBeNull();
+    expect(result?.getFullYear()).toBe(2025);
+    expect(result?.getMonth()).toBe(5);
+    expect(result?.getDate()).toBe(15);
+  });
+
+  it("should parse custom MM/DD/YYYY format", () => {
+    const result = parseDate("06/15/2025", "MM/DD/YYYY");
+    expect(result).not.toBeNull();
+    expect(result?.getFullYear()).toBe(2025);
+    expect(result?.getMonth()).toBe(5);
+    expect(result?.getDate()).toBe(15);
+  });
+
+  it("should parse DD.MM.YYYY format", () => {
+    const result = parseDate("15.06.2025", "DD.MM.YYYY");
+    expect(result).not.toBeNull();
+    expect(result?.getFullYear()).toBe(2025);
+    expect(result?.getMonth()).toBe(5);
+    expect(result?.getDate()).toBe(15);
+  });
+
+  it("should return null for invalid date string", () => {
+    expect(parseDate("invalid")).toBeNull();
+    expect(parseDate("2025-13-45")).toBeNull(); // Invalid month and day
+  });
+
+  it("should fall back to native parsing when pattern is invalid", () => {
+    // Native Date can parse ISO format even with invalid pattern
+    const result = parseDate("2025-06-15", "invalid");
+    // Falls back to native Date parsing which works for ISO format
+    expect(result).not.toBeNull();
+    expect(result?.getFullYear()).toBe(2025);
+    expect(result?.getMonth()).toBe(5);
+    expect(result?.getDate()).toBe(15);
+  });
+
+  it("should return null for unparseable string with invalid pattern", () => {
+    expect(parseDate("not-a-date", "invalid")).toBeNull();
+  });
+
+  it("should handle February 29 on leap year", () => {
+    const result = parseDate("2024-02-29");
+    expect(result).not.toBeNull();
+    expect(result?.getDate()).toBe(29);
+  });
+
+  it("should return null for February 29 on non-leap year", () => {
+    const result = parseDate("2025-02-29");
+    expect(result).toBeNull();
+  });
+});
+
+describe("getRelativeDate", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2025-06-15T12:00:00"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("should return 'Today' for the current date", () => {
+    const today = new Date("2025-06-15");
+    expect(getRelativeDate(today)).toBe("Today");
+  });
+
+  it("should return 'Tomorrow' for the next day", () => {
+    const tomorrow = new Date("2025-06-16");
+    expect(getRelativeDate(tomorrow)).toBe("Tomorrow");
+  });
+
+  it("should return 'Yesterday' for the previous day", () => {
+    const yesterday = new Date("2025-06-14");
+    expect(getRelativeDate(yesterday)).toBe("Yesterday");
+  });
+
+  it("should return 'In X days' for dates within a week", () => {
+    const in3Days = new Date("2025-06-18");
+    expect(getRelativeDate(in3Days)).toBe("In 3 days");
+  });
+
+  it("should return 'X days ago' for recent past dates", () => {
+    const threeDaysAgo = new Date("2025-06-12");
+    expect(getRelativeDate(threeDaysAgo)).toBe("3 days ago");
+  });
+
+  it("should return 'In X weeks' for dates within a month", () => {
+    const in2Weeks = new Date("2025-06-29");
+    expect(getRelativeDate(in2Weeks)).toBe("In 2 weeks");
+  });
+
+  it("should return 'X weeks ago' for past dates within a month", () => {
+    const twoWeeksAgo = new Date("2025-06-01");
+    expect(getRelativeDate(twoWeeksAgo)).toBe("2 weeks ago");
+  });
+
+  it("should return formatted date for dates beyond a month", () => {
+    const farDate = new Date("2025-12-25");
+    const result = getRelativeDate(farDate);
+    expect(result).toBeTruthy();
+    expect(result).not.toBe("Today");
+    expect(result).not.toBe("Tomorrow");
+  });
+
+  it("should accept a custom base date", () => {
+    const date = new Date("2025-06-20");
+    const baseDate = new Date("2025-06-18");
+    expect(getRelativeDate(date, baseDate)).toBe("In 2 days");
   });
 });

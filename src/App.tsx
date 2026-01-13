@@ -4,8 +4,12 @@ import { useState } from "react";
 // Calendar imports
 import {
   Calendar,
+  DatePicker,
   type DateTimeValue,
   type DateRangeValue,
+  type MultipleDatesValue,
+  type WeekValue,
+  type QuarterValue,
   type DayCell,
   type LayoutMode,
   defaultClassNames,
@@ -54,6 +58,64 @@ function DateRangeDemo(): ReactElement {
         Click week number to select entire week
       </div>
       <ValueDisplay value={value} mode="range" />
+    </>
+  );
+}
+
+function MultipleDatesDemo(): ReactElement {
+  const [value, setValue] = useState<MultipleDatesValue>([]);
+
+  return (
+    <>
+      <Calendar<"multiple">
+        mode="multiple"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        showClearButton
+      />
+      <div className="mt-2 text-center text-xs text-gray-500">
+        {value.length} date{value.length !== 1 ? "s" : ""} selected
+      </div>
+    </>
+  );
+}
+
+function WeekPickerDemo(): ReactElement {
+  const [value, setValue] = useState<WeekValue | null>(null);
+
+  return (
+    <>
+      <Calendar<"week">
+        mode="week"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        showClearButton
+        showWeekNumbers
+      />
+      <div className="mt-2 text-center text-xs text-gray-500">
+        {value ? `Week ${value.weekNumber}, ${value.year}` : "Select a week"}
+      </div>
+    </>
+  );
+}
+
+function QuarterPickerDemo(): ReactElement {
+  const [value, setValue] = useState<QuarterValue | null>(null);
+
+  return (
+    <>
+      <Calendar<"quarter">
+        mode="quarter"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        showClearButton
+      />
+      <div className="mt-2 text-center text-xs text-gray-500">
+        {value ? `Q${value.quarter} ${value.year}` : "Select a quarter"}
+      </div>
     </>
   );
 }
@@ -167,6 +229,204 @@ function ResponsiveLayoutDemo(): ReactElement {
 }
 
 // ============================================================================
+// DEMO COMPONENTS - Multiple Months & Features
+// ============================================================================
+
+function MultipleMonthsDemo(): ReactElement {
+  const [value, setValue] = useState<DateRangeValue | null>(null);
+
+  return (
+    <>
+      <Calendar<"range">
+        mode="range"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        numberOfMonths={2}
+      />
+      <ValueDisplay value={value} mode="range" />
+    </>
+  );
+}
+
+function TodayClearButtonsDemo(): ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        showTodayButton
+        showClearButton
+      />
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+function HighlightedDatesDemo(): ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  const today = new Date();
+  const highlightedDates = [
+    new Date(today.getFullYear(), today.getMonth(), 10),
+    new Date(today.getFullYear(), today.getMonth(), 15),
+    new Date(today.getFullYear(), today.getMonth(), 20),
+    new Date(today.getFullYear(), today.getMonth(), 25),
+  ];
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        highlightedDates={highlightedDates}
+      />
+      <div className="mt-2 text-center text-xs text-gray-500">
+        📌 Days 10, 15, 20, 25 are highlighted
+      </div>
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+function CustomDisabledDatesDemo(): ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  // Disable weekends
+  const isDateDisabled = (date: Date): boolean => {
+    const day = date.getDay();
+    return day === 0 || day === 6; // Sunday = 0, Saturday = 6
+  };
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        isDateDisabled={isDateDisabled}
+      />
+      <div className="mt-2 text-center text-xs text-gray-500">🚫 Weekends disabled</div>
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+// ============================================================================
+// DEMO COMPONENTS - Locale/i18n
+// ============================================================================
+
+function LocaleGermanDemo(): ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        locale="de-DE"
+      />
+      <div className="mt-2 text-center text-xs text-gray-500">🇩🇪 German locale (Monday start)</div>
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+function LocaleArabicDemo(): ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        locale="ar-SA"
+      />
+      <div className="mt-2 text-center text-xs text-gray-500">🇸🇦 Arabic locale (RTL)</div>
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+function LocaleJapaneseDemo(): ReactElement {
+  const [value, setValue] = useState<DateTimeValue | null>(null);
+
+  return (
+    <>
+      <Calendar<"single">
+        mode="single"
+        value={value}
+        onChange={setValue}
+        classNames={defaultClassNames}
+        locale="ja-JP"
+      />
+      <div className="mt-2 text-center text-xs text-gray-500">🇯🇵 Japanese locale</div>
+      <ValueDisplay value={value} mode="single" />
+    </>
+  );
+}
+
+// ============================================================================
+// DEMO COMPONENTS - DatePicker (Popover)
+// ============================================================================
+
+function DatePickerBasicDemo(): ReactElement {
+  const [value, setValue] = useState<Date | null>(null);
+
+  return (
+    <>
+      <DatePicker
+        value={value}
+        onChange={setValue}
+        placeholder="Select a date..."
+        dateFormat="MM/DD/YYYY"
+        calendarClassNames={defaultClassNames}
+      />
+      <div className="mt-2 text-center text-xs text-gray-500">
+        {value ? value.toLocaleDateString() : "No date selected"}
+      </div>
+    </>
+  );
+}
+
+function DatePickerWithTimeDemo(): ReactElement {
+  const [value, setValue] = useState<Date | null>(null);
+
+  const today = new Date();
+  const minDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  const maxDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+  return (
+    <>
+      <DatePicker
+        value={value}
+        onChange={setValue}
+        placeholder="Select date..."
+        dateFormat="DD/MM/YYYY"
+        minDate={minDate}
+        maxDate={maxDate}
+        isClearable
+        calendarClassNames={defaultClassNames}
+      />
+      <div className="mt-2 text-center text-xs text-gray-500">
+        {value ? value.toLocaleDateString() : "Current month only"}
+      </div>
+    </>
+  );
+}
+
+// ============================================================================
 // DEMO COMPONENTS - Constraints
 // ============================================================================
 
@@ -268,7 +528,7 @@ function CustomStylesDemo(): ReactElement {
 
   const shadcnClassNames = mergeClassNames(defaultClassNames, {
     root: "bg-white rounded-lg shadow-sm border border-gray-200 p-4 font-sans",
-    header: "border-b border-gray-100 pb-3 mb-3",
+    header: "flex justify-between border-b border-gray-100 pb-3 mb-3",
     headerTitle: "flex items-center gap-1",
     headerMonthSelect:
       "appearance-none bg-transparent text-sm font-medium text-gray-900 cursor-pointer hover:text-gray-600 focus:outline-none",
@@ -657,6 +917,53 @@ export default function App(): ReactElement {
             >
               <DateRangeDemo />
             </DemoCard>
+
+            <DemoCard
+              title="Multiple Dates"
+              description="Select multiple non-contiguous dates"
+              badge="New"
+              badgeVariant="green"
+              code={`<Calendar
+  mode="multiple"
+  value={dates}
+  onChange={setDates}
+  classNames={defaultClassNames}
+  showClearButton
+/>`}
+            >
+              <MultipleDatesDemo />
+            </DemoCard>
+
+            <DemoCard
+              title="Week Picker"
+              description="Select entire weeks at once"
+              badge="New"
+              badgeVariant="green"
+              code={`<Calendar
+  mode="week"
+  value={week}
+  onChange={setWeek}
+  classNames={defaultClassNames}
+  showWeekNumbers
+/>`}
+            >
+              <WeekPickerDemo />
+            </DemoCard>
+
+            <DemoCard
+              title="Quarter Picker"
+              description="Select entire quarters (Q1-Q4)"
+              badge="New"
+              badgeVariant="green"
+              code={`<Calendar
+  mode="quarter"
+  value={quarter}
+  onChange={setQuarter}
+  classNames={defaultClassNames}
+/>`}
+            >
+              <QuarterPickerDemo />
+            </DemoCard>
           </DemoSection>
 
           {/* Time Picker */}
@@ -734,6 +1041,161 @@ export default function App(): ReactElement {
 />`}
             >
               <ResponsiveLayoutDemo />
+            </DemoCard>
+          </DemoSection>
+
+          {/* DatePicker (Popover) */}
+          <DemoSection
+            id="datepicker"
+            title="DatePicker (Popover)"
+            description="Input field with calendar dropdown"
+            icon="📋"
+          >
+            <DemoCard
+              title="Basic DatePicker"
+              description="Text input with calendar popup"
+              badge="New"
+              badgeVariant="green"
+              code={`<DatePicker
+  value={value}
+  onChange={setValue}
+  placeholder="Select a date..."
+  dateFormat="MM/DD/YYYY"
+/>`}
+            >
+              <DatePickerBasicDemo />
+            </DemoCard>
+
+            <DemoCard
+              title="DatePicker with Constraints"
+              description="Min/max date restrictions with European format"
+              badge="New"
+              badgeVariant="green"
+              code={`<DatePicker
+  value={value}
+  onChange={setValue}
+  placeholder="Select date..."
+  dateFormat="DD/MM/YYYY"
+  minDate={startOfMonth}
+  maxDate={endOfMonth}
+  isClearable
+/>`}
+            >
+              <DatePickerWithTimeDemo />
+            </DemoCard>
+          </DemoSection>
+
+          {/* Multiple Months & Features */}
+          <DemoSection
+            id="features"
+            title="Additional Features"
+            description="Multiple months, today/clear buttons, highlighted dates"
+            icon="✨"
+          >
+            <DemoCard
+              title="Multiple Months"
+              description="Display 2+ months side by side"
+              code={`<Calendar
+  mode="range"
+  value={value}
+  onChange={setValue}
+  numberOfMonths={2}
+/>`}
+            >
+              <MultipleMonthsDemo />
+            </DemoCard>
+
+            <DemoCard
+              title="Today & Clear Buttons"
+              description="Quick navigation and clear selection"
+              code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  showTodayButton
+  showClearButton
+/>`}
+            >
+              <TodayClearButtonsDemo />
+            </DemoCard>
+
+            <DemoCard
+              title="Highlighted Dates"
+              description="Mark special dates with visual indicator"
+              code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  highlightedDates={[
+    new Date(2024, 0, 10),
+    new Date(2024, 0, 15),
+  ]}
+/>`}
+            >
+              <HighlightedDatesDemo />
+            </DemoCard>
+
+            <DemoCard
+              title="Custom Disabled Dates"
+              description="Disable specific dates via callback"
+              code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  isDateDisabled={(date) => {
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  }}
+/>`}
+            >
+              <CustomDisabledDatesDemo />
+            </DemoCard>
+          </DemoSection>
+
+          {/* Locale/i18n */}
+          <DemoSection
+            id="locale"
+            title="Locale / i18n"
+            description="Internationalization with automatic RTL support"
+            icon="🌍"
+          >
+            <DemoCard
+              title="German Locale"
+              description="German month/day names, Monday start"
+              code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  locale="de-DE"
+/>`}
+            >
+              <LocaleGermanDemo />
+            </DemoCard>
+
+            <DemoCard
+              title="Arabic Locale (RTL)"
+              description="Right-to-left layout with Arabic names"
+              code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  locale="ar-SA"
+/>`}
+            >
+              <LocaleArabicDemo />
+            </DemoCard>
+
+            <DemoCard
+              title="Japanese Locale"
+              description="Japanese month/day names"
+              code={`<Calendar
+  mode="single"
+  value={value}
+  onChange={setValue}
+  locale="ja-JP"
+/>`}
+            >
+              <LocaleJapaneseDemo />
             </DemoCard>
           </DemoSection>
 
